@@ -17,6 +17,7 @@ import { setLobbyWanted, unlockAudio } from "@/lib/game/audio";
 import { useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { setDiscordPresence } from "@/lib/discord/presence";
+import { useAccount } from "@/lib/account/client";
 import { VARIANT_LABELS } from "@/lib/game/types";
 import { shareUrl } from "@/lib/game/room-code";
 
@@ -29,6 +30,18 @@ export function GameApp() {
   const roomCode = useOnline((s) => s.roomCode);
   const members = useOnline((s) => s.members);
   const variant = useGame((s) => s.variant);
+  const hydrateAccount = useAccount((s) => s.hydrate);
+  const account = useAccount((s) => s.user);
+
+  useEffect(() => {
+    void hydrateAccount();
+  }, [hydrateAccount]);
+
+  useEffect(() => {
+    if (account && !useOnline.getState().selfName.trim()) {
+      useOnline.getState().setSelfName(account.name);
+    }
+  }, [account]);
 
   useEffect(() => {
     const size = Math.max(1, members.filter((m) => m.connectionState !== "failed").length);

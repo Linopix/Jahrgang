@@ -56,6 +56,15 @@ function HinweisePage() {
       </section>
 
       <section className="mt-10 space-y-3">
+        <h2 className="font-display text-2xl font-medium text-fg">Konto</h2>
+        <p className="text-sm leading-relaxed text-muted">
+          Optional. Nur ein Name und ein Geheimwort, damit die Rangliste über
+          Geräte zählt. Kein E-Mail, kein Gewinn. Wer das Wort vergisst, legt
+          ein neues Konto an.
+        </p>
+      </section>
+
+      <section className="mt-10 space-y-3">
         <h2 className="font-display text-2xl font-medium text-fg">Discord</h2>
         <p className="text-sm leading-relaxed text-muted">
           Stimme bleibt in Discord, das Spiel im Browser. Ein Status im

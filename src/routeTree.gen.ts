@@ -11,8 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as HinweiseRouteImport } from './routes/hinweise'
+import { Route as KontoRouteImport } from './routes/konto'
 import { Route as RanglisteRouteImport } from './routes/rangliste'
+import { Route as ApiAccountRouteImport } from './routes/api/account'
 import { Route as ApiRtcRouteImport } from './routes/api/rtc'
+import { Route as ApiScoresRouteImport } from './routes/api/scores'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -24,9 +27,19 @@ const HinweiseRoute = HinweiseRouteImport.update({
   path: '/hinweise',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KontoRoute = KontoRouteImport.update({
+  id: '/konto',
+  path: '/konto',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RanglisteRoute = RanglisteRouteImport.update({
   id: '/rangliste',
   path: '/rangliste',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAccountRoute = ApiAccountRouteImport.update({
+  id: '/api/account',
+  path: '/api/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiRtcRoute = ApiRtcRouteImport.update({
@@ -34,39 +47,78 @@ const ApiRtcRoute = ApiRtcRouteImport.update({
   path: '/api/rtc',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiScoresRoute = ApiScoresRouteImport.update({
+  id: '/api/scores',
+  path: '/api/scores',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/hinweise': typeof HinweiseRoute
+  '/konto': typeof KontoRoute
   '/rangliste': typeof RanglisteRoute
+  '/api/account': typeof ApiAccountRoute
   '/api/rtc': typeof ApiRtcRoute
+  '/api/scores': typeof ApiScoresRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/hinweise': typeof HinweiseRoute
+  '/konto': typeof KontoRoute
   '/rangliste': typeof RanglisteRoute
+  '/api/account': typeof ApiAccountRoute
   '/api/rtc': typeof ApiRtcRoute
+  '/api/scores': typeof ApiScoresRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/hinweise': typeof HinweiseRoute
+  '/konto': typeof KontoRoute
   '/rangliste': typeof RanglisteRoute
+  '/api/account': typeof ApiAccountRoute
   '/api/rtc': typeof ApiRtcRoute
+  '/api/scores': typeof ApiScoresRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/hinweise' | '/rangliste' | '/api/rtc'
+  fullPaths:
+    | '/'
+    | '/hinweise'
+    | '/konto'
+    | '/rangliste'
+    | '/api/account'
+    | '/api/rtc'
+    | '/api/scores'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/hinweise' | '/rangliste' | '/api/rtc'
-  id: '__root__' | '/' | '/hinweise' | '/rangliste' | '/api/rtc'
+  to:
+    | '/'
+    | '/hinweise'
+    | '/konto'
+    | '/rangliste'
+    | '/api/account'
+    | '/api/rtc'
+    | '/api/scores'
+  id:
+    | '__root__'
+    | '/'
+    | '/hinweise'
+    | '/konto'
+    | '/rangliste'
+    | '/api/account'
+    | '/api/rtc'
+    | '/api/scores'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HinweiseRoute: typeof HinweiseRoute
+  KontoRoute: typeof KontoRoute
   RanglisteRoute: typeof RanglisteRoute
+  ApiAccountRoute: typeof ApiAccountRoute
   ApiRtcRoute: typeof ApiRtcRoute
+  ApiScoresRoute: typeof ApiScoresRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -85,11 +137,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HinweiseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/konto': {
+      id: '/konto'
+      path: '/konto'
+      fullPath: '/konto'
+      preLoaderRoute: typeof KontoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rangliste': {
       id: '/rangliste'
       path: '/rangliste'
       fullPath: '/rangliste'
       preLoaderRoute: typeof RanglisteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/account': {
+      id: '/api/account'
+      path: '/api/account'
+      fullPath: '/api/account'
+      preLoaderRoute: typeof ApiAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/rtc': {
@@ -99,14 +165,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRtcRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/scores': {
+      id: '/api/scores'
+      path: '/api/scores'
+      fullPath: '/api/scores'
+      preLoaderRoute: typeof ApiScoresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HinweiseRoute: HinweiseRoute,
+  KontoRoute: KontoRoute,
   RanglisteRoute: RanglisteRoute,
+  ApiAccountRoute: ApiAccountRoute,
   ApiRtcRoute: ApiRtcRoute,
+  ApiScoresRoute: ApiScoresRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

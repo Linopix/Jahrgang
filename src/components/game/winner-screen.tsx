@@ -22,6 +22,7 @@ import {
   type SessionStats,
 } from "@/lib/game/types";
 import { recordLocalScore } from "@/lib/game/local-scores";
+import { submitBoard, useAccount } from "@/lib/account/client";
 import { cn } from "@/lib/utils";
 
 function formatDuration(ms: number) {
@@ -123,6 +124,7 @@ export function WinnerScreen() {
   const nextRound = useOnline((s) => s.nextRound);
   const pending = useOnline((s) => s.pending);
   const selfId = useOnline((s) => s.selfId);
+  const account = useAccount((s) => s.user);
   const mayStart = !online || canStartNextRound();
   const original = guessKind(variant, custom) !== "none";
   const ranked = rankPlayers(players);
@@ -143,12 +145,21 @@ export function WinnerScreen() {
       (champ ? { id: champ.id, name: champ.name, wins: 1, points: champ.timeline.length + champ.quiz } : null);
     if (!mine) return;
     recordLocalScore({
-      name: mine.name,
+      name: account?.name || mine.name,
       wins: mine.wins,
       points: mine.points,
       heard: stats.heard,
       variant,
     });
+    if (account) {
+      void submitBoard({
+        wins: mine.wins,
+        points: mine.points,
+        heard: stats.heard,
+        placedOk: stats.placedOk,
+        variant,
+      });
+    }
   }, []);
 
   const title = soloFailed

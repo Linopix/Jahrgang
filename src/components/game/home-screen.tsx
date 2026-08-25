@@ -94,6 +94,10 @@ export function HomeScreen() {
           Rangliste
         </Link>
         <span>·</span>
+        <Link to="/konto" className="hover:text-fg">
+          Konto
+        </Link>
+        <span>·</span>
         <a href="mailto:jahrgang.game@icloud.com" className="hover:text-fg">
           Kontakt
         </a>
