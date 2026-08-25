@@ -10,22 +10,56 @@ Drei Modi:
 
 ## Discord-Abend (so spielt ihr)
 
-1. Der Host öffnet die **veröffentlichte** Website (nicht localhost).
+1. Der Host öffnet die **Live-URL** (nicht localhost).
 2. **Online-Abend** → Name eingeben → **Raum öffnen**.
 3. **Discord-Link** kopieren und in den Call / Chat posten. Alternativ den vierstelligen Code vorlesen.
 4. Freund:innen klicken den Link, geben ihren Namen ein, **Beitreten**.
 5. Host wählt Repertoire und Ziel, dann **Abend starten**.
-6. Nur wer am Zug ist, legt. Alle hören denselben Hit. Voice bleibt bei Discord.
+6. Nur wer am Zug ist, legt. Alle hören denselben Hit **auf ihrem Gerät**. Voice bleibt bei Discord — keinen Tab-Ton teilen.
 
-Kosten: 0 €. Keine Accounts, kein Spotify.
+Kosten: 0 €. Keine Accounts, kein Spotify, kein Discord-Bot.
 
-### Was du einrichten musst
+## Online stellen (Vercel, ohne Grok)
 
-Für Freund:innen **über Internet / Discord** muss die App **online veröffentlicht** sein (Grok-App publishen oder nach Vercel deployen). `localhost` auf Windows reicht nur zum eigenen Testen mit zwei Browser-Fenstern.
+Damit Freund:innen aus Discord reinkommen, braucht die App eine öffentliche Website plus eine kleine Datenbank nur für den Handshake. Beides ist kostenlos. Grok-Publish brauchst du nicht.
 
-Sonst nichts: keine API-Keys, keine Datenbank von Hand, keine TURN-Konfiguration. Die App legt den Handshake selbst an.
+### 1. Vercel mit GitHub verbinden
 
-Falls jemand nicht reinkommt: VPN aus, denselben Link nochmal öffnen, Code laut vorlesen (ohne 0/O/1/I).
+1. Auf [vercel.com/signup](https://vercel.com/signup) mit **GitHub** anmelden (Hobby / Free).
+2. **Add New… → Project**.
+3. Das private Repo **Linopix/Jahrgang** importieren. Wenn es nicht erscheint: **Adjust GitHub App Permissions** und dem Vercel-Bot Zugriff auf dieses Repo geben.
+4. Framework sollte **TanStack Start** sein. Build-Command: `npm run build`. Nicht ändern.
+5. **Deploy**. Der erste Wurf kann schon die Startseite zeigen — Online-Abend funktioniert aber erst nach Schritt 2.
+
+Danach bekommst du eine URL wie `https://jahrgang-….vercel.app`. Das ist noch nicht der Discord-Link.
+
+### 2. Neon-Datenbank anschließen (Handshake)
+
+Ohne Postgres landen Host und Gäste nicht im selben Raum.
+
+1. In Vercel: [Marketplace → Neon](https://vercel.com/marketplace/neon) → **Install**.
+2. **Create New Neon Account**, Plan **Free**, Region z. B. Frankfurt / EU.
+3. Datenbank einen Namen geben (z. B. `jahrgang`).
+4. **Connect Project** → dieses Vercel-Projekt → Umgebungen **Production** (und Preview, wenn du willst) → **Connect**.
+5. Vercel setzt automatisch `DATABASE_URL`. Nichts abtippen, keine Keys in die App schreiben.
+6. **Deployments → … am letzten Deployment → Redeploy**, damit die Tabellen angelegt werden.
+
+Wenn der Redeploy grün ist: die **Production-URL** ist die Website für Discord.
+
+### 3. Im Call spielen
+
+Host öffnet die Vercel-URL → **Online-Abend** → **Discord-Link** in den Chat. Der Link enthält den Raumcode. Jeder Push auf `main` aktualisiert die Live-Seite von allein.
+
+### Was du *nicht* einrichten musst
+
+Kein Discord-Bot, kein Spotify, keine API-Keys, kein TURN-Server, keine Accounts in der App.
+
+| Symptom | Was tun |
+| --- | --- |
+| Freund:innen kommen nicht in den Raum | Die **Vercel-URL** nutzen, nicht localhost. Nach Neon **Redeploy**? |
+| Erster Deploy ok, Beitreten hängt | `DATABASE_URL` fehlt — Neon verbinden, dann Redeploy |
+| Vercel findet das Repo nicht | GitHub-App: Zugriff auf das private Repo **Jahrgang** erlauben |
+| Verbindung blockiert | VPN aus; Mobilfunk/strenges NAT kann einzeln scheitern |
 
 ## Auf Windows starten (Entwicklung)
 
@@ -61,24 +95,14 @@ npm run dev
 
 Im Browser: [http://localhost:8080](http://localhost:8080)
 
-Auf Windows immer `npm run dev` nutzen, nicht `startup.sh`. Beenden mit **Strg+C**.
+Auf Windows immer `npm run dev` nutzen. Beenden mit **Strg+C**.
 
-Zwei Fenster auf demselben PC: in einem Raum öffnen, im anderen denselben Code eingeben.
-
-### Typische Probleme
-
-| Symptom | Was tun |
-| --- | --- |
-| `git` / `node` nicht gefunden | PowerShell nach der Installation neu öffnen |
-| Clone schlägt fehl | GitHub Desktop nutzen oder bei GitHub angemeldet sein |
-| Port 8080 belegt | Anderen Prozess beenden |
-| Freund:innen kommen nicht in den Raum | Die **veröffentlichte** URL nutzen, nicht localhost |
-| Verbindung blockiert | VPN aus; Mobilfunk/strenges NAT kann einzeln scheitern |
+Zwei Fenster auf demselben PC: in einem Raum öffnen, im anderen denselben Code eingeben. Das testet nur lokal — Discord-Freund:innen brauchen die Vercel-URL.
 
 ## Spielregeln
 
 1. Jede Person startet mit einer offenen Karte auf der eigenen Zeitlinie (links früh, rechts spät).
-2. Ein neuer Hit spielt ohne Titel. Einordnen, nicht das genaue Jahr raten.
+2. Ein neuer Hit spielt. Du siehst weder Titel noch Jahr.
 3. Platz tippen, ablegen. Sitzt die Lage, bleibt die Karte.
 4. Joker: Jahrzehnt oder Überspringen. Wer zuerst das Ziel (6/8/10) erreicht, gewinnt.
 
@@ -86,8 +110,8 @@ Vorschauen kommen von iTunes. Ohne Netz startet das Spiel nicht.
 
 ## Technik (kurz)
 
-Züge laufen direkt zwischen den Browsern (WebRTC). Der Server kennt nur den Raumcode für den Handshake. Der Host ist Schiedsrichter. Open Relay TURN ist als kostenloser Fallback eingebaut, falls ein Netz direkte Verbindung blockiert.
+Züge laufen direkt zwischen den Browsern (WebRTC). Der Server kennt nur den Raumcode für den Handshake (Neon). Der Host ist Schiedsrichter. Open Relay TURN ist als kostenloser Fallback eingebaut.
 
 ## Stack
 
-React 19, TanStack Start, Vite, Tailwind, Zustand. Node 22.
+React 19, TanStack Start, Vite, Tailwind, Zustand. Hosting: Vercel Hobby. Handshake: Neon Free. Node 22.
