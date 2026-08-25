@@ -14,7 +14,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Jahrgang ist das Musik-Zeitspiel für den Bildschirm: Hits hören, auf die Zeitlinie legen, gewinnen.",
+          "Jahrgang: Hits hören, auf die Zeitlinie legen. Mit Raumcode über Discord oder an einem Bildschirm.",
       },
       { name: "theme-color", content: "#0c0b0a" },
     ],

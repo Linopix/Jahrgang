@@ -28,6 +28,11 @@ const STEPS = [
     title: "Joker",
     body: "Zwei Joker pro Person: Jahrzehnt anzeigen oder den Song überspringen. Wer zuerst das Ziel erreicht, ist der Jahrgang.",
   },
+  {
+    n: "06",
+    title: "Online",
+    body: "Beim Online-Abend bekommt der Host einen vierstelligen Code. Den Link in Discord posten — jede Person spielt auf dem eigenen Gerät, Voice bleibt im Call.",
+  },
 ];
 
 type RulesDialogProps = {

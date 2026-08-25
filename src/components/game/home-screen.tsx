@@ -1,12 +1,14 @@
-import { Disc3, Users, User } from "lucide-react";
+import { Disc3, Radio, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Vinyl } from "./vinyl";
 import { useGame } from "@/lib/game/store";
+import { useOnline } from "@/lib/game/online-store";
 import { unlockAudio } from "@/lib/game/audio";
 
 export function HomeScreen() {
   const openSetup = useGame((s) => s.openSetup);
   const setRulesOpen = useGame((s) => s.setRulesOpen);
+  const openEntry = useOnline((s) => s.openEntry);
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col justify-between px-5 py-8 sm:py-12">
@@ -33,11 +35,23 @@ export function HomeScreen() {
           className="w-full"
           onClick={() => {
             unlockAudio();
+            openEntry();
+          }}
+        >
+          <Radio className="size-4" />
+          Online-Abend
+        </Button>
+        <Button
+          size="lg"
+          variant="secondary"
+          className="w-full"
+          onClick={() => {
+            unlockAudio();
             openSetup("party");
           }}
         >
           <Users className="size-4" />
-          Partyabend
+          Ein Bildschirm
         </Button>
         <Button
           size="lg"

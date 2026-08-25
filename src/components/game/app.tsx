@@ -1,6 +1,10 @@
 import { useEffect } from "react";
 import { HomeScreen } from "./home-screen";
 import { LoadingScreen } from "./loading-screen";
+import { OnlineBridge } from "./online-bridge";
+import { OnlineConnectingScreen } from "./online-connecting-screen";
+import { OnlineEntryScreen } from "./online-entry-screen";
+import { OnlineLobbyScreen } from "./online-lobby-screen";
 import { PlayScreen } from "./play-screen";
 import { RevealScreen } from "./reveal-screen";
 import { RulesDialog } from "./rules-dialog";
@@ -8,11 +12,14 @@ import { SetupScreen } from "./setup-screen";
 import { WinnerScreen } from "./winner-screen";
 import { unlockAudio } from "@/lib/game/audio";
 import { useGame } from "@/lib/game/store";
+import { useOnline } from "@/lib/game/online-store";
 
 export function GameApp() {
   const phase = useGame((s) => s.phase);
   const rulesOpen = useGame((s) => s.rulesOpen);
   const setRulesOpen = useGame((s) => s.setRulesOpen);
+  const onlineStatus = useOnline((s) => s.status);
+  const onlineRole = useOnline((s) => s.role);
 
   useEffect(() => {
     const resume = () => unlockAudio();
@@ -29,14 +36,23 @@ export function GameApp() {
     };
   }, []);
 
+  const localPhase = onlineStatus === "off" || onlineStatus === "playing";
+
   return (
     <>
-      {phase === "home" ? <HomeScreen /> : null}
-      {phase === "setup" ? <SetupScreen /> : null}
-      {phase === "loading" ? <LoadingScreen /> : null}
-      {phase === "listen" ? <PlayScreen /> : null}
-      {phase === "reveal" ? <RevealScreen /> : null}
-      {phase === "winner" ? <WinnerScreen /> : null}
+      <OnlineBridge />
+      {onlineStatus === "entry" ? <OnlineEntryScreen /> : null}
+      {onlineStatus === "connecting" && onlineRole === "guest" ? <OnlineConnectingScreen /> : null}
+      {onlineStatus === "lobby" || (onlineStatus === "connecting" && onlineRole === "host") ? (
+        <OnlineLobbyScreen />
+      ) : null}
+      {onlineStatus === "off" && phase === "home" ? <HomeScreen /> : null}
+      {localPhase && phase === "setup" ? <SetupScreen /> : null}
+      {localPhase && phase === "loading" ? <LoadingScreen /> : null}
+      {localPhase && phase === "listen" ? <PlayScreen /> : null}
+      {localPhase && phase === "reveal" ? <RevealScreen /> : null}
+      {localPhase && phase === "winner" ? <WinnerScreen /> : null}
+      {onlineStatus === "playing" && phase === "home" ? <LoadingScreen /> : null}
       <RulesDialog open={rulesOpen} onOpenChange={setRulesOpen} />
     </>
   );

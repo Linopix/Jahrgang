@@ -18,6 +18,7 @@ import {
   STARTING_TOKENS,
   type EraId,
   type GameMode,
+  type GameSnapshot,
   type LastResult,
   type Phase,
   type Player,
@@ -47,19 +48,25 @@ type GameStore = {
   openSetup: (mode: GameMode) => void;
   openHome: () => void;
   setRulesOpen: (open: boolean) => void;
-  startGame: (config: SetupConfig) => Promise<void>;
+  startGame: (config: SetupConfig) => Promise<boolean>;
   selectSlot: (index: number) => void;
   confirmPlacement: () => void;
-  nextTurn: () => void;
+  nextTurn: (opts?: { skipIds?: string[] }) => void;
   useDecade: () => void;
   useSkip: () => void;
   replay: () => void;
+  snapshot: () => GameSnapshot;
+  applySnapshot: (snap: GameSnapshot) => void;
+  resetBoard: () => void;
 };
 
-function makePlayers(names: string[], starters: ResolvedSong[]): Player[] {
-  return names.map((name, i) => ({
-    id: `p-${i}`,
-    name: name.trim() || `Spieler ${i + 1}`,
+function makePlayers(
+  seats: { id: string; name: string }[],
+  starters: ResolvedSong[],
+): Player[] {
+  return seats.map((seat, i) => ({
+    id: seat.id,
+    name: seat.name.trim() || `Spieler ${i + 1}`,
     timeline: starters[i] ? [starters[i]] : [],
     tokens: STARTING_TOKENS,
     misses: 0,
@@ -70,6 +77,22 @@ function isOver(players: Player[], target: number, mode: GameMode) {
   if (winner(players, target)) return true;
   if (mode === "solo" && (players[0]?.misses ?? 0) >= SOLO_LIVES) return true;
   return false;
+}
+
+function pickNextIndex(
+  players: Player[],
+  currentPlayerIndex: number,
+  mode: GameMode,
+  skipIds?: string[],
+) {
+  if (mode === "solo") return 0;
+  const blocked = new Set(skipIds ?? []);
+  for (let n = 1; n <= players.length; n += 1) {
+    const idx = (currentPlayerIndex + n) % players.length;
+    const row = players[idx];
+    if (row && !blocked.has(row.id)) return idx;
+  }
+  return (currentPlayerIndex + 1) % players.length;
 }
 
 export const useGame = create<GameStore>((set, get) => ({
@@ -115,7 +138,75 @@ export const useGame = create<GameStore>((set, get) => ({
     });
   },
 
+  resetBoard: () => {
+    stopPreview();
+    set({
+      phase: "home",
+      players: [],
+      deck: [],
+      current: null,
+      lastResult: null,
+      selectedSlot: null,
+      decadeHint: null,
+      loadError: null,
+    });
+  },
+
   setRulesOpen: (open) => set({ rulesOpen: open }),
+
+  snapshot: () => {
+    const s = get();
+    return {
+      phase: s.phase,
+      mode: s.mode,
+      era: s.era,
+      target: s.target,
+      players: s.players,
+      currentPlayerIndex: s.currentPlayerIndex,
+      deck: s.deck,
+      current: s.current,
+      lastResult: s.lastResult,
+      decadeHint: s.decadeHint,
+    };
+  },
+
+  applySnapshot: (snap) => {
+    const prev = get();
+    const songChanged =
+      prev.current?.id !== snap.current?.id || prev.phase !== snap.phase;
+    set({
+      phase: snap.phase,
+      mode: snap.mode,
+      era: snap.era,
+      target: snap.target,
+      players: snap.players,
+      currentPlayerIndex: snap.currentPlayerIndex,
+      deck: snap.deck,
+      current: snap.current,
+      lastResult: snap.lastResult,
+      decadeHint: snap.decadeHint,
+      selectedSlot:
+        prev.phase === snap.phase && prev.current?.id === snap.current?.id
+          ? prev.selectedSlot
+          : null,
+      loadError: null,
+    });
+    if (snap.phase === "listen" && snap.current && songChanged) {
+      void playPreview(snap.current.previewUrl);
+    }
+    if (snap.phase === "reveal" && prev.phase !== "reveal") {
+      pausePreview();
+      if (snap.lastResult?.correct) sfxCorrect();
+      else sfxWrong();
+    }
+    if (snap.phase === "winner" && prev.phase !== "winner") {
+      stopPreview();
+      if (snap.lastResult?.correct) sfxWin();
+    }
+    if (snap.phase === "loading" && prev.phase !== "loading") {
+      stopPreview();
+    }
+  },
 
   startGame: async (config) => {
     unlockAudio();
@@ -133,6 +224,10 @@ export const useGame = create<GameStore>((set, get) => ({
           ? [config.names[0]?.trim() || "Du"]
           : config.names.filter((name) => name.trim()).slice(0, 8);
       const playerCount = Math.max(1, names.length);
+      const seats = names.map((name, i) => ({
+        id: config.ids?.[i] ?? `p-${i}`,
+        name,
+      }));
       const needed = Math.min(
         POOL_SIZE,
         playerCount + Math.max(config.target + 4, 10),
@@ -166,12 +261,12 @@ export const useGame = create<GameStore>((set, get) => ({
           loadError:
             "Zu wenige Songs mit Vorschau gefunden. Anderes Repertoire wählen oder später nochmal versuchen.",
         });
-        return;
+        return false;
       }
 
       const starters = resolved.slice(0, playerCount);
       const deck = resolved.slice(playerCount);
-      const players = makePlayers(names, starters);
+      const players = makePlayers(seats, starters);
       const current = deck[0] ?? null;
       set({
         players,
@@ -185,11 +280,13 @@ export const useGame = create<GameStore>((set, get) => ({
         loadProgress: { done: resolved.length, total: resolved.length },
       });
       if (current) void playPreview(current.previewUrl);
+      return true;
     } catch {
       set({
         phase: "setup",
         loadError: "Vorschauen konnten nicht geladen werden. Verbindung prüfen und erneut starten.",
       });
+      return false;
     }
   },
 
@@ -228,7 +325,7 @@ export const useGame = create<GameStore>((set, get) => ({
     });
   },
 
-  nextTurn: () => {
+  nextTurn: (opts) => {
     const { phase, players, currentPlayerIndex, deck, mode, target, lastResult } = get();
     if (phase !== "reveal") return;
     stopPreview();
@@ -237,7 +334,7 @@ export const useGame = create<GameStore>((set, get) => ({
       set({ phase: "winner", current: null });
       return;
     }
-    const nextIndex = mode === "solo" ? 0 : (currentPlayerIndex + 1) % players.length;
+    const nextIndex = pickNextIndex(players, currentPlayerIndex, mode, opts?.skipIds);
     const current = deck[0] ?? null;
     set({
       currentPlayerIndex: nextIndex,

@@ -41,6 +41,7 @@ export interface Player {
 export interface SetupConfig {
   mode: GameMode;
   names: string[];
+  ids?: string[];
   target: 6 | 8 | 10;
   era: EraId;
 }
@@ -49,6 +50,19 @@ export interface LastResult {
   correct: boolean;
   song: ResolvedSong;
   slot: number;
+}
+
+export interface GameSnapshot {
+  phase: Phase;
+  mode: GameMode;
+  era: EraId;
+  target: number;
+  players: Player[];
+  currentPlayerIndex: number;
+  deck: ResolvedSong[];
+  current: ResolvedSong | null;
+  lastResult: LastResult | null;
+  decadeHint: string | null;
 }
 
 export const ERA_LABELS: Record<EraId, string> = {

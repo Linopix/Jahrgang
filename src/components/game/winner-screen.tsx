@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Timeline } from "./timeline";
 import { Vinyl } from "./vinyl";
+import { isOnlinePlay, requestBackToLobby, requestLeave } from "@/lib/game/online-actions";
 import { useGame } from "@/lib/game/store";
+import { useOnline } from "@/lib/game/online-store";
 import { SOLO_LIVES } from "@/lib/game/types";
 
 export function WinnerScreen() {
@@ -10,6 +12,8 @@ export function WinnerScreen() {
   const mode = useGame((s) => s.mode);
   const openSetup = useGame((s) => s.openSetup);
   const openHome = useGame((s) => s.openHome);
+  const online = isOnlinePlay();
+  const isHost = useOnline((s) => s.role) === "host";
 
   const champ = [...players].sort((a, b) => b.timeline.length - a.timeline.length)[0];
   const soloFailed = mode === "solo" && (champ?.misses ?? 0) >= SOLO_LIVES && (champ?.timeline.length ?? 0) < target;
@@ -63,12 +67,31 @@ export function WinnerScreen() {
       ) : null}
 
       <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-        <Button size="lg" className="flex-1" onClick={() => openSetup(mode)}>
-          Nochmal
-        </Button>
-        <Button size="lg" variant="secondary" className="flex-1" onClick={openHome}>
-          Zum Start
-        </Button>
+        {online ? (
+          <>
+            {isHost ? (
+              <Button size="lg" className="flex-1" onClick={requestBackToLobby}>
+                Nochmal in der Lobby
+              </Button>
+            ) : (
+              <p className="flex-1 self-center text-center text-sm text-muted">
+                Der Host legt die nächste Runde auf.
+              </p>
+            )}
+            <Button size="lg" variant="secondary" className="flex-1" onClick={requestLeave}>
+              Raum verlassen
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button size="lg" className="flex-1" onClick={() => openSetup(mode)}>
+              Nochmal
+            </Button>
+            <Button size="lg" variant="secondary" className="flex-1" onClick={openHome}>
+              Zum Start
+            </Button>
+          </>
+        )}
       </div>
     </main>
   );

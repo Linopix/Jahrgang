@@ -11,7 +11,9 @@ import {
   setMuted,
   unlockAudio,
 } from "@/lib/game/audio";
+import { canControlTurn, isOnlinePlay, requestDecade, requestLeave, requestPlace, requestSkip } from "@/lib/game/online-actions";
 import { currentPlayer, useGame } from "@/lib/game/store";
+import { useOnline } from "@/lib/game/online-store";
 import { cn } from "@/lib/utils";
 
 export function PlayScreen() {
@@ -24,12 +26,13 @@ export function PlayScreen() {
   const mode = useGame((s) => s.mode);
   const deckLength = useGame((s) => s.deck.length);
   const selectSlot = useGame((s) => s.selectSlot);
-  const confirmPlacement = useGame((s) => s.confirmPlacement);
-  const useDecade = useGame((s) => s.useDecade);
-  const useSkip = useGame((s) => s.useSkip);
   const replay = useGame((s) => s.replay);
   const openHome = useGame((s) => s.openHome);
   const setRulesOpen = useGame((s) => s.setRulesOpen);
+  const pending = useOnline((s) => s.pending);
+  const selfId = useOnline((s) => s.selfId);
+  const online = isOnlinePlay();
+  const myTurn = canControlTurn();
 
   const player = currentPlayer({ players, currentPlayerIndex });
   const [playing, setPlaying] = useState(true);
@@ -63,7 +66,7 @@ export function PlayScreen() {
       <header className="flex items-center justify-between gap-3">
         <button
           type="button"
-          onClick={openHome}
+          onClick={() => (online ? requestLeave() : openHome())}
           className="font-display text-lg tracking-tight text-fg"
         >
           Jahrgang
@@ -103,7 +106,10 @@ export function PlayScreen() {
                   active ? "bg-primary text-primary-fg" : "bg-raised text-fg shadow-border",
                 )}
               >
-                <span className="truncate text-sm font-medium">{row.name}</span>
+                <span className="truncate text-sm font-medium">
+                  {row.name}
+                  {online && row.id === selfId ? " · du" : ""}
+                </span>
                 <span className="text-xs tabular-nums opacity-70">
                   {row.timeline.length}/{target}
                 </span>
@@ -120,10 +126,14 @@ export function PlayScreen() {
       )}
 
       <section className="mt-3 flex min-h-0 flex-1 flex-col items-center overflow-y-auto text-center">
-        <p className="text-xs font-medium tracking-[0.22em] text-muted uppercase">Am Zug</p>
+        <p className="text-xs font-medium tracking-[0.22em] text-muted uppercase">
+          {online && !myTurn ? "Du hörst mit" : "Am Zug"}
+        </p>
         <h1 className="mt-1 font-display text-3xl font-medium text-fg sm:text-5xl">{player.name}</h1>
         <p className="mt-2 max-w-md text-sm text-muted">
-          Höre den Hit und lege ihn auf deine Zeitlinie. Links ist früher, rechts ist später.
+          {online && !myTurn
+            ? `${player.name} legt gerade. Der Hit läuft bei allen.`
+            : "Höre den Hit und lege ihn auf deine Zeitlinie. Links ist früher, rechts ist später."}
         </p>
 
         <div className="mt-4">
@@ -176,16 +186,16 @@ export function PlayScreen() {
           <Button
             variant="secondary"
             size="sm"
-            disabled={player.tokens <= 0 || Boolean(decadeHint)}
-            onClick={useDecade}
+            disabled={!myTurn || player.tokens <= 0 || Boolean(decadeHint)}
+            onClick={requestDecade}
           >
             Jahrzehnt · {player.tokens}
           </Button>
           <Button
             variant="secondary"
             size="sm"
-            disabled={player.tokens <= 0 || deckLength === 0}
-            onClick={useSkip}
+            disabled={!myTurn || player.tokens <= 0 || deckLength === 0}
+            onClick={requestSkip}
           >
             Überspringen
           </Button>
@@ -201,16 +211,17 @@ export function PlayScreen() {
         </div>
         <Timeline
           songs={player.timeline}
-          selectedSlot={selectedSlot}
-          onSelectSlot={selectSlot}
+          selectedSlot={myTurn ? selectedSlot : null}
+          onSelectSlot={myTurn ? selectSlot : undefined}
+          interactive={myTurn}
         />
         <Button
           size="lg"
           className="mt-3 w-full"
-          disabled={selectedSlot === null}
-          onClick={confirmPlacement}
+          disabled={!myTurn || selectedSlot === null || pending}
+          onClick={requestPlace}
         >
-          Hier ablegen
+          {myTurn ? "Hier ablegen" : `Warten auf ${player.name}`}
         </Button>
       </section>
     </main>
