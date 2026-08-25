@@ -6,6 +6,8 @@ import { shareUrl } from "@/lib/game/room-code";
 import { requestConfig, requestKick, requestLeave, requestStartOnline } from "@/lib/game/online-actions";
 import { sfxScratch } from "@/lib/game/audio";
 import { roomConfigFrom, useOnline } from "@/lib/game/online-store";
+import { playerSeats } from "@/lib/tv/mode";
+import { TV_LIVE } from "@/lib/tv/flags";
 import { cn } from "@/lib/utils";
 
 export function OnlineLobbyScreen() {
@@ -26,6 +28,7 @@ export function OnlineLobbyScreen() {
   const custom = useOnline((s) => s.custom);
   const emoji = useOnline((s) => s.emoji);
   const chat = useOnline((s) => s.chat);
+  const tv = useOnline((s) => s.tv);
   const error = useOnline((s) => s.error);
   const hostId = useOnline((s) => s.hostId);
   const pending = useOnline((s) => s.pending);
@@ -47,6 +50,7 @@ export function OnlineLobbyScreen() {
     custom,
     emoji,
     chat,
+    tv,
   });
 
   useEffect(() => {
@@ -69,7 +73,9 @@ export function OnlineLobbyScreen() {
   }
 
   const readyCount = members.filter((m) => m.connectionState !== "failed").length;
-  const canStart = !connecting && !pending && readyCount >= 2;
+  const seats = playerSeats(members, hostId, tv);
+  const need = TV_LIVE && tv ? 1 : 2;
+  const canStart = !connecting && !pending && seats.length >= need;
 
   return (
     <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pb-28 pt-8 lg:max-w-6xl lg:px-8 lg:pb-8">
@@ -82,15 +88,17 @@ export function OnlineLobbyScreen() {
       </button>
 
       <p className="mt-6 text-xs font-medium tracking-[0.24em] text-muted uppercase">
-        {isHost ? "Du hostest" : "Du bist dabei"}
+        {isHost ? (tv ? "Fernseher" : "Du hostest") : "Du bist dabei"}
       </p>
-      <h1 className="mt-2 font-display text-4xl font-medium text-fg">Lobby</h1>
+      <h1 className="mt-2 font-display text-4xl font-medium text-fg">{tv ? "TV-Abend" : "Lobby"}</h1>
       <p className="mt-2 max-w-xl text-sm text-muted">
         {connecting
           ? isHost
             ? "Raum wird geöffnet…"
             : `Verbinde mit ${roomCode}…`
-          : "Code oder Link teilen. Der Host startet, sobald alle verbunden sind."}
+          : tv
+            ? "Code aufs Handy. Der Fernseher spielt, die Handys raten."
+            : "Code oder Link teilen. Der Host startet, sobald alle verbunden sind."}
       </p>
 
       <div className="lg:mt-8 lg:grid lg:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)] lg:items-start lg:gap-12">
@@ -142,7 +150,11 @@ export function OnlineLobbyScreen() {
               <span className="min-w-0 flex-1 truncate font-medium text-fg">
                 {member.name}
                 {member.connectionState === "self" ? (
-                  <span className="ml-2 text-xs font-normal text-muted">du</span>
+                  <span className="ml-2 text-xs font-normal text-muted">
+                    {tv && member.id === hostId ? "Fernseher" : "du"}
+                  </span>
+                ) : member.id === hostId && tv ? (
+                  <span className="ml-2 text-xs font-normal text-muted">Fernseher</span>
                 ) : null}
               </span>
               <span
@@ -194,8 +206,10 @@ export function OnlineLobbyScreen() {
             >
               {pending
                 ? "Titel werden geladen…"
-                : readyCount < 2
-                  ? "Mindestens zwei Personen"
+                : seats.length < need
+                  ? tv
+                    ? "Mindestens ein Handy"
+                    : "Mindestens zwei Personen"
                   : "Abend starten"}
             </Button>
           </div>

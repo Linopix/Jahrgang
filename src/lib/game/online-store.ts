@@ -23,6 +23,7 @@ import {
   type TokenCount,
 } from "./types";
 import { makeRoomCode, normalizeRoomCode } from "./room-code";
+import { TV_LIVE } from "@/lib/tv/flags";
 
 export type OnlineStatus = "off" | "entry" | "connecting" | "lobby" | "playing";
 export type OnlineRole = "host" | "guest";
@@ -74,6 +75,7 @@ type OnlineStore = {
   custom: CustomRules;
   emoji: boolean;
   chat: boolean;
+  tv: boolean;
   error: string | null;
   pending: boolean;
   inviteCode: string;
@@ -81,7 +83,7 @@ type OnlineStore = {
   openEntry: (invite?: string) => void;
   setSelfName: (name: string) => void;
   setInviteCode: (code: string) => void;
-  createRoom: () => void;
+  createRoom: (opts?: { tv?: boolean }) => void;
   joinRoom: (code?: string) => void;
   leaveRoom: () => void;
   setIdentity: (selfId: string, hostIfCreator: boolean) => void;
@@ -114,6 +116,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   custom: DEFAULT_CUSTOM,
   emoji: true,
   chat: true,
+  tv: false,
   error: null,
   pending: false,
   inviteCode: "",
@@ -132,6 +135,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       pending: false,
       inviteCode: code,
       selfName: get().selfName.trim() || readStoredName(),
+      tv: false,
     });
   },
 
@@ -142,7 +146,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   },
   setInviteCode: (code) => set({ inviteCode: normalizeRoomCode(code) }),
 
-  createRoom: () => {
+  createRoom: (opts) => {
     const name = get().selfName.trim() || readStoredName();
     if (!name) {
       set({ error: "Bitte zuerst einen Namen eintragen." });
@@ -159,6 +163,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       error: null,
       pending: false,
       kickedIds: [],
+      tv: TV_LIVE && Boolean(opts?.tv),
     });
   },
 
@@ -199,6 +204,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       error: null,
       pending: false,
       kickedIds: [],
+      tv: false,
     });
   },
 
@@ -232,6 +238,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       custom: parseCustom(config.custom),
       emoji: config.emoji !== false,
       chat: config.chat !== false,
+      tv: TV_LIVE && Boolean(config.tv),
     }),
   setError: (error) => set({ error, pending: false }),
   setPending: (pending) => set({ pending }),
@@ -255,6 +262,7 @@ export function roomConfigFrom(
     | "custom"
     | "emoji"
     | "chat"
+    | "tv"
   >,
 ): RoomConfig {
   return {
@@ -271,6 +279,7 @@ export function roomConfigFrom(
     custom: parseCustom(state.custom),
     emoji: state.emoji !== false,
     chat: state.chat !== false,
+    tv: TV_LIVE && Boolean(state.tv),
   };
 }
 

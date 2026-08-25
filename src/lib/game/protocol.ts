@@ -27,6 +27,7 @@ export type RoomConfigWire = {
   custom?: CustomRules;
   emoji?: boolean;
   chat?: boolean;
+  tv?: boolean;
 };
 
 export type OnlineMessage =

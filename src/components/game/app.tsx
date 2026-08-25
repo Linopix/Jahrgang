@@ -13,6 +13,8 @@ import { RevealScreen } from "./reveal-screen";
 import { RulesDialog } from "./rules-dialog";
 import { SetupScreen } from "./setup-screen";
 import { WinnerScreen } from "./winner-screen";
+import { TvPlayScreen, TvRevealScreen, TvWinnerScreen } from "./tv-stage";
+import { useTvScreen } from "@/lib/tv/mode";
 import { setLobbyWanted, unlockAudio } from "@/lib/game/audio";
 import { useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
@@ -106,6 +108,7 @@ export function GameApp() {
     setLobbyWanted(!playing);
   }, [playing]);
 
+  const tvScreen = useTvScreen();
   const localPhase = onlineStatus === "off" || onlineStatus === "playing";
 
   return (
@@ -119,9 +122,9 @@ export function GameApp() {
       {onlineStatus === "off" && phase === "home" ? <HomeScreen /> : null}
       {localPhase && phase === "setup" ? <SetupScreen /> : null}
       {localPhase && phase === "loading" ? <LoadingScreen /> : null}
-      {localPhase && phase === "listen" ? <PlayScreen /> : null}
-      {localPhase && phase === "reveal" ? <RevealScreen /> : null}
-      {localPhase && phase === "winner" ? <WinnerScreen /> : null}
+      {localPhase && phase === "listen" ? tvScreen ? <TvPlayScreen /> : <PlayScreen /> : null}
+      {localPhase && phase === "reveal" ? tvScreen ? <TvRevealScreen /> : <RevealScreen /> : null}
+      {localPhase && phase === "winner" ? tvScreen ? <TvWinnerScreen /> : <WinnerScreen /> : null}
       {onlineStatus === "playing" && phase === "home" ? <LoadingScreen /> : null}
       <ReactionDock />
       <ChatDock />

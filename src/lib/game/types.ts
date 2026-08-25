@@ -195,6 +195,7 @@ export interface RoomConfig {
   custom: CustomRules;
   emoji: boolean;
   chat: boolean;
+  tv: boolean;
 }
 
 export const ERA_IDS: EraId[] = [
@@ -466,6 +467,7 @@ export const DEFAULT_ROOM_CONFIG: RoomConfig = {
   custom: DEFAULT_CUSTOM,
   emoji: true,
   chat: true,
+  tv: false,
 };
 
 export function isPlayVariant(value: unknown): value is PlayVariant {

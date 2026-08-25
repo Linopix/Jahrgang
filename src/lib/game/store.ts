@@ -17,6 +17,7 @@ import {
   stopPreview,
   unlockAudio,
 } from "./audio";
+import { isTvRemote } from "@/lib/tv/mode";
 import {
   DEFAULT_CUSTOM,
   DEFAULT_MIX_FROM,
@@ -92,6 +93,7 @@ type GameStore = {
 
 function cuePreview(song: ResolvedSong | null, variant: PlayVariant, custom?: CustomRules) {
   if (!song) return;
+  if (isTvRemote()) return;
   void playPreview(song.previewUrl, previewRate(rulesFor(variant, custom).warp, song.id), song.spotifyUri);
 }
 

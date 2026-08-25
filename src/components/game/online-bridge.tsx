@@ -46,6 +46,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   const custom = useOnline((s) => s.custom);
   const emoji = useOnline((s) => s.emoji);
   const chat = useOnline((s) => s.chat);
+  const tv = useOnline((s) => s.tv);
   const status = useOnline((s) => s.status);
   const sendRef = useRef(p2p.send);
   sendRef.current = p2p.send;
@@ -132,9 +133,10 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       custom,
       emoji,
       chat,
+      tv,
     };
     p2p.send(msg);
-  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, emoji, chat, members]);
+  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, emoji, chat, tv, members]);
 
   useEffect(() => {
     return p2p.onMessage((from, data, channel) => {
@@ -219,6 +221,7 @@ function handleMessage(
       custom: parseCustom(msg.custom),
       emoji: msg.emoji !== false,
       chat: msg.chat !== false,
+      tv: Boolean(msg.tv),
     });
     useOnline.setState({ hostId: msg.hostId });
     if (online.status === "connecting" || online.status === "entry") {
@@ -242,6 +245,7 @@ function handleMessage(
       custom: parseCustom(msg.custom),
       emoji: msg.emoji !== false,
       chat: msg.chat !== false,
+      tv: Boolean(msg.tv),
     });
     return;
   }

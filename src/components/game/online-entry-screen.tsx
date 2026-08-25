@@ -4,6 +4,7 @@ import { Vinyl } from "./vinyl";
 import { unlockAudio } from "@/lib/game/audio";
 import { useOnline } from "@/lib/game/online-store";
 import { notePlayerName, noteRoomCode } from "@/lib/gags";
+import { TV_LIVE } from "@/lib/tv/flags";
 
 export function OnlineEntryScreen() {
   const selfName = useOnline((s) => s.selfName);
@@ -71,6 +72,20 @@ export function OnlineEntryScreen() {
         <Radio className="size-4" />
         Raum öffnen
       </Button>
+      {TV_LIVE ? (
+        <Button
+          size="lg"
+          variant="secondary"
+          className="mt-3 w-full"
+          disabled={!named}
+          onClick={() => {
+            unlockAudio();
+            createRoom({ tv: true });
+          }}
+        >
+          Fernseher
+        </Button>
+      ) : null}
 
       <div className="mt-8 flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />

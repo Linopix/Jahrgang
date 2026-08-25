@@ -4,6 +4,7 @@ import { roomConfigFrom, useOnline } from "./online-store";
 import { clearRoomFromUrl } from "./room-code";
 import type { RoomConfig } from "./types";
 import type { OnlineMessage } from "./protocol";
+import { isTvRoom, isTvScreen, playerSeats } from "@/lib/tv/mode";
 
 function skipIds() {
   return useOnline
@@ -23,6 +24,7 @@ export function isOnlinePlay() {
 export function canControlTurn() {
   const online = useOnline.getState();
   if (online.status !== "playing") return true;
+  if (isTvScreen()) return false;
   const current = useGame.getState().players[useGame.getState().currentPlayerIndex];
   return Boolean(current && current.id === online.selfId);
 }
@@ -148,8 +150,9 @@ export function requestConfig(patch: Partial<RoomConfig>) {
 export async function requestStartOnline() {
   const online = useOnline.getState();
   if (online.role !== "host") return;
-  const seats = online.members.filter((m) => m.connectionState !== "failed").slice(0, 8);
-  if (seats.length < 2) return;
+  const seats = playerSeats(online.members, online.hostId, online.tv);
+  const need = isTvRoom(online.tv) ? 1 : 2;
+  if (seats.length < need) return;
   online.setPending(true);
   online.setError(null);
   netSend({ t: "loading" } satisfies OnlineMessage);

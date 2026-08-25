@@ -17,6 +17,8 @@ import { currentPlayer, useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { catalogArtists, catalogTitles } from "@/lib/game/catalog";
 import { rulesFor, VARIANT_LABELS } from "@/lib/game/types";
+import { TvListenBanner } from "./tv-stage";
+import { useTvRemote } from "@/lib/tv/mode";
 import { cn } from "@/lib/utils";
 
 function SwapIcon({
@@ -68,6 +70,7 @@ export function PlayScreen() {
   const selfId = useOnline((s) => s.selfId);
   const online = isOnlinePlay();
   const myTurn = canControlTurn();
+  const tvRemote = useTvRemote();
   const rules = rulesFor(variant, custom);
   const original = rules.guess !== "none";
   const kind = rules.guess;
@@ -222,6 +225,7 @@ export function PlayScreen() {
         <p className="text-xs font-medium tracking-[0.22em] text-muted uppercase">
           {online && !myTurn ? "Du hörst mit" : original ? "Raten und legen" : "Am Zug"}
         </p>
+        {tvRemote ? <div className="mt-3 w-full max-w-sm"><TvListenBanner /></div> : null}
         <h1 className="mt-1 font-display text-3xl font-medium text-fg sm:text-5xl">{player.name}</h1>
         <p className="mt-2 max-w-md text-sm text-muted">
           {online && !myTurn
