@@ -314,6 +314,7 @@ export function notePack(id: EraId) {
 
 export function noteVariant(id: PlayVariant) {
   if (id === "wild") onceGag("v-wild", "Die Platte läuft verkehrt. Du auch?");
+  else if (id === "custom") onceGag("v-custom", "Grenzen? Welche Grenzen?");
   else if (id === "blind") onceGag("v-blind", "Augen zu, Ohren auf.");
   else if (id === "hook") onceGag("v-hook", "Nur der Titel. Der Rest ist Einbildung.");
 }

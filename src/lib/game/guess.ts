@@ -1,3 +1,5 @@
+import type { PlayVariant } from "./types";
+
 function stripMarks(input: string) {
   return input.normalize("NFD").replace(/\p{M}/gu, "");
 }
@@ -99,10 +101,10 @@ export function scoreForVariant(
   titleGuess: string,
   artistGuess: string,
   song: { title: string; artist: string },
-  variant: "timeline" | "blind" | "original" | "star" | "hook" | "wild",
+  variant: PlayVariant,
 ) {
   const full = scoreGuesses(titleGuess, artistGuess, song);
-  if (variant === "original" || variant === "wild") return full;
+  if (variant === "original" || variant === "wild" || variant === "custom") return full;
   if (variant === "star") {
     return {
       titleCorrect: false,

@@ -26,7 +26,9 @@ import {
   SOLO_LIVES,
   emptyStats,
   guessKind,
+  openPlay,
   reversesTimeline,
+  freePlace,
   type CatalogSong,
   type EraId,
   type GameMode,
@@ -128,7 +130,8 @@ function hydratePlayers(players: Player[]): Player[] {
   }));
 }
 
-function isOver(players: Player[], target: number, mode: GameMode) {
+function isOver(players: Player[], target: number, mode: GameMode, variant: PlayVariant) {
+  if (openPlay(variant)) return false;
   if (winner(players, target)) return true;
   if (mode === "solo" && (players[0]?.misses ?? 0) >= SOLO_LIVES) return true;
   return false;
@@ -305,7 +308,9 @@ export const useGame = create<GameStore>((set, get) => ({
       }));
       const needed = Math.min(
         POOL_SIZE,
-        playerCount + Math.max(config.target + 4, 10),
+        openPlay(variant)
+          ? POOL_SIZE
+          : playerCount + Math.max(config.target + 4, 10),
       );
       let imported: PlaylistTrack[] = [];
       if (config.era === "playlist" && !config.playlistUrl) {
@@ -427,7 +432,9 @@ export const useGame = create<GameStore>((set, get) => ({
     const player = players[currentPlayerIndex];
     if (!player) return;
     pausePreview();
-    const correct = canPlace(player.timeline, selectedSlot, current.year, reversesTimeline(variant));
+    const correct =
+      freePlace(variant) ||
+      canPlace(player.timeline, selectedSlot, current.year, reversesTimeline(variant));
     const scored =
       guessKind(variant) === "none"
         ? null
@@ -471,10 +478,10 @@ export const useGame = create<GameStore>((set, get) => ({
   },
 
   nextTurn: (opts) => {
-    const { phase, players, currentPlayerIndex, deck, mode, target, lastResult, series } = get();
+    const { phase, players, currentPlayerIndex, deck, mode, target, lastResult, series, variant } = get();
     if (phase !== "reveal") return;
     stopPreview();
-    if (isOver(players, target, mode) || deck.length === 0) {
+    if (isOver(players, target, mode, variant) || deck.length === 0) {
       if (lastResult?.correct && winner(players, target)) sfxWin();
       set({
         phase: "winner",

@@ -364,15 +364,17 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
         <section>
           <h2 className="text-sm font-medium text-fg">Ziel und Joker</h2>
           <div className="mt-3 grid gap-5">
-            <SnapSlider
-              label="Karten"
-              value={value.target}
-              min={6}
-              max={10}
-              step={2}
-              display={`${value.target}`}
-              onChange={(target) => onChange({ target: target as 6 | 8 | 10 })}
-            />
+            {value.variant === "custom" ? null : (
+              <SnapSlider
+                label="Karten"
+                value={value.target}
+                min={6}
+                max={10}
+                step={2}
+                display={`${value.target}`}
+                onChange={(target) => onChange({ target: target as 6 | 8 | 10 })}
+              />
+            )}
             <SnapSlider
               label="Joker"
               value={value.tokens}
@@ -383,7 +385,11 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
               onChange={(tokens) => onChange({ tokens: tokens as TokenCount })}
             />
           </div>
-          <p className="mt-2 text-sm text-muted">Karten bis zum Sieg · Joker pro Person.</p>
+          <p className="mt-2 text-sm text-muted">
+            {value.variant === "custom"
+              ? "Kein Ziel. Der Stapel läuft sich leer. Joker bleiben."
+              : "Karten bis zum Sieg · Joker pro Person."}
+          </p>
         </section>
       </div>
 

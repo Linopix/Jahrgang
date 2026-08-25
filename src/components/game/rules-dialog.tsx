@@ -11,12 +11,12 @@ const STEPS = [
   {
     n: "02",
     title: "Hören",
-    body: "Ein neuer Titel spielt ohne Angabe von Name oder Jahr. Zeitstrahl: nur legen, Cover sichtbar. Blind: Cover verdeckt. Kenner, Star und Titel: zusätzlich raten. Verrückter: raten, Cover zu, Jahre versteckt, links ist später, und die Vorschau läuft zu schnell oder zu langsam.",
+    body: "Ein neuer Titel spielt ohne Angabe von Name oder Jahr. Zeitstrahl: nur legen, Cover sichtbar. Blind: Cover verdeckt. Kenner, Star und Titel: zusätzlich raten. Verrückter: raten, Cover zu, Jahre versteckt, links ist später. Custom: raten, Cover offen, legen ohne Zeitlinie-Regel, bis der Stapel leer ist.",
   },
   {
     n: "03",
     title: "Legen",
-    body: "Platz vor, zwischen oder hinter den Karten wählen. Entscheidend für die Karte ist, ob der Titel früher oder später erschien.",
+    body: "Platz vor, zwischen oder hinter den Karten wählen. Entscheidend für die Karte ist, ob der Titel früher oder später erschien. Custom ignoriert das.",
   },
   {
     n: "04",
@@ -26,7 +26,7 @@ const STEPS = [
   {
     n: "05",
     title: "Joker",
-    body: "Je nach Einstellung keine, eine oder zwei Hilfen: Jahrzehnt anzeigen oder den Titel überspringen. Wer zuerst das Ziel erreicht, gewinnt.",
+    body: "Je nach Einstellung keine, eine oder zwei Hilfen: Jahrzehnt anzeigen oder den Titel überspringen. Wer zuerst das Ziel erreicht, gewinnt. Custom hat kein Ziel.",
   },
   {
     n: "06",
@@ -52,7 +52,7 @@ export function RulesDialog({ open, onOpenChange }: RulesDialogProps) {
                 So wird gespielt
               </Dialog.Title>
               <Dialog.Description className="mt-1 text-sm text-muted">
-                Zeitstrahl, Blind, Kenner, Star, Titel oder Verrückter.
+                Zeitstrahl, Blind, Kenner, Star, Titel, Verrückter oder Custom.
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>

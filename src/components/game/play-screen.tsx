@@ -16,7 +16,7 @@ import { canControlTurn, isOnlinePlay, requestDecade, requestLeave, requestPlace
 import { currentPlayer, useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { catalogArtists, catalogTitles } from "@/lib/game/catalog";
-import { guessKind, hidesCover, reversesTimeline, VARIANT_LABELS } from "@/lib/game/types";
+import { guessKind, hidesCover, openPlay, reversesTimeline, VARIANT_LABELS } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
 
 function SwapIcon({
@@ -176,7 +176,7 @@ export function PlayScreen() {
                   {online && row.id === selfId ? " · du" : ""}
                 </span>
                 <span className="text-xs tabular-nums opacity-70">
-                  {row.timeline.length}/{target}
+                  {openPlay(variant) ? row.timeline.length : `${row.timeline.length}/${target}`}
                   {original ? ` · ${row.quiz}` : ""}
                 </span>
               </li>
@@ -185,9 +185,16 @@ export function PlayScreen() {
         </ol>
       ) : (
         <p className="mt-3 text-sm text-muted">
-          Karten <span className="tabular-nums text-fg">{player.timeline.length}/{target}</span>
-          <span className="mx-2 text-subtle">·</span>
-          Fehler <span className="tabular-nums text-fg">{player.misses}/3</span>
+          Karten{" "}
+          <span className="tabular-nums text-fg">
+            {openPlay(variant) ? player.timeline.length : `${player.timeline.length}/${target}`}
+          </span>
+          {openPlay(variant) ? null : (
+            <>
+              <span className="mx-2 text-subtle">·</span>
+              Fehler <span className="tabular-nums text-fg">{player.misses}/3</span>
+            </>
+          )}
           {original ? (
             <>
               <span className="mx-2 text-subtle">·</span>
@@ -209,7 +216,9 @@ export function PlayScreen() {
             : kind === "both"
               ? reversesTimeline(variant)
                 ? "Titel und Interpret raten. Die Platte läuft verkehrt. Links später, rechts früher."
-                : "Titel und Interpret eintragen, dann auf der Zeitlinie einordnen."
+                : openPlay(variant)
+                  ? "Titel und Interpret raten, dann irgendwo hinlegen. Die Reihenfolge ist frei."
+                  : "Titel und Interpret eintragen, dann auf der Zeitlinie einordnen."
               : kind === "artist"
                 ? "Nur den Interpreten raten, dann einordnen."
                 : kind === "title"
@@ -329,7 +338,7 @@ export function PlayScreen() {
             Zeitlinie von {player.name}
           </p>
           <p className="text-xs text-subtle">
-            {reversesTimeline(variant) ? "spät → früh" : "früh → spät"}
+            {openPlay(variant) ? "frei" : reversesTimeline(variant) ? "spät → früh" : "früh → spät"}
           </p>
         </div>
         <div className="lg:min-h-0 lg:flex-1 lg:overflow-x-auto lg:overflow-y-auto">

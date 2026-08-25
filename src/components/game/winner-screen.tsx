@@ -15,6 +15,7 @@ import { useOnline } from "@/lib/game/online-store";
 import {
   guessKind,
   NEXT_ROUND_BLURB,
+  openPlay,
   SOLO_LIVES,
   VARIANT_LABELS,
   type Player,
@@ -47,7 +48,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 const CONFETTI = [8, 18, 28, 38, 48, 58, 68, 78, 88, 14, 42, 72, 92, 24, 54];
 
-function Podium({ ranked, target }: { ranked: Player[]; target: number }) {
+function Podium({ ranked, target, open }: { ranked: Player[]; target: number; open?: boolean }) {
   const first = ranked[0];
   const second = ranked[1];
   const third = ranked[2];
@@ -68,7 +69,7 @@ function Podium({ ranked, target }: { ranked: Player[]; target: number }) {
               {col.player.name}
             </p>
             <p className="mb-2 text-xs tabular-nums text-muted">
-              {col.player.timeline.length}/{target}
+              {open ? col.player.timeline.length : `${col.player.timeline.length}/${target}`}
             </p>
             <div
               className={cn(
@@ -161,7 +162,7 @@ export function WinnerScreen() {
         </p>
         <h1 className="mt-2 text-center font-display text-4xl font-medium text-fg sm:text-5xl">{title}</h1>
         <div className="mt-12 w-full">
-          <Podium ranked={ranked} target={target} />
+          <Podium ranked={ranked} target={target} open={openPlay(variant)} />
         </div>
         <p className="mt-10 text-sm text-muted">Tippen für die Zahlen.</p>
       </main>
@@ -179,7 +180,9 @@ export function WinnerScreen() {
         <p className="mt-3 max-w-md text-sm text-muted">
           {soloFailed
             ? `${champ?.timeline.length ?? 0} von ${target} Karten.`
-            : `${champ?.timeline.length ?? 0} Titel in der richtigen Reihenfolge.`}
+            : openPlay(variant)
+              ? `${champ?.timeline.length ?? 0} Titel, ohne Zeitlinie-Regel.`
+              : `${champ?.timeline.length ?? 0} Titel in der richtigen Reihenfolge.`}
           {original && champ ? ` ${champ.quiz} Treffer beim Raten.` : ""}
         </p>
       </div>
@@ -201,7 +204,7 @@ export function WinnerScreen() {
             >
               <span className="font-medium">{player.name}</span>
               <span className="tabular-nums opacity-70">
-                {player.timeline.length}/{target}
+                {openPlay(variant) ? player.timeline.length : `${player.timeline.length}/${target}`}
                 {original ? ` · ${player.quiz}` : ""}
               </span>
             </li>

@@ -37,7 +37,7 @@ export type GenreId =
 
 export type GameMode = "party" | "solo";
 
-export type PlayVariant = "timeline" | "blind" | "original" | "star" | "hook" | "wild";
+export type PlayVariant = "timeline" | "blind" | "original" | "star" | "hook" | "wild" | "custom";
 
 export type TokenCount = 0 | 1 | 2;
 
@@ -263,7 +263,15 @@ export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [
   },
 ];
 
-export const VARIANT_IDS: PlayVariant[] = ["timeline", "blind", "original", "star", "hook", "wild"];
+export const VARIANT_IDS: PlayVariant[] = [
+  "timeline",
+  "blind",
+  "original",
+  "star",
+  "hook",
+  "wild",
+  "custom",
+];
 
 export const VARIANT_LABELS: Record<PlayVariant, string> = {
   timeline: "Zeitstrahl",
@@ -272,6 +280,7 @@ export const VARIANT_LABELS: Record<PlayVariant, string> = {
   star: "Star",
   hook: "Titel",
   wild: "Verrückter",
+  custom: "Custom",
 };
 
 export const VARIANT_BLURBS: Record<PlayVariant, string> = {
@@ -281,14 +290,15 @@ export const VARIANT_BLURBS: Record<PlayVariant, string> = {
   star: "Nur den Interpreten raten, dann einordnen. Das Cover bleibt verdeckt.",
   hook: "Nur den Titel raten, dann einordnen. Das Cover bleibt verdeckt.",
   wild: "Kenner, Cover zu, Jahre weg, links ist später — und die Platte läuft zu schnell oder zu langsam.",
+  custom: "Keine Zeitlinie-Regel, Cover offen. Raten bleibt. Ihr spielt, bis der Stapel leer ist.",
 };
 
 export function hidesCover(variant: PlayVariant) {
-  return variant !== "timeline";
+  return variant !== "timeline" && variant !== "custom";
 }
 
 export function guessKind(variant: PlayVariant): "none" | "both" | "artist" | "title" {
-  if (variant === "original" || variant === "wild") return "both";
+  if (variant === "original" || variant === "wild" || variant === "custom") return "both";
   if (variant === "star") return "artist";
   if (variant === "hook") return "title";
   return "none";
@@ -296,6 +306,14 @@ export function guessKind(variant: PlayVariant): "none" | "both" | "artist" | "t
 
 export function reversesTimeline(variant: PlayVariant) {
   return variant === "wild";
+}
+
+export function freePlace(variant: PlayVariant) {
+  return variant === "custom";
+}
+
+export function openPlay(variant: PlayVariant) {
+  return variant === "custom";
 }
 
 export const GENRE_IDS: GenreId[] = [
