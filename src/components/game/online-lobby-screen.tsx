@@ -3,7 +3,7 @@ import { Check, Copy, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GameOptions, roomConfigSummary } from "./game-options";
 import { shareUrl } from "@/lib/game/room-code";
-import { requestConfig, requestLeave, requestStartOnline } from "@/lib/game/online-actions";
+import { requestConfig, requestKick, requestLeave, requestStartOnline } from "@/lib/game/online-actions";
 import { sfxScratch } from "@/lib/game/audio";
 import { roomConfigFrom, useOnline } from "@/lib/game/online-store";
 import { cn } from "@/lib/utils";
@@ -121,9 +121,9 @@ export function OnlineLobbyScreen() {
           {members.map((member) => (
             <li
               key={member.id}
-              className="flex items-center justify-between rounded-md bg-raised px-4 py-3 text-sm shadow-border"
+              className="flex items-center gap-3 rounded-md bg-raised px-4 py-3 text-sm shadow-border"
             >
-              <span className="truncate font-medium text-fg">
+              <span className="min-w-0 flex-1 truncate font-medium text-fg">
                 {member.name}
                 {member.connectionState === "self" ? (
                   <span className="ml-2 text-xs font-normal text-muted">du</span>
@@ -131,7 +131,7 @@ export function OnlineLobbyScreen() {
               </span>
               <span
                 className={cn(
-                  "text-xs",
+                  "shrink-0 text-xs",
                   member.connectionState === "failed"
                     ? "text-danger"
                     : member.connectionState === "connecting"
@@ -147,6 +147,16 @@ export function OnlineLobbyScreen() {
                       ? "verbindet…"
                       : "verbunden"}
               </span>
+              {isHost && member.id !== hostId ? (
+                <button
+                  type="button"
+                  aria-label={`${member.name} rauswerfen`}
+                  onClick={() => requestKick(member.id)}
+                  className="shrink-0 text-xs text-muted transition-colors hover:text-danger"
+                >
+                  Raus
+                </button>
+              ) : null}
             </li>
           ))}
         </ul>

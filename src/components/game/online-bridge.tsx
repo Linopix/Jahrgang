@@ -51,9 +51,9 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   sendRef.current = p2p.send;
 
   useEffect(() => {
-    bindNet({ send: p2p.send, selfId: p2p.selfId });
+    bindNet({ send: p2p.send, selfId: p2p.selfId, dropPeer: p2p.dropPeer });
     return () => bindNet(null);
-  }, [p2p.send, p2p.selfId]);
+  }, [p2p.send, p2p.selfId, p2p.dropPeer]);
 
   useEffect(() => {
     useOnline.setState({ selfId: p2p.selfId });
@@ -89,7 +89,9 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       { id: selfId, name, connectionState: "self" },
     ];
     const known = new Map(useOnline.getState().members.map((m) => [m.id, m]));
+    const kicked = new Set(useOnline.getState().kickedIds);
     for (const peer of p2p.peers) {
+      if (kicked.has(peer.id)) continue;
       const prev = known.get(peer.id);
       next.push({
         id: peer.id,
@@ -176,6 +178,10 @@ function handleMessage(
   const game = useGame.getState();
 
   if (msg.t === "hello" && online.role === "host") {
+    if (online.kickedIds.includes(from)) {
+      ctx.send({ t: "kick" }, from);
+      return;
+    }
     if (online.status === "playing") {
       ctx.send({ t: "start-failed", error: "Die Runde läuft bereits." }, from);
       return;
@@ -285,6 +291,15 @@ function handleMessage(
     if (online.role !== "host") return;
     if (online.nextRound !== "all") return;
     void requestStartOnline();
+    return;
+  }
+
+  if (msg.t === "kick" && online.role === "guest") {
+    const code = online.roomCode;
+    game.resetBoard();
+    online.leaveRoom();
+    online.openEntry(code);
+    online.setError("Der Host hat dich aus dem Raum genommen. Namen prüfen und erneut beitreten.");
     return;
   }
 

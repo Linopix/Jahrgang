@@ -113,6 +113,7 @@ export class P2PRoom {
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
   private pingTimer: ReturnType<typeof setInterval> | null = null;
   private closed = false;
+  private ignored = new Set<string>();
   private everPolled = false;
   private lastPeersFingerprint = "";
 
@@ -153,6 +154,16 @@ export class P2PRoom {
       body: JSON.stringify({ op: "leave", room: this.opts.room, peer: this.opts.selfId }),
       keepalive: true,
     }).catch(() => {});
+  }
+
+  dropPeer(peerId: string): void {
+    if (!peerId || peerId === this.opts.selfId) return;
+    this.ignored.add(peerId);
+    const slot = this.peers.get(peerId);
+    if (!slot) return;
+    slot.pc.close();
+    this.peers.delete(peerId);
+    this.emitPeers();
   }
 
   /** Send on the unreliable game-state channel (drops stale packets). */
@@ -233,6 +244,7 @@ export class P2PRoom {
     const alive = new Set(peers.map((p) => p.id));
     for (const p of peers) {
       if (p.id === this.opts.selfId) continue;
+      if (this.ignored.has(p.id)) continue;
       const existing = this.peers.get(p.id);
       if (existing) {
         existing.info.name = p.name;
@@ -245,6 +257,7 @@ export class P2PRoom {
       if (!alive.has(id)) {
         slot.pc.close();
         this.peers.delete(id);
+        this.ignored.delete(id);
       }
     }
     this.emitPeers();

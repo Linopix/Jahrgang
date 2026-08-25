@@ -50,7 +50,8 @@ export type OnlineMessage =
   | { t: "back-lobby" }
   | { t: "host-left" }
   | { t: "react"; emoji: string }
-  | { t: "chat"; text: string };
+  | { t: "chat"; text: string }
+  | { t: "kick" };
 
 export function isOnlineMessage(data: unknown): data is OnlineMessage {
   if (!data || typeof data !== "object" || !("t" in data)) return false;
@@ -67,6 +68,7 @@ export function isOnlineMessage(data: unknown): data is OnlineMessage {
     t === "back-lobby" ||
     t === "host-left" ||
     t === "react" ||
-    t === "chat"
+    t === "chat" ||
+    t === "kick"
   );
 }

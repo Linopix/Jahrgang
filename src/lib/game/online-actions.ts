@@ -1,4 +1,4 @@
-import { netSend } from "./net";
+import { netDrop, netSend } from "./net";
 import { useGame, type SongGuess } from "./store";
 import { roomConfigFrom, useOnline } from "./online-store";
 import { clearRoomFromUrl } from "./room-code";
@@ -194,4 +194,17 @@ export function requestLeave() {
   useGame.getState().openHome();
   online.leaveRoom();
   clearRoomFromUrl();
+}
+
+export function requestKick(peerId: string) {
+  const online = useOnline.getState();
+  if (online.role !== "host") return;
+  if (online.status === "playing") return;
+  if (!peerId || peerId === online.selfId) return;
+  netSend({ t: "kick" } satisfies OnlineMessage, peerId);
+  useOnline.setState({
+    kickedIds: [...new Set([...online.kickedIds, peerId])],
+    members: online.members.filter((row) => row.id !== peerId),
+  });
+  window.setTimeout(() => netDrop(peerId), 80);
 }

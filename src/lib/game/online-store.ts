@@ -77,6 +77,7 @@ type OnlineStore = {
   error: string | null;
   pending: boolean;
   inviteCode: string;
+  kickedIds: string[];
   openEntry: (invite?: string) => void;
   setSelfName: (name: string) => void;
   setInviteCode: (code: string) => void;
@@ -116,6 +117,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   error: null,
   pending: false,
   inviteCode: "",
+  kickedIds: [],
 
   openEntry: (invite) => {
     const code = invite ? normalizeRoomCode(invite) : get().inviteCode;
@@ -156,6 +158,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       members: [],
       error: null,
       pending: false,
+      kickedIds: [],
     });
   },
 
@@ -195,6 +198,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       members: [],
       error: null,
       pending: false,
+      kickedIds: [],
     });
   },
 
