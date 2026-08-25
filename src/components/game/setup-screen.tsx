@@ -5,6 +5,7 @@ import { GameOptions } from "./game-options";
 import { useGame } from "@/lib/game/store";
 import { DEFAULT_ROOM_CONFIG, type RoomConfig } from "@/lib/game/types";
 import { sfxScratch } from "@/lib/game/audio";
+import { notePlayerName } from "@/lib/gags";
 
 const PARTY_NAMES = ["Alex", "Sam", "Kim", "Jo", "Mo", "Lee", "Nik", "Rae"];
 
@@ -84,6 +85,7 @@ export function SetupScreen() {
                     const next = names.slice();
                     next[i] = event.target.value;
                     setNames(next);
+                    notePlayerName(event.target.value);
                   }}
                   className="h-12 w-full rounded-md bg-raised px-4 text-sm text-fg shadow-border outline-none transition-[box-shadow] focus:ring-2 focus:ring-primary/70"
                   maxLength={18}

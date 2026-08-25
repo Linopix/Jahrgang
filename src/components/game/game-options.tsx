@@ -4,7 +4,7 @@ import { peekPlaylist } from "@/lib/game/playlist";
 import { sfxHover, sfxSlide, sfxTick } from "@/lib/game/audio";
 import { GenreArt, PackArt } from "@/components/game/pack-art";
 import { MenuSelect } from "@/components/game/menu-select";
-import { noteMixYears } from "@/lib/gags";
+import { noteMixYears, notePack, noteVariant } from "@/lib/gags";
 import {
   ERA_BLURBS,
   ERA_LABELS,
@@ -331,7 +331,10 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
               ariaLabel="Spielmodus"
               name="spiel"
               value={value.variant}
-              onChange={(variant) => onChange({ variant })}
+              onChange={(variant) => {
+                noteVariant(variant);
+                onChange({ variant });
+              }}
               items={VARIANT_IDS.map((id, index) => ({
                 id,
                 label: VARIANT_LABELS[id],
@@ -405,7 +408,10 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
                     name="stil"
                     placeholder="Stil wählen"
                     value={STIL_IDS.includes(value.era) ? value.era : undefined}
-                    onChange={(era) => onChange({ era: era as EraId })}
+                    onChange={(era) => {
+                      notePack(era as EraId);
+                      onChange({ era: era as EraId });
+                    }}
                     items={STIL_IDS.map((id) => ({
                       id,
                       label: ERA_LABELS[id],
@@ -423,7 +429,10 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
                       selected={value.era === id}
                       label={ERA_LABELS[id]}
                       art={<PackArt id={id} />}
-                      onSelect={() => onChange({ era: id })}
+                      onSelect={() => {
+                        notePack(id);
+                        onChange({ era: id });
+                      }}
                     />
                   ))}
                 </div>
