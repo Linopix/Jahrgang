@@ -54,6 +54,8 @@ type OnlineStore = {
   target: 6 | 8 | 10;
   variant: PlayVariant;
   tokens: TokenCount;
+  playlistUrl: string;
+  playlistLabel: string;
   error: string | null;
   pending: boolean;
   inviteCode: string;
@@ -84,6 +86,8 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   target: DEFAULT_TARGET,
   variant: DEFAULT_VARIANT,
   tokens: DEFAULT_TOKENS,
+  playlistUrl: "",
+  playlistLabel: "",
   error: null,
   pending: false,
   inviteCode: "",
@@ -182,6 +186,8 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       target: config.target,
       variant: isPlayVariant(config.variant) ? config.variant : DEFAULT_VARIANT,
       tokens: isTokenCount(config.tokens) ? config.tokens : DEFAULT_TOKENS,
+      playlistUrl: config.playlistUrl ?? "",
+      playlistLabel: config.playlistLabel ?? "",
     }),
   setError: (error) => set({ error, pending: false }),
   setPending: (pending) => set({ pending }),
@@ -189,12 +195,16 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   markLobby: () => set({ status: "lobby", pending: false }),
 }));
 
-export function roomConfigFrom(state: Pick<OnlineStore, "era" | "target" | "variant" | "tokens">): RoomConfig {
+export function roomConfigFrom(
+  state: Pick<OnlineStore, "era" | "target" | "variant" | "tokens" | "playlistUrl" | "playlistLabel">,
+): RoomConfig {
   return {
     era: state.era,
     target: state.target,
     variant: state.variant,
     tokens: state.tokens,
+    playlistUrl: state.playlistUrl,
+    playlistLabel: state.playlistLabel,
   };
 }
 

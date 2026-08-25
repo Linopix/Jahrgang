@@ -18,6 +18,8 @@ export type OnlineMessage =
       target: 6 | 8 | 10;
       variant: PlayVariant;
       tokens: TokenCount;
+      playlistUrl?: string;
+      playlistLabel?: string;
     }
   | {
       t: "config";
@@ -25,6 +27,8 @@ export type OnlineMessage =
       target: 6 | 8 | 10;
       variant: PlayVariant;
       tokens: TokenCount;
+      playlistUrl?: string;
+      playlistLabel?: string;
     }
   | { t: "loading" }
   | { t: "start-failed"; error: string }

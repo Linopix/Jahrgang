@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { peekPlaylist } from "@/lib/game/playlist";
 import {
   ERA_LABELS,
   TARGET_OPTIONS,
@@ -50,6 +53,81 @@ function Choice<T extends string | number>({
         </button>
       ))}
     </div>
+  );
+}
+
+function PlaylistField({
+  value,
+  onChange,
+}: {
+  value: RoomConfig;
+  onChange: (patch: Partial<RoomConfig>) => void;
+}) {
+  const [draft, setDraft] = useState(value.playlistUrl);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDraft(value.playlistUrl);
+  }, [value.playlistUrl]);
+
+  async function apply() {
+    const url = draft.trim();
+    if (!url) {
+      setError(null);
+      onChange({ playlistUrl: "", playlistLabel: "" });
+      return;
+    }
+    setPending(true);
+    setError(null);
+    const result = await peekPlaylist({ data: { url } });
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    onChange({
+      playlistUrl: result.peek.url,
+      playlistLabel: `${result.peek.title} · ${result.peek.count} Titel`,
+    });
+  }
+
+  return (
+    <section className="mt-8">
+      <h2 className="text-sm font-medium text-fg">Playlist</h2>
+      <p className="mt-1 text-sm text-muted">
+        Optional. Öffentlicher Spotify- oder Deezer-Link. Fehlt ein Jahr, rückt das Repertoire nach.
+      </p>
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+        <input
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          placeholder="https://open.spotify.com/playlist/…"
+          autoComplete="off"
+          spellCheck={false}
+          className="h-12 min-w-0 flex-1 rounded-md bg-raised px-4 text-sm text-fg shadow-border outline-none transition-[box-shadow] placeholder:text-subtle focus:ring-2 focus:ring-primary/70"
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              void apply();
+            }
+          }}
+        />
+        <Button
+          type="button"
+          variant="secondary"
+          className="h-12 shrink-0"
+          disabled={pending}
+          onClick={() => void apply()}
+        >
+          {pending ? "Prüfen…" : draft.trim() ? "Übernehmen" : "Leeren"}
+        </Button>
+      </div>
+      {value.playlistLabel ? (
+        <p className="mt-2 text-sm text-fg">{value.playlistLabel}</p>
+      ) : null}
+      {error ? <p className="mt-2 text-sm text-danger">{error}</p> : null}
+    </section>
   );
 }
 
@@ -114,6 +192,8 @@ export function GameOptions({ value, onChange }: GameOptionsProps) {
           ))}
         </div>
       </section>
+
+      <PlaylistField value={value} onChange={onChange} />
     </>
   );
 }
@@ -121,5 +201,6 @@ export function GameOptions({ value, onChange }: GameOptionsProps) {
 export function roomConfigSummary(config: RoomConfig) {
   const joker =
     config.tokens === 0 ? "ohne Joker" : `${config.tokens} Joker`;
-  return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${ERA_LABELS[config.era]}`;
+  const playlist = config.playlistLabel ? ` · ${config.playlistLabel}` : "";
+  return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${ERA_LABELS[config.era]}${playlist}`;
 }

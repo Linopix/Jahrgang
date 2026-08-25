@@ -16,6 +16,8 @@ export function OnlineLobbyScreen() {
   const target = useOnline((s) => s.target);
   const variant = useOnline((s) => s.variant);
   const tokens = useOnline((s) => s.tokens);
+  const playlistUrl = useOnline((s) => s.playlistUrl);
+  const playlistLabel = useOnline((s) => s.playlistLabel);
   const error = useOnline((s) => s.error);
   const hostId = useOnline((s) => s.hostId);
   const pending = useOnline((s) => s.pending);
@@ -23,7 +25,7 @@ export function OnlineLobbyScreen() {
   const connecting = status === "connecting";
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
   const link = shareUrl(roomCode);
-  const config = roomConfigFrom({ era, target, variant, tokens });
+  const config = roomConfigFrom({ era, target, variant, tokens, playlistUrl, playlistLabel });
 
   useEffect(() => {
     if (!roomCode || typeof window === "undefined") return;

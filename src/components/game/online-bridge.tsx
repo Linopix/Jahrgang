@@ -34,6 +34,8 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   const target = useOnline((s) => s.target);
   const variant = useOnline((s) => s.variant);
   const tokens = useOnline((s) => s.tokens);
+  const playlistUrl = useOnline((s) => s.playlistUrl);
+  const playlistLabel = useOnline((s) => s.playlistLabel);
   const status = useOnline((s) => s.status);
   const sendRef = useRef(p2p.send);
   sendRef.current = p2p.send;
@@ -109,9 +111,11 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       target,
       variant,
       tokens,
+      playlistUrl,
+      playlistLabel,
     };
     p2p.send(msg);
-  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, members]);
+  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, playlistUrl, playlistLabel, members]);
 
   useEffect(() => {
     return p2p.onMessage((from, data, channel) => {
@@ -183,6 +187,8 @@ function handleMessage(
       target: msg.target,
       variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
       tokens: isTokenCount(msg.tokens) ? msg.tokens : DEFAULT_TOKENS,
+      playlistUrl: msg.playlistUrl ?? "",
+      playlistLabel: msg.playlistLabel ?? "",
     });
     useOnline.setState({ hostId: msg.hostId });
     if (online.status === "connecting" || online.status === "entry") {
@@ -197,6 +203,8 @@ function handleMessage(
       target: msg.target,
       variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
       tokens: isTokenCount(msg.tokens) ? msg.tokens : DEFAULT_TOKENS,
+      playlistUrl: msg.playlistUrl ?? "",
+      playlistLabel: msg.playlistLabel ?? "",
     });
     return;
   }

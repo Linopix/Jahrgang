@@ -126,6 +126,7 @@ export async function requestStartOnline() {
     target: online.target,
     variant: online.variant,
     tokens: online.tokens,
+    playlistUrl: online.playlistUrl || undefined,
   });
   if (!ok) {
     const error = useGame.getState().loadError ?? "Start fehlgeschlagen.";

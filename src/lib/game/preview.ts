@@ -11,6 +11,7 @@ export type PreviewResult = {
   id: string;
   previewUrl: string | null;
   artworkUrl: string | null;
+  year?: number;
 };
 
 type ITunesSong = {
@@ -54,8 +55,8 @@ function scoreMatch(
   else if (fa.includes(a) || a.includes(fa)) score += 3;
   if (ft === t) score += 4;
   else if (ft.includes(t) || t.includes(ft)) score += 3;
-  if (foundYear !== undefined && Math.abs(foundYear - year) <= 1) score += 2;
-  else if (foundYear !== undefined && Math.abs(foundYear - year) <= 3) score += 1;
+  if (foundYear !== undefined && year > 1900 && Math.abs(foundYear - year) <= 1) score += 2;
+  else if (foundYear !== undefined && year > 1900 && Math.abs(foundYear - year) <= 3) score += 1;
   return score;
 }
 
@@ -87,7 +88,15 @@ async function fromItunes(query: PreviewQuery): Promise<PreviewResult | null> {
   const best = ranked[0];
   if (!best || best.score < 5 || !best.row.previewUrl) return null;
   const art = best.row.artworkUrl100?.replace("100x100bb", "400x400bb") ?? null;
-  return { id: query.id, previewUrl: best.row.previewUrl, artworkUrl: art };
+  const year = best.row.releaseDate
+    ? new Date(best.row.releaseDate).getFullYear()
+    : undefined;
+  return {
+    id: query.id,
+    previewUrl: best.row.previewUrl,
+    artworkUrl: art,
+    year: Number.isFinite(year) ? year : undefined,
+  };
 }
 
 async function fromDeezer(query: PreviewQuery): Promise<PreviewResult | null> {
@@ -118,7 +127,7 @@ async function fromDeezer(query: PreviewQuery): Promise<PreviewResult | null> {
   };
 }
 
-async function resolveOne(query: PreviewQuery): Promise<PreviewResult> {
+export async function lookupPreview(query: PreviewQuery): Promise<PreviewResult> {
   try {
     const itunes = await fromItunes(query);
     if (itunes?.previewUrl) return itunes;
@@ -131,7 +140,11 @@ async function resolveOne(query: PreviewQuery): Promise<PreviewResult> {
   } catch {
     /* fall through */
   }
-  return { id: query.id, previewUrl: null, artworkUrl: null };
+  return { id: query.id, previewUrl: null, artworkUrl: null, year: undefined };
+}
+
+async function resolveOne(query: PreviewQuery): Promise<PreviewResult> {
+  return lookupPreview(query);
 }
 
 export const resolvePreviews = createServerFn({ method: "POST" })

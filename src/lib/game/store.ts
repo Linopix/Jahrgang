@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { songsForEra } from "./catalog";
 import { canPlace, decadeLabel, fisherYates, insertSong, winner } from "./engine";
 import { scoreGuesses } from "./guess";
+import { loadPlaylistSongs, type PlaylistTrack } from "./playlist";
 import { resolvePreviews } from "./preview";
 import {
   pausePreview,
@@ -18,6 +19,7 @@ import {
   DEFAULT_TOKENS,
   DEFAULT_VARIANT,
   SOLO_LIVES,
+  type CatalogSong,
   type EraId,
   type GameMode,
   type GameSnapshot,
@@ -259,10 +261,36 @@ export const useGame = create<GameStore>((set, get) => ({
         POOL_SIZE,
         playerCount + Math.max(config.target + 4, 10),
       );
-      const pool = fisherYates(songsForEra(config.era));
+      let imported: PlaylistTrack[] = [];
+      if (config.playlistUrl) {
+        try {
+          imported = await loadPlaylistSongs({ data: { url: config.playlistUrl } });
+        } catch {
+          imported = [];
+        }
+      }
+      const catalogPool = fisherYates(songsForEra(config.era));
+      const pool: Array<CatalogSong | PlaylistTrack> = imported.length
+        ? [...fisherYates(imported), ...catalogPool]
+        : catalogPool;
       const resolved: ResolvedSong[] = [];
       const seen = new Set<string>();
       set({ loadProgress: { done: 0, total: needed } });
+
+      for (const song of pool) {
+        if (resolved.length >= needed) break;
+        if (seen.has(song.id)) continue;
+        const ready = "previewUrl" in song ? song.previewUrl : undefined;
+        if (ready) {
+          seen.add(song.id);
+          resolved.push({
+            ...song,
+            previewUrl: ready,
+            artworkUrl: "artworkUrl" in song ? song.artworkUrl : undefined,
+          });
+          set({ loadProgress: { done: Math.min(resolved.length, needed), total: needed } });
+        }
+      }
 
       for (let i = 0; i < pool.length && resolved.length < needed; i += 8) {
         const slice = pool.slice(i, i + 8).filter((song) => !seen.has(song.id));
@@ -275,6 +303,7 @@ export const useGame = create<GameStore>((set, get) => ({
           if (!song) continue;
           resolved.push({
             ...song,
+            year: song.year || result.year || song.year,
             previewUrl: result.previewUrl,
             artworkUrl: result.artworkUrl ?? undefined,
           });
@@ -285,8 +314,9 @@ export const useGame = create<GameStore>((set, get) => ({
       if (resolved.length < playerCount + 4) {
         set({
           phase: "setup",
-          loadError:
-            "Zu wenige Songs mit Vorschau gefunden. Anderes Repertoire wählen oder später nochmal versuchen.",
+          loadError: config.playlistUrl
+            ? "Zu wenige Titel mit Jahr und Vorschau. Playlist öffentlich teilen oder Repertoire nutzen."
+            : "Zu wenige Songs mit Vorschau gefunden. Anderes Repertoire wählen oder später nochmal versuchen.",
         });
         return false;
       }

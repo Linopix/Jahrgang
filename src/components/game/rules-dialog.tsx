@@ -31,7 +31,7 @@ const STEPS = [
   {
     n: "06",
     title: "Online",
-    body: "Der Host teilt einen vierstelligen Code oder den Einladungslink. Jede Person spielt auf dem eigenen Gerät. Spiel, Ziel, Joker und Repertoire stellt der Host in der Lobby ein.",
+    body: "Der Host teilt einen vierstelligen Code oder den Einladungslink. Jede Person spielt auf dem eigenen Gerät. Spiel, Ziel, Joker, Repertoire und optional eine Playlist stellt der Host in der Lobby ein.",
   },
 ];
 

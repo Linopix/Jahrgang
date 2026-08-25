@@ -51,6 +51,7 @@ export interface SetupConfig {
   era: EraId;
   variant: PlayVariant;
   tokens: TokenCount;
+  playlistUrl?: string;
 }
 
 export interface LastResult {
@@ -82,6 +83,8 @@ export interface RoomConfig {
   target: 6 | 8 | 10;
   variant: PlayVariant;
   tokens: TokenCount;
+  playlistUrl: string;
+  playlistLabel: string;
 }
 
 export const ERA_LABELS: Record<EraId, string> = {
@@ -116,6 +119,8 @@ export const DEFAULT_ROOM_CONFIG: RoomConfig = {
   target: DEFAULT_TARGET,
   variant: DEFAULT_VARIANT,
   tokens: DEFAULT_TOKENS,
+  playlistUrl: "",
+  playlistLabel: "",
 };
 
 export function isPlayVariant(value: unknown): value is PlayVariant {
