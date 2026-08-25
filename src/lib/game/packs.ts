@@ -356,3 +356,8 @@ export function songsForPack(pack: EraId, mix?: MixFilter): CatalogSong[] {
     }
   });
 }
+
+export function packSize(pack: EraId, mix?: MixFilter): number {
+  if (pack === "playlist") return 0;
+  return songsForPack(pack, mix).length;
+}

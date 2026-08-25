@@ -136,6 +136,8 @@ export function PlayScreen() {
           </button>
           <p className="truncate text-[0.65rem] tracking-[0.16em] text-subtle uppercase">
             {VARIANT_LABELS[variant]}
+            <span className="mx-1.5">·</span>
+            {deckLength} im Stapel
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1">

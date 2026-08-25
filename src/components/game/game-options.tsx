@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { peekPlaylist } from "@/lib/game/playlist";
+import { packSize } from "@/lib/game/packs";
 import { sfxHover, sfxSlide, sfxTick } from "@/lib/game/audio";
 import { GenreArt, PackArt } from "@/components/game/pack-art";
 import { MenuSelect } from "@/components/game/menu-select";
@@ -317,6 +318,14 @@ function MixField({
           }))}
         />
       </div>
+      <p className="text-xs tabular-nums text-subtle">
+        {packSize("mix", {
+          from: value.mixFrom,
+          to: value.mixTo,
+          genre: value.mixGenre,
+        })}{" "}
+        Titel im Stapel
+      </p>
     </div>
   );
 }
@@ -396,9 +405,22 @@ function CustomTune({
   );
 }
 
+function pileCount(value: RoomConfig) {
+  if (value.era === "playlist") {
+    const match = value.playlistLabel.match(/(\d+)\s*Titel/);
+    return match ? Number(match[1]) : null;
+  }
+  return packSize(value.era, {
+    from: value.mixFrom,
+    to: value.mixTo,
+    genre: value.mixGenre,
+  });
+}
+
 export function GameOptions({ value, onChange, online }: GameOptionsProps) {
   const custom = value.custom ?? DEFAULT_CUSTOM;
   const showTarget = value.variant !== "custom" || !custom.open;
+  const pile = pileCount(value);
   return (
     <div>
       <div className="mt-8 grid gap-8 lg:mt-0 lg:grid-cols-2">
@@ -511,7 +533,16 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
       ) : null}
 
       <section className="mt-8">
-        <h2 className="text-sm font-medium text-fg">Repertoire</h2>
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-sm font-medium text-fg">Repertoire</h2>
+          <p className="text-xs tabular-nums text-subtle" data-pile-size>
+            {pile === null
+              ? "Stapel offen"
+              : pile === 0
+                ? "Kein Titel"
+                : `${pile} Titel im Stapel`}
+          </p>
+        </div>
         <p className="mt-1 text-sm text-muted">{ERA_BLURBS[value.era]}</p>
         <div className="mt-4 grid gap-6 lg:grid-cols-2">
           {PACK_GROUPS.map((group) => {
@@ -535,7 +566,7 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
                       items={group.ids.map((id) => ({
                         id,
                         label: ERA_LABELS[id],
-                        blurb: ERA_BLURBS[id],
+                        blurb: `${ERA_BLURBS[id]} ${packSize(id)} Titel.`,
                         art: <PackArt id={id} className="size-7" />,
                       }))}
                     />
