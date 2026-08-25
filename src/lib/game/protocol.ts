@@ -41,7 +41,7 @@ export type OnlineMessage =
   | { t: "state"; snapshot: GameSnapshot }
   | {
       t: "action";
-      kind: "place" | "decade" | "skip" | "next";
+      kind: "place" | "decade" | "skip" | "next" | "end";
       slot?: number;
       title?: string;
       artist?: string;

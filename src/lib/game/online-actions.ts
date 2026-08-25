@@ -40,6 +40,28 @@ export function canStartNextRound() {
   return online.nextRound === "all";
 }
 
+export function canEndGame() {
+  const online = useOnline.getState();
+  if (online.status !== "playing") return true;
+  return online.role === "host";
+}
+
+export function requestEnd() {
+  if (!canEndGame()) return;
+  const online = useOnline.getState();
+  const game = useGame.getState();
+  if (online.status !== "playing") {
+    game.endGame();
+    return;
+  }
+  if (online.role === "host") {
+    game.endGame();
+    pushState();
+    return;
+  }
+  netSend({ t: "action", kind: "end" } satisfies OnlineMessage);
+}
+
 export function requestPlace(guess?: SongGuess) {
   const online = useOnline.getState();
   const game = useGame.getState();

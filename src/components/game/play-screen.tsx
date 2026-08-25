@@ -12,7 +12,7 @@ import {
   setMuted,
   unlockAudio,
 } from "@/lib/game/audio";
-import { canControlTurn, isOnlinePlay, requestDecade, requestLeave, requestPlace, requestSkip } from "@/lib/game/online-actions";
+import { canControlTurn, canEndGame, isOnlinePlay, requestDecade, requestEnd, requestLeave, requestPlace, requestSkip } from "@/lib/game/online-actions";
 import { currentPlayer, useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { catalogArtists, catalogTitles } from "@/lib/game/catalog";
@@ -146,6 +146,15 @@ export function PlayScreen() {
           >
             Regeln
           </button>
+          {canEndGame() ? (
+            <button
+              type="button"
+              className="h-11 px-2 text-sm text-muted hover:text-fg"
+              onClick={requestEnd}
+            >
+              Beenden
+            </button>
+          ) : null}
           <button
             type="button"
             aria-label={muted ? "Ton an" : "Stummschalten"}

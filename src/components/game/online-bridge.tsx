@@ -326,6 +326,12 @@ function handleMessage(
     return;
   }
 
+  if (msg.t === "action" && msg.kind === "end" && online.role === "host") {
+    game.endGame();
+    ctx.send({ t: "state", snapshot: useGame.getState().snapshot() });
+    return;
+  }
+
   if (msg.t === "action" && online.role === "host") {
     const current = game.players[game.currentPlayerIndex];
     if (!current || current.id !== from) return;

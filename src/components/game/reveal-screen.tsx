@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { SongCard } from "./song-card";
-import { canControlTurn, isOnlinePlay, requestNext } from "@/lib/game/online-actions";
+import { canControlTurn, canEndGame, isOnlinePlay, requestEnd, requestNext } from "@/lib/game/online-actions";
 import { useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { guessKind } from "@/lib/game/types";
@@ -106,6 +106,15 @@ export function RevealScreen() {
       ) : (
         <p className="mt-10 text-sm text-muted">Warten auf {player?.name ?? "den Zug"}…</p>
       )}
+      {canEndGame() ? (
+        <button
+          type="button"
+          className="mt-4 h-11 text-sm text-muted hover:text-fg"
+          onClick={requestEnd}
+        >
+          Abend beenden
+        </button>
+      ) : null}
     </main>
   );
 }

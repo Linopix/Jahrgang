@@ -81,6 +81,7 @@ type GameStore = {
   selectSlot: (index: number) => void;
   confirmPlacement: (guess?: SongGuess) => void;
   nextTurn: (opts?: { skipIds?: string[] }) => void;
+  endGame: () => void;
   useDecade: () => void;
   useSkip: () => void;
   replay: () => void;
@@ -508,6 +509,21 @@ export const useGame = create<GameStore>((set, get) => ({
       phase: "listen",
     });
     if (current) cuePreview(current, get().variant, get().custom);
+  },
+
+  endGame: () => {
+    const { phase, players, series, target } = get();
+    if (phase !== "listen" && phase !== "reveal") return;
+    stopPreview();
+    sfxWin();
+    set({
+      phase: "winner",
+      current: null,
+      lastResult: null,
+      selectedSlot: null,
+      decadeHint: null,
+      series: tallySeries(series, players, target),
+    });
   },
 
   useDecade: () => {

@@ -16,7 +16,7 @@ const STEPS = [
   {
     n: "03",
     title: "Legen",
-    body: "Platz vor, zwischen oder hinter den Karten wählen. Entscheidend für die Karte ist, ob der Titel früher oder später erschien. Custom kann die Reihenfolge freigeben.",
+    body: "Platz vor, zwischen oder hinter den Karten wählen. Entscheidend für die Karte ist, ob der Titel früher oder später erschien. Custom kann die Reihenfolge freigeben. Beenden schließt den Abend vorzeitig und zeigt Podest und Zahlen.",
   },
   {
     n: "04",
