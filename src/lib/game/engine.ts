@@ -1,4 +1,4 @@
-import type { CatalogSong, Player, ResolvedSong } from "./types";
+import type { CatalogSong, Player, ResolvedSong, SeriesStanding } from "./types";
 
 export function fisherYates<T>(items: T[]): T[] {
   const next = items.slice();
@@ -51,6 +51,41 @@ export function rankPlayers(players: Player[]): Player[] {
     if ((b.quiz ?? 0) !== (a.quiz ?? 0)) return (b.quiz ?? 0) - (a.quiz ?? 0);
     return a.misses - b.misses;
   });
+}
+
+export function mergeSeries(
+  existing: SeriesStanding[],
+  seats: { id: string; name: string }[],
+): SeriesStanding[] {
+  const map = new Map(existing.map((row) => [row.id, row]));
+  return seats.map((seat) => {
+    const prev = map.get(seat.id);
+    return prev
+      ? { ...prev, name: seat.name }
+      : { id: seat.id, name: seat.name, wins: 0, points: 0 };
+  });
+}
+
+export function tallySeries(
+  series: SeriesStanding[],
+  players: Player[],
+  target: number,
+): SeriesStanding[] {
+  const champ = winner(players, target) ?? rankPlayers(players)[0];
+  const map = new Map(series.map((row) => [row.id, { ...row }]));
+  for (const player of players) {
+    const row = map.get(player.id) ?? {
+      id: player.id,
+      name: player.name,
+      wins: 0,
+      points: 0,
+    };
+    row.name = player.name;
+    row.points += player.timeline.length + player.quiz;
+    if (champ && player.id === champ.id) row.wins += 1;
+    map.set(player.id, row);
+  }
+  return [...map.values()].sort((a, b) => b.wins - a.wins || b.points - a.points);
 }
 
 export function uniqueYearsSpread(songs: CatalogSong[]): CatalogSong[] {

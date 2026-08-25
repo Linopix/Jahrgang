@@ -21,7 +21,7 @@ export type GenreId = "all" | "pop" | "rock" | "rap" | "dance" | "german";
 
 export type GameMode = "party" | "solo";
 
-export type PlayVariant = "timeline" | "original";
+export type PlayVariant = "timeline" | "blind" | "original" | "star" | "hook";
 
 export type TokenCount = 0 | 1 | 2;
 
@@ -80,6 +80,13 @@ export interface SetupConfig {
   mixGenre?: GenreId;
 }
 
+export interface SeriesStanding {
+  id: string;
+  name: string;
+  wins: number;
+  points: number;
+}
+
 export interface LastResult {
   correct: boolean;
   song: ResolvedSong;
@@ -102,6 +109,7 @@ export interface GameSnapshot {
   current: ResolvedSong | null;
   lastResult: LastResult | null;
   decadeHint: string | null;
+  series: SeriesStanding[];
 }
 
 export interface RoomConfig {
@@ -196,15 +204,34 @@ export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [
   },
 ];
 
+export const VARIANT_IDS: PlayVariant[] = ["timeline", "blind", "original", "star", "hook"];
+
 export const VARIANT_LABELS: Record<PlayVariant, string> = {
   timeline: "Zeitstrahl",
+  blind: "Blind",
   original: "Kenner",
+  star: "Star",
+  hook: "Titel",
 };
 
 export const VARIANT_BLURBS: Record<PlayVariant, string> = {
   timeline: "Nur das Erscheinungsjahr. Das Cover darf während des Hörens sichtbar sein.",
-  original: "Interpret und Titel raten, danach einordnen. Das Cover bleibt bis zum Aufdecken verdeckt.",
+  blind: "Wie Zeitstrahl, aber das Cover bleibt bis zum Aufdecken verdeckt.",
+  original: "Interpret und Titel raten, danach einordnen. Das Cover bleibt verdeckt.",
+  star: "Nur den Interpreten raten, dann einordnen. Das Cover bleibt verdeckt.",
+  hook: "Nur den Titel raten, dann einordnen. Das Cover bleibt verdeckt.",
 };
+
+export function hidesCover(variant: PlayVariant) {
+  return variant !== "timeline";
+}
+
+export function guessKind(variant: PlayVariant): "none" | "both" | "artist" | "title" {
+  if (variant === "original") return "both";
+  if (variant === "star") return "artist";
+  if (variant === "hook") return "title";
+  return "none";
+}
 
 export const GENRE_LABELS: Record<GenreId, string> = {
   all: "Alle",
@@ -221,8 +248,8 @@ export const NEXT_ROUND_LABELS: Record<NextRoundPolicy, string> = {
   all: "Alle",
 };
 export const NEXT_ROUND_BLURB: Record<NextRoundPolicy, string> = {
-  host: "Nach dem Sieg startet nur der Host neu.",
-  all: "Jede Person im Raum darf die nächste Runde starten.",
+  host: "Nach dem Sieg startet nur der Host weiter. Der Raum und der Abend-Stand bleiben.",
+  all: "Jede Person im Raum darf weiter spielen. Der Code bleibt, der Stand auch.",
 };
 
 export const YEAR_MIN = 1960;
@@ -251,7 +278,7 @@ export const DEFAULT_ROOM_CONFIG: RoomConfig = {
 };
 
 export function isPlayVariant(value: unknown): value is PlayVariant {
-  return value === "timeline" || value === "original";
+  return typeof value === "string" && (VARIANT_IDS as string[]).includes(value);
 }
 
 export function isTokenCount(value: unknown): value is TokenCount {

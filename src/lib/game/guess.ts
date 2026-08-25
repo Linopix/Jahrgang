@@ -68,6 +68,58 @@ export function guessMatches(
   return false;
 }
 
+export function suggestNames(query: string, pool: readonly string[], limit = 5): string[] {
+  const q = normalizeGuess(query);
+  const compact = compactGuess(query);
+  if (q.length < 2) return [];
+  const scored: { raw: string; score: number }[] = [];
+  const seen = new Set<string>();
+  for (const raw of pool) {
+    if (!raw) continue;
+    const key = normalizeGuess(raw);
+    if (!key || seen.has(key)) continue;
+    let score = 0;
+    if (key === q) score = 100;
+    else if (key.startsWith(q)) score = 86 - Math.min(20, key.length - q.length);
+    else if (compact && compactGuess(raw).startsWith(compact)) score = 78;
+    else if (key.includes(` ${q}`) || key.includes(q)) score = 54;
+    else if (q.length >= 3) {
+      const dist = levenshtein(key, q);
+      if (dist <= (q.length >= 8 ? 2 : 1)) score = 42 - dist * 6;
+    }
+    if (score <= 0) continue;
+    seen.add(key);
+    scored.push({ raw, score });
+  }
+  scored.sort((a, b) => b.score - a.score || a.raw.localeCompare(b.raw, "de"));
+  return scored.slice(0, limit).map((row) => row.raw);
+}
+
+export function scoreForVariant(
+  titleGuess: string,
+  artistGuess: string,
+  song: { title: string; artist: string },
+  variant: "timeline" | "blind" | "original" | "star" | "hook",
+) {
+  const full = scoreGuesses(titleGuess, artistGuess, song);
+  if (variant === "original") return full;
+  if (variant === "star") {
+    return {
+      titleCorrect: false,
+      artistCorrect: full.artistCorrect,
+      quiz: full.artistCorrect ? 1 : 0,
+    };
+  }
+  if (variant === "hook") {
+    return {
+      titleCorrect: full.titleCorrect,
+      artistCorrect: false,
+      quiz: full.titleCorrect ? 1 : 0,
+    };
+  }
+  return { titleCorrect: false, artistCorrect: false, quiz: 0 };
+}
+
 export function scoreGuesses(
   titleGuess: string,
   artistGuess: string,

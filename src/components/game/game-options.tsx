@@ -25,7 +25,7 @@ import {
 } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
 
-const VARIANTS: PlayVariant[] = ["timeline", "original"];
+const VARIANTS: PlayVariant[] = ["timeline", "blind", "original", "star", "hook"];
 const GENRES: GenreId[] = ["all", "pop", "rock", "rap", "dance", "german"];
 
 type GameOptionsProps = {
@@ -305,7 +305,7 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
               value={value.variant}
               onChange={(variant) => onChange({ variant })}
               label={(item) => VARIANT_LABELS[item]}
-              columns="grid-cols-2"
+              columns="grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
             />
           </div>
           <p className="mt-2 text-sm text-muted">{VARIANT_BLURBS[value.variant]}</p>

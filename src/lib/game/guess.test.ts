@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { guessMatches, normalizeGuess, scoreGuesses } from "./guess.ts";
+import { guessMatches, normalizeGuess, scoreGuesses, suggestNames } from "./guess.ts";
 
 test("normalize strips punctuation, articles and featuring", () => {
   assert.equal(normalizeGuess("Y.M.C.A."), "y m c a");
@@ -44,4 +44,13 @@ test("scoreGuesses awards one point each", () => {
     artistCorrect: true,
     quiz: 1,
   });
+});
+
+test("suggestNames fixes light typos and prefixes", () => {
+  const pool = ["Bohemian Rhapsody", "Billie Jean", "Blinding Lights", "The Beatles"];
+  const titles = suggestNames("bohem", pool);
+  assert.ok(titles.includes("Bohemian Rhapsody"));
+  const typo = suggestNames("billy jean", ["Billie Jean", "Beat It"]);
+  assert.equal(typo[0], "Billie Jean");
+  assert.deepEqual(suggestNames("x", pool), []);
 });

@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Timeline } from "./timeline";
 import { Vinyl } from "./vinyl";
+import { GuessField } from "./guess-field";
 import {
   getMusicElement,
   isMuted,
@@ -14,11 +15,9 @@ import {
 import { canControlTurn, isOnlinePlay, requestDecade, requestLeave, requestPlace, requestSkip } from "@/lib/game/online-actions";
 import { currentPlayer, useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
-import { VARIANT_LABELS } from "@/lib/game/types";
+import { catalogArtists, catalogTitles } from "@/lib/game/catalog";
+import { guessKind, hidesCover, VARIANT_LABELS } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
-
-const FIELD =
-  "h-12 w-full rounded-md bg-raised px-4 text-sm text-fg shadow-border outline-none transition-[box-shadow,background-color] duration-150 focus:ring-2 focus:ring-primary/70";
 
 function SwapIcon({
   on,
@@ -68,7 +67,22 @@ export function PlayScreen() {
   const selfId = useOnline((s) => s.selfId);
   const online = isOnlinePlay();
   const myTurn = canControlTurn();
-  const original = variant === "original";
+  const original = guessKind(variant) !== "none";
+  const kind = guessKind(variant);
+  const titles = useMemo(() => {
+    const extra = [
+      ...players.flatMap((row) => row.timeline.map((song) => song.title)),
+      ...(current ? [current.title] : []),
+    ];
+    return [...new Set([...catalogTitles(), ...extra])];
+  }, [players, current]);
+  const artists = useMemo(() => {
+    const extra = [
+      ...players.flatMap((row) => row.timeline.map((song) => song.artist)),
+      ...(current ? [current.artist] : []),
+    ];
+    return [...new Set([...catalogArtists(), ...extra])];
+  }, [players, current]);
 
   const player = currentPlayer({ players, currentPlayerIndex });
   const [playing, setPlaying] = useState(true);
@@ -190,15 +204,21 @@ export function PlayScreen() {
         <p className="mt-2 max-w-md text-sm text-muted">
           {online && !myTurn
             ? `${player.name} ist am Zug.`
-            : original
+            : kind === "both"
               ? "Titel und Interpret eintragen, dann auf der Zeitlinie einordnen."
-              : "Titel hören und auf der Zeitlinie einordnen. Links früher, rechts später."}
+              : kind === "artist"
+                ? "Nur den Interpreten raten, dann einordnen."
+                : kind === "title"
+                  ? "Nur den Titel raten, dann einordnen."
+                  : hidesCover(variant)
+                    ? "Hören und einordnen. Das Cover bleibt verdeckt."
+                    : "Titel hören und auf der Zeitlinie einordnen. Links früher, rechts später."}
         </p>
 
         <div className="mt-4">
           <Vinyl
             spinning={playing}
-            artworkUrl={original ? undefined : current.artworkUrl}
+            artworkUrl={hidesCover(variant) ? undefined : current.artworkUrl}
             size="md"
           />
         </div>
@@ -266,39 +286,32 @@ export function PlayScreen() {
           </div>
         ) : null}
 
-        {original && myTurn ? (
+        {kind !== "none" && myTurn ? (
           <form
-            className="mt-5 grid w-full max-w-md gap-2 text-left sm:grid-cols-2"
+            className={cn(
+              "mt-5 grid w-full max-w-md gap-2 text-left",
+              kind === "both" && "sm:grid-cols-2",
+            )}
             onSubmit={(event) => event.preventDefault()}
           >
-            <label className="block">
-              <span className="sr-only">Titel</span>
-              <input
-                value={titleGuess}
-                onChange={(event) => setTitleGuess(event.target.value)}
-                className={FIELD}
+            {kind === "both" || kind === "title" ? (
+              <GuessField
+                label="Titel"
                 placeholder="Titel"
-                maxLength={80}
-                autoComplete="off"
-                autoCorrect="off"
-                spellCheck={false}
-                enterKeyHint="next"
+                value={titleGuess}
+                onChange={setTitleGuess}
+                pool={titles}
               />
-            </label>
-            <label className="block">
-              <span className="sr-only">Interpret</span>
-              <input
-                value={artistGuess}
-                onChange={(event) => setArtistGuess(event.target.value)}
-                className={FIELD}
+            ) : null}
+            {kind === "both" || kind === "artist" ? (
+              <GuessField
+                label="Interpret"
                 placeholder="Interpret"
-                maxLength={80}
-                autoComplete="off"
-                autoCorrect="off"
-                spellCheck={false}
-                enterKeyHint="done"
+                value={artistGuess}
+                onChange={setArtistGuess}
+                pool={artists}
               />
-            </label>
+            ) : null}
           </form>
         ) : null}
       </section>

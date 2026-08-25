@@ -3,6 +3,7 @@ import { SongCard } from "./song-card";
 import { canControlTurn, isOnlinePlay, requestNext } from "@/lib/game/online-actions";
 import { useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
+import { guessKind } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
 
 function Mark({ ok, label, guess, actual }: { ok: boolean; label: string; guess?: string; actual: string }) {
@@ -38,9 +39,11 @@ export function RevealScreen() {
       ? player?.name
       : players[(currentPlayerIndex + 1) % players.length]?.name;
   const canAdvance = !online || myTurn || host;
-  const original = variant === "original";
+  const kind = guessKind(variant);
+  const quizMax = kind === "both" ? 2 : kind === "none" ? 0 : 1;
   const quizHits =
-    Number(lastResult.titleCorrect) + Number(lastResult.artistCorrect);
+    (kind === "title" || kind === "both" ? Number(lastResult.titleCorrect) : 0) +
+    (kind === "artist" || kind === "both" ? Number(lastResult.artistCorrect) : 0);
 
   return (
     <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col items-center justify-center px-5 py-10 text-center lg:max-w-3xl">
@@ -59,35 +62,41 @@ export function RevealScreen() {
         {lastResult.correct
           ? "Die Karte bleibt auf der Zeitlinie."
           : "Die Karte wird zurückgelegt."}
-        {original ? ` ${quizHits} von 2 Treffern beim Raten.` : ""}
+        {kind !== "none" ? ` ${quizHits} von ${quizMax} Treffern beim Raten.` : ""}
       </p>
 
       <div className="mt-8 pop-in">
         <SongCard song={lastResult.song} />
       </div>
 
-      {original ? (
+      {kind !== "none" ? (
         <div className="mt-6 grid w-full max-w-sm gap-2">
-          <Mark
-            ok={Boolean(lastResult.titleCorrect)}
-            label="Titel"
-            guess={lastResult.titleGuess}
-            actual={lastResult.song.title}
-          />
-          <Mark
-            ok={Boolean(lastResult.artistCorrect)}
-            label="Interpret"
-            guess={lastResult.artistGuess}
-            actual={lastResult.song.artist}
-          />
+          {kind === "both" || kind === "title" ? (
+            <Mark
+              ok={Boolean(lastResult.titleCorrect)}
+              label="Titel"
+              guess={lastResult.titleGuess}
+              actual={lastResult.song.title}
+            />
+          ) : null}
+          {kind === "both" || kind === "artist" ? (
+            <Mark
+              ok={Boolean(lastResult.artistCorrect)}
+              label="Interpret"
+              guess={lastResult.artistGuess}
+              actual={lastResult.song.artist}
+            />
+          ) : null}
         </div>
-      ) : (
+      ) : null}
+
+      {kind === "none" ? (
         <p className="mt-6 max-w-sm text-sm text-muted">
           <span className="text-fg">{lastResult.song.title}</span>
           {" · "}
           {lastResult.song.artist}
         </p>
-      )}
+      ) : null}
 
       {canAdvance ? (
         <Button size="lg" className="mt-10 w-full max-w-xs" disabled={pending} onClick={requestNext}>

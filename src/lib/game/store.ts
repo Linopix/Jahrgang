@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { songsForPack } from "./packs";
-import { canPlace, decadeLabel, fisherYates, insertSong, winner } from "./engine";
-import { scoreGuesses } from "./guess";
+import { canPlace, decadeLabel, fisherYates, insertSong, mergeSeries, tallySeries, winner } from "./engine";
+import { scoreForVariant } from "./guess";
 import { loadPlaylistSongs, type PlaylistTrack } from "./playlist";
 import { resolvePreviews } from "./preview";
 import {
@@ -23,6 +23,7 @@ import {
   DEFAULT_TOKENS,
   DEFAULT_VARIANT,
   SOLO_LIVES,
+  guessKind,
   type CatalogSong,
   type EraId,
   type GameMode,
@@ -32,6 +33,7 @@ import {
   type PlayVariant,
   type Player,
   type ResolvedSong,
+  type SeriesStanding,
   type SetupConfig,
   type TokenCount,
 } from "./types";
@@ -59,6 +61,7 @@ type GameStore = {
   loadProgress: { done: number; total: number };
   loadError: string | null;
   lastSetup: SetupConfig | null;
+  series: SeriesStanding[];
   rulesOpen: boolean;
   volume: number;
   muted: boolean;
@@ -139,6 +142,7 @@ export const useGame = create<GameStore>((set, get) => ({
   loadProgress: { done: 0, total: 1 },
   loadError: null,
   lastSetup: null,
+  series: [],
   rulesOpen: false,
   volume: 0.85,
   muted: false,
@@ -165,6 +169,7 @@ export const useGame = create<GameStore>((set, get) => ({
       selectedSlot: null,
       decadeHint: null,
       loadError: null,
+      series: [],
     });
   },
 
@@ -198,6 +203,7 @@ export const useGame = create<GameStore>((set, get) => ({
       current: s.current,
       lastResult: s.lastResult,
       decadeHint: s.decadeHint,
+      series: s.series,
     };
   },
 
@@ -217,6 +223,7 @@ export const useGame = create<GameStore>((set, get) => ({
       current: snap.current,
       lastResult: snap.lastResult,
       decadeHint: snap.decadeHint,
+      series: snap.series ?? prev.series,
       selectedSlot:
         prev.phase === snap.phase && prev.current?.id === snap.current?.id
           ? prev.selectedSlot
@@ -353,6 +360,7 @@ export const useGame = create<GameStore>((set, get) => ({
         selectedSlot: null,
         lastResult: null,
         decadeHint: null,
+        series: mergeSeries(get().series, seats),
         phase: "listen",
         loadProgress: { done: resolved.length, total: resolved.length },
       });
@@ -385,9 +393,9 @@ export const useGame = create<GameStore>((set, get) => ({
     pausePreview();
     const correct = canPlace(player.timeline, selectedSlot, current.year);
     const scored =
-      variant === "original"
-        ? scoreGuesses(guess?.title ?? "", guess?.artist ?? "", current)
-        : null;
+      guessKind(variant) === "none"
+        ? null
+        : scoreForVariant(guess?.title ?? "", guess?.artist ?? "", current, variant);
     const nextPlayers = players.map((row, i) => {
       if (i !== currentPlayerIndex) return row;
       const quiz = row.quiz + (scored?.quiz ?? 0);
@@ -398,14 +406,15 @@ export const useGame = create<GameStore>((set, get) => ({
     });
     if (correct) sfxCorrect();
     else sfxWrong();
+    const kind = guessKind(variant);
     set({
       players: nextPlayers,
       lastResult: {
         correct,
         song: current,
         slot: selectedSlot,
-        titleGuess: variant === "original" ? guess?.title ?? "" : undefined,
-        artistGuess: variant === "original" ? guess?.artist ?? "" : undefined,
+        titleGuess: kind === "both" || kind === "title" ? guess?.title ?? "" : undefined,
+        artistGuess: kind === "both" || kind === "artist" ? guess?.artist ?? "" : undefined,
         titleCorrect: scored?.titleCorrect,
         artistCorrect: scored?.artistCorrect,
       },
@@ -416,12 +425,16 @@ export const useGame = create<GameStore>((set, get) => ({
   },
 
   nextTurn: (opts) => {
-    const { phase, players, currentPlayerIndex, deck, mode, target, lastResult } = get();
+    const { phase, players, currentPlayerIndex, deck, mode, target, lastResult, series } = get();
     if (phase !== "reveal") return;
     stopPreview();
     if (isOver(players, target, mode) || deck.length === 0) {
       if (lastResult?.correct && winner(players, target)) sfxWin();
-      set({ phase: "winner", current: null });
+      set({
+        phase: "winner",
+        current: null,
+        series: tallySeries(series, players, target),
+      });
       return;
     }
     const nextIndex = pickNextIndex(players, currentPlayerIndex, mode, opts?.skipIds);

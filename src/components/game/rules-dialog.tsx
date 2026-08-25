@@ -11,7 +11,7 @@ const STEPS = [
   {
     n: "02",
     title: "Hören",
-    body: "Ein neuer Titel spielt ohne Angabe von Name oder Jahr. Im Zeitstrahl zählt nur die Lage. Im Kenner-Modus rätst du zusätzlich Interpret und Titel.",
+    body: "Ein neuer Titel spielt ohne Angabe von Name oder Jahr. Zeitstrahl: nur legen, Cover sichtbar. Blind: Cover verdeckt. Kenner, Star und Titel: zusätzlich raten.",
   },
   {
     n: "03",
@@ -21,7 +21,7 @@ const STEPS = [
   {
     n: "04",
     title: "Aufdecken",
-    body: "Stimmt die Lage, bleibt die Karte. Liegt sie falsch, wird sie zurückgelegt. Im Kenner-Modus gibt es extra Treffer für richtige Tipps. Gleiches Jahr darf direkt daneben stehen.",
+    body: "Stimmt die Lage, bleibt die Karte. Liegt sie falsch, wird sie zurückgelegt. Bei Kenner, Star und Titel gibt es extra Treffer für richtige Tipps. Gleiches Jahr darf direkt daneben stehen.",
   },
   {
     n: "05",
@@ -31,7 +31,7 @@ const STEPS = [
   {
     n: "06",
     title: "Online",
-    body: "Der Host teilt einen vierstelligen Code. Repertoire und ob nur der Host oder alle die nächste Runde starten, stellt der Host in der Lobby ein.",
+    body: "Der Host teilt einen vierstelligen Code. Weiter spielen hält den Raum und zählt Siege auf dem Abend-Board. Repertoire und wer starten darf, stellt der Host in der Lobby ein.",
   },
 ];
 
@@ -52,7 +52,7 @@ export function RulesDialog({ open, onOpenChange }: RulesDialogProps) {
                 So wird gespielt
               </Dialog.Title>
               <Dialog.Description className="mt-1 text-sm text-muted">
-                Zwei Varianten: Zeitstrahl und Kenner.
+                Zeitstrahl, Blind, Kenner, Star oder Titel.
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>

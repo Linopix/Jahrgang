@@ -451,6 +451,19 @@ export const CATALOG: CatalogSong[] = ROWS.flatMap(([title, artist, year, german
   return [{ id, title, artist, year, german: german === 1 }];
 });
 
+let titlePool: string[] | null = null;
+let artistPool: string[] | null = null;
+
+export function catalogTitles() {
+  titlePool ??= [...new Set(CATALOG.map((song) => song.title))];
+  return titlePool;
+}
+
+export function catalogArtists() {
+  artistPool ??= [...new Set(CATALOG.map((song) => song.artist))];
+  return artistPool;
+}
+
 export function songId(title: string, artist: string, year: number) {
   return slug(title, artist, year);
 }

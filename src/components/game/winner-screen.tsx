@@ -11,7 +11,7 @@ import {
 import { rankPlayers } from "@/lib/game/engine";
 import { useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
-import { NEXT_ROUND_BLURB, SOLO_LIVES, VARIANT_LABELS } from "@/lib/game/types";
+import { guessKind, NEXT_ROUND_BLURB, SOLO_LIVES, VARIANT_LABELS } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
 
 export function WinnerScreen() {
@@ -19,6 +19,7 @@ export function WinnerScreen() {
   const target = useGame((s) => s.target);
   const mode = useGame((s) => s.mode);
   const variant = useGame((s) => s.variant);
+  const series = useGame((s) => s.series);
   const openSetup = useGame((s) => s.openSetup);
   const openHome = useGame((s) => s.openHome);
   const online = isOnlinePlay();
@@ -26,7 +27,7 @@ export function WinnerScreen() {
   const nextRound = useOnline((s) => s.nextRound);
   const pending = useOnline((s) => s.pending);
   const mayStart = !online || canStartNextRound();
-  const original = variant === "original";
+  const original = guessKind(variant) !== "none";
   const ranked = rankPlayers(players);
   const champ = ranked[0];
   const soloFailed = mode === "solo" && (champ?.misses ?? 0) >= SOLO_LIVES && (champ?.timeline.length ?? 0) < target;
@@ -81,6 +82,28 @@ export function WinnerScreen() {
         </ol>
       ) : null}
 
+      {series.some((row) => row.wins > 0 || row.points > 0) ? (
+        <section className="mt-8">
+          <h2 className="text-sm font-medium text-fg">Abend</h2>
+          <p className="mt-1 text-sm text-muted">
+            Läuft im selben Raum weiter. Siege und Punkte bleiben stehen.
+          </p>
+          <ol className="mt-3 space-y-2">
+            {series.map((row) => (
+              <li
+                key={row.id}
+                className="flex items-center justify-between rounded-md bg-raised px-4 py-3 text-sm text-fg shadow-border"
+              >
+                <span className="font-medium">{row.name}</span>
+                <span className="tabular-nums text-muted">
+                  {row.wins} {row.wins === 1 ? "Sieg" : "Siege"} · {row.points} Pkt
+                </span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
+
       <div className="mt-10 flex flex-col gap-3 sm:flex-row">
         {online ? (
           <>
@@ -91,7 +114,7 @@ export function WinnerScreen() {
                 disabled={pending}
                 onClick={() => void requestAgain()}
               >
-                Nächste Runde
+                Weiter spielen
               </Button>
             ) : (
               <p className="flex-1 self-center text-center text-sm text-muted">
@@ -110,7 +133,7 @@ export function WinnerScreen() {
         ) : (
           <>
             <Button size="lg" className="flex-1" onClick={() => void requestAgain()}>
-              Nochmal
+              Weiter spielen
             </Button>
             <Button size="lg" variant="secondary" className="flex-1" onClick={() => openSetup(mode)}>
               Einstellungen
