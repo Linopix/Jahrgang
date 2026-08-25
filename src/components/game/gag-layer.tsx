@@ -43,7 +43,7 @@ function EggLog({ found, onClose }: { found: string[]; onClose: () => void }) {
             <p className="text-xs font-medium tracking-[0.2em] text-muted uppercase">Liste</p>
             <h2 className="mt-1 font-display text-2xl font-medium text-fg">Easter Eggs</h2>
             <p className="mt-1 text-xs text-muted">
-              {found.length} von {GAG_ITEM_TOTAL} · Kategorien bleiben zu, bis das erste sitzt.
+              {found.length} von {GAG_ITEM_TOTAL} · Nur Gefundenes hat einen Namen.
             </p>
           </div>
           <button type="button" aria-label="Schließen" onClick={onClose} className="rounded-md p-1 text-muted hover:text-fg">
@@ -71,8 +71,7 @@ function EggLog({ found, onClose }: { found: string[]; onClose: () => void }) {
                         key={item.id}
                         className={cn("truncate text-xs", on ? "text-fg" : "text-subtle")}
                       >
-                        {on ? "✓ " : "· "}
-                        {item.label}
+                        {on ? `✓ ${item.label}` : "???"}
                       </li>
                     );
                   })}
