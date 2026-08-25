@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { Smile } from "lucide-react";
-import { REACTION_EMOJIS, sendReaction, useReactions } from "@/lib/game/reactions";
+import { EMOTE_SRC, HIDDEN_EMOTES, REACTION_EMOJIS, sendReaction, useReactions } from "@/lib/game/reactions";
 import { useOnline } from "@/lib/game/online-store";
 import { sfxHover, unlockAudio } from "@/lib/game/audio";
+import { useGags } from "@/lib/gags";
+import { EmoteMark } from "./emote";
 import { cn } from "@/lib/utils";
 
 export function ReactionDock() {
   const status = useOnline((s) => s.status);
   const enabled = useOnline((s) => s.emoji);
   const bursts = useReactions((s) => s.bursts);
+  const found = useGags((s) => s.found);
+  const extra = HIDDEN_EMOTES.filter((id) => found.includes(id));
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const live = status === "lobby" || status === "playing" || status === "connecting";
@@ -40,7 +44,9 @@ export function ReactionDock() {
             className="react-burst absolute bottom-24 flex flex-col items-center"
             style={{ left: `${burst.x}%` }}
           >
-            <span className="text-3xl leading-none drop-shadow-sm sm:text-4xl">{burst.emoji}</span>
+            <span className="text-3xl leading-none drop-shadow-sm sm:text-4xl">
+              <EmoteMark id={burst.emoji} className="size-10 sm:size-12" />
+            </span>
             {burst.name ? (
               <span className="mt-1 max-w-24 truncate text-[0.65rem] text-fg/80">{burst.name}</span>
             ) : null}
@@ -66,6 +72,21 @@ export function ReactionDock() {
                 className="flex size-11 items-center justify-center rounded-md text-xl transition-[transform,background-color] duration-150 ease-out hover:-translate-y-px hover:bg-raised active:scale-[0.94]"
               >
                 {emoji}
+              </button>
+            ))}
+            {extra.map((id) => (
+              <button
+                key={id}
+                type="button"
+                aria-label="Reaktion Schweinebein"
+                onMouseEnter={() => sfxHover()}
+                onClick={() => {
+                  unlockAudio();
+                  sendReaction(id);
+                }}
+                className="flex size-11 items-center justify-center rounded-md transition-[transform,background-color] duration-150 ease-out hover:-translate-y-px hover:bg-raised active:scale-[0.94]"
+              >
+                <img src={EMOTE_SRC[id]} alt="" className="size-8 rounded-sm object-cover" />
               </button>
             ))}
           </div>

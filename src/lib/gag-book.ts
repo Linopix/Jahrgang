@@ -141,6 +141,11 @@ export const GAG_GROUPS: GagGroup[] = [
       { id: "v-hook", label: "Titel" },
     ],
   },
+  {
+    id: "chat",
+    title: "Chat",
+    items: [{ id: "schweinebein", label: "Schweinebein" }],
+  },
 ];
 
 export const GAG_ITEM_TOTAL = GAG_GROUPS.reduce((n, g) => n + g.items.length, 0);

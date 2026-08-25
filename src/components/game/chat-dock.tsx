@@ -3,6 +3,7 @@ import { MessageCircle } from "lucide-react";
 import { CHAT_MAX, sendChat, useChat } from "@/lib/game/chat";
 import { useOnline } from "@/lib/game/online-store";
 import { unlockAudio } from "@/lib/game/audio";
+import { EmoteMark } from "./emote";
 import { cn } from "@/lib/utils";
 
 export function ChatDock() {
@@ -66,7 +67,13 @@ export function ChatDock() {
                     {line.name}
                   </span>
                   <span className="text-muted"> · </span>
-                  <span className="text-fg">{line.text}</span>
+                  <span className="text-fg">
+                    {line.text.replace(/\s+/g, "").toLowerCase() === "schweinebein" ? (
+                      <EmoteMark id="schweinebein" className="size-6 align-text-bottom" />
+                    ) : (
+                      line.text
+                    )}
+                  </span>
                 </p>
               ))
             )}

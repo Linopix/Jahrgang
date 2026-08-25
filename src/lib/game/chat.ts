@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { sfxTick } from "./audio";
 import { netSend } from "./net";
 import { useOnline } from "./online-store";
+import { noteChat } from "@/lib/gags";
 
 export const CHAT_MAX = 140;
 
@@ -53,6 +54,7 @@ export function sendChat(raw: string) {
   lastSentAt = now;
   useChat.getState().push(online.selfName || "Du", text, true);
   sfxTick();
+  noteChat(text);
   netSend({ t: "chat", text });
   return true;
 }
@@ -64,4 +66,5 @@ export function receiveChat(raw: unknown, name: string) {
   if (!text) return;
   useChat.getState().push(name || "Gast", text, false);
   sfxTick();
+  noteChat(text);
 }

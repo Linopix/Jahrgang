@@ -17,6 +17,7 @@ export const EGG_IDS = [
   "room",
   "pack",
   "mode",
+  "chat",
 ] as const;
 
 export type EggId = (typeof EGG_IDS)[number];
@@ -45,6 +46,7 @@ function eggBucket(id: string): EggId | null {
   if (id.startsWith("c-")) return "room";
   if (id.startsWith("p-")) return "pack";
   if (id.startsWith("v-")) return "mode";
+  if (id === "schweinebein") return "chat";
   return "name";
 }
 
@@ -357,4 +359,14 @@ export function noteVariant(id: PlayVariant) {
   else if (id === "custom") onceGag("v-custom", "Grenzen? Welche Grenzen?");
   else if (id === "blind") onceGag("v-blind", "Augen zu, Ohren auf.");
   else if (id === "hook") onceGag("v-hook", "Nur der Titel. Der Rest ist Einbildung.");
+}
+
+export function noteChat(text: string) {
+  const key = fold(text).replace(/\s+/g, "");
+  if (key === "schweinebein") {
+    onceGag(
+      "schweinebein",
+      "Neues Emote: Schweinebein. Links bei den Reaktionen. Guten Appetit.",
+    );
+  }
 }
