@@ -22,7 +22,6 @@ import {
   YEAR_MAX,
   YEAR_MIN,
   type CustomRules,
-  type EraId,
   type GuessKind,
   type LineRule,
   type NextRoundPolicy,
@@ -30,19 +29,6 @@ import {
   type TokenCount,
 } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
-
-const STIL_IDS: EraId[] = [
-  "pop",
-  "rock",
-  "rap",
-  "dance",
-  "soul",
-  "metal",
-  "indie",
-  "latin",
-  "schlager",
-  "german",
-];
 
 type GameOptionsProps = {
   value: RoomConfig;
@@ -499,49 +485,52 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
         <h2 className="text-sm font-medium text-fg">Repertoire</h2>
         <p className="mt-1 text-sm text-muted">{ERA_BLURBS[value.era]}</p>
         <div className="mt-4 grid gap-6 lg:grid-cols-2">
-          {PACK_GROUPS.map((group) => (
-            <div key={group.title}>
-              <p className="text-xs font-medium tracking-[0.16em] text-muted uppercase">
-                {group.title}
-              </p>
-              {group.title === "Stil" ? (
-                <div className="mt-2">
-                  <MenuSelect
-                    ariaLabel="Stil"
-                    name="stil"
-                    placeholder="Stil wählen"
-                    value={STIL_IDS.includes(value.era) ? value.era : undefined}
-                    onChange={(era) => {
-                      notePack(era as EraId);
-                      onChange({ era: era as EraId });
-                    }}
-                    items={STIL_IDS.map((id) => ({
-                      id,
-                      label: ERA_LABELS[id],
-                      blurb: ERA_BLURBS[id],
-                      art: <PackArt id={id} className="size-7" />,
-                    }))}
-                  />
-                </div>
-              ) : (
-                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {group.ids.map((id) => (
-                    <SleeveChip
-                      key={id}
-                      packId={id}
-                      selected={value.era === id}
-                      label={ERA_LABELS[id]}
-                      art={<PackArt id={id} />}
-                      onSelect={() => {
-                        notePack(id);
-                        onChange({ era: id });
+          {PACK_GROUPS.map((group) => {
+            const dropdown = group.title !== "Eigene";
+            return (
+              <div key={group.title}>
+                <p className="text-xs font-medium tracking-[0.16em] text-muted uppercase">
+                  {group.title}
+                </p>
+                {dropdown ? (
+                  <div className="mt-2">
+                    <MenuSelect
+                      ariaLabel={group.title}
+                      name={group.title.toLowerCase()}
+                      placeholder={`${group.title} wählen`}
+                      value={group.ids.includes(value.era) ? value.era : undefined}
+                      onChange={(era) => {
+                        notePack(era);
+                        onChange({ era });
                       }}
+                      items={group.ids.map((id) => ({
+                        id,
+                        label: ERA_LABELS[id],
+                        blurb: ERA_BLURBS[id],
+                        art: <PackArt id={id} className="size-7" />,
+                      }))}
                     />
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+                  </div>
+                ) : (
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {group.ids.map((id) => (
+                      <SleeveChip
+                        key={id}
+                        packId={id}
+                        selected={value.era === id}
+                        label={ERA_LABELS[id]}
+                        art={<PackArt id={id} />}
+                        onSelect={() => {
+                          notePack(id);
+                          onChange({ era: id });
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
         {value.era === "playlist" ? <PlaylistField value={value} onChange={onChange} /> : null}
         {value.era === "mix" ? <MixField value={value} onChange={onChange} /> : null}
