@@ -5,7 +5,7 @@ import { isOnlineMessage, type MemberWire, type OnlineMessage } from "@/lib/game
 import { bindNet } from "@/lib/game/net";
 import { useGame } from "@/lib/game/store";
 import { useOnline, type OnlineMember } from "@/lib/game/online-store";
-import { DEFAULT_TOKENS, DEFAULT_VARIANT, isPlayVariant, isTokenCount } from "@/lib/game/types";
+import { DEFAULT_ROOM_CONFIG, DEFAULT_TOKENS, DEFAULT_VARIANT, isPlayVariant, isTokenCount } from "@/lib/game/types";
 import type { PeerInfo } from "@/lib/multiplayer";
 
 const JOIN_TIMEOUT_MS = 14000;
@@ -36,6 +36,9 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   const tokens = useOnline((s) => s.tokens);
   const playlistUrl = useOnline((s) => s.playlistUrl);
   const playlistLabel = useOnline((s) => s.playlistLabel);
+  const mixFrom = useOnline((s) => s.mixFrom);
+  const mixTo = useOnline((s) => s.mixTo);
+  const mixGenre = useOnline((s) => s.mixGenre);
   const status = useOnline((s) => s.status);
   const sendRef = useRef(p2p.send);
   sendRef.current = p2p.send;
@@ -113,9 +116,12 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       tokens,
       playlistUrl,
       playlistLabel,
+      mixFrom,
+      mixTo,
+      mixGenre,
     };
     p2p.send(msg);
-  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, playlistUrl, playlistLabel, members]);
+  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, members]);
 
   useEffect(() => {
     return p2p.onMessage((from, data, channel) => {
@@ -189,6 +195,9 @@ function handleMessage(
       tokens: isTokenCount(msg.tokens) ? msg.tokens : DEFAULT_TOKENS,
       playlistUrl: msg.playlistUrl ?? "",
       playlistLabel: msg.playlistLabel ?? "",
+      mixFrom: msg.mixFrom ?? DEFAULT_ROOM_CONFIG.mixFrom,
+      mixTo: msg.mixTo ?? DEFAULT_ROOM_CONFIG.mixTo,
+      mixGenre: msg.mixGenre ?? "all",
     });
     useOnline.setState({ hostId: msg.hostId });
     if (online.status === "connecting" || online.status === "entry") {
@@ -205,6 +214,9 @@ function handleMessage(
       tokens: isTokenCount(msg.tokens) ? msg.tokens : DEFAULT_TOKENS,
       playlistUrl: msg.playlistUrl ?? "",
       playlistLabel: msg.playlistLabel ?? "",
+      mixFrom: msg.mixFrom ?? DEFAULT_ROOM_CONFIG.mixFrom,
+      mixTo: msg.mixTo ?? DEFAULT_ROOM_CONFIG.mixTo,
+      mixGenre: msg.mixGenre ?? "all",
     });
     return;
   }

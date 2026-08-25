@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { songsForEra } from "./catalog";
+import { songsForPack } from "./packs";
 import { canPlace, decadeLabel, fisherYates, insertSong, winner } from "./engine";
 import { scoreGuesses } from "./guess";
 import { loadPlaylistSongs, type PlaylistTrack } from "./playlist";
@@ -15,6 +15,8 @@ import {
   unlockAudio,
 } from "./audio";
 import {
+  DEFAULT_MIX_FROM,
+  DEFAULT_MIX_TO,
   DEFAULT_TARGET,
   DEFAULT_TOKENS,
   DEFAULT_VARIANT,
@@ -262,14 +264,27 @@ export const useGame = create<GameStore>((set, get) => ({
         playerCount + Math.max(config.target + 4, 10),
       );
       let imported: PlaylistTrack[] = [];
-      if (config.playlistUrl) {
+      if (config.era === "playlist" && !config.playlistUrl) {
+        set({
+          phase: "setup",
+          loadError: "Bitte einen öffentlichen Spotify- oder Deezer-Link übernehmen.",
+        });
+        return false;
+      }
+      if (config.era === "playlist" && config.playlistUrl) {
         try {
           imported = await loadPlaylistSongs({ data: { url: config.playlistUrl } });
         } catch {
           imported = [];
         }
       }
-      const catalogPool = fisherYates(songsForEra(config.era));
+      const catalogPool = fisherYates(
+        songsForPack(config.era === "playlist" ? "all" : config.era, {
+          from: config.mixFrom ?? DEFAULT_MIX_FROM,
+          to: config.mixTo ?? DEFAULT_MIX_TO,
+          genre: config.mixGenre ?? "all",
+        }),
+      );
       const pool: Array<CatalogSong | PlaylistTrack> = imported.length
         ? [...fisherYates(imported), ...catalogPool]
         : catalogPool;

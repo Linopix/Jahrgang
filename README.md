@@ -18,7 +18,7 @@ Jede Person beginnt mit einer offenen Karte. Dann kommt ein neuer Titel. Du hör
 
 Joker nach Einstellung: keine, eine oder zwei. Damit lässt sich das Jahrzehnt anzeigen oder der Titel überspringen.
 
-Ziel sind 6, 8 oder 10 Karten. Repertoire wählbar, zum Beispiel 80er, 90er oder Deutsch. Optional eine öffentliche Spotify- oder Deezer-Playlist; bekannte Titel behalten ihr Hitjahr, der Rest kommt aus dem Repertoire.
+Ziel sind 6, 8 oder 10 Karten. Repertoire als Pack: Jahrzehnt, Stil, Party, Charts, Rap Charts, TikTok 2024 und 2025. Mix aus Zeitraum plus Genre. Oder Spotify unter Repertoire – öffentlicher Playlist-Link.
 
 ## Mit anderen spielen
 
@@ -26,7 +26,7 @@ Ziel sind 6, 8 oder 10 Karten. Repertoire wählbar, zum Beispiel 80er, 90er oder
 2. Namen eingeben, **Raum öffnen**.
 3. Den Code oder den Link an die Runde schicken.
 4. Die anderen treten bei.
-5. Der Host wählt Spiel, Ziel, Joker, Repertoire und optional eine Playlist und startet.
+5. Der Host wählt Spiel, Repertoire und startet.
 
 Nur wer am Zug ist, legt. Alle hören denselben Titel auf ihrem Gerät. Bis zu acht Personen.
 

@@ -18,6 +18,9 @@ export function OnlineLobbyScreen() {
   const tokens = useOnline((s) => s.tokens);
   const playlistUrl = useOnline((s) => s.playlistUrl);
   const playlistLabel = useOnline((s) => s.playlistLabel);
+  const mixFrom = useOnline((s) => s.mixFrom);
+  const mixTo = useOnline((s) => s.mixTo);
+  const mixGenre = useOnline((s) => s.mixGenre);
   const error = useOnline((s) => s.error);
   const hostId = useOnline((s) => s.hostId);
   const pending = useOnline((s) => s.pending);
@@ -25,7 +28,17 @@ export function OnlineLobbyScreen() {
   const connecting = status === "connecting";
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
   const link = shareUrl(roomCode);
-  const config = roomConfigFrom({ era, target, variant, tokens, playlistUrl, playlistLabel });
+  const config = roomConfigFrom({
+    era,
+    target,
+    variant,
+    tokens,
+    playlistUrl,
+    playlistLabel,
+    mixFrom,
+    mixTo,
+    mixGenre,
+  });
 
   useEffect(() => {
     if (!roomCode || typeof window === "undefined") return;
@@ -50,7 +63,7 @@ export function OnlineLobbyScreen() {
   const canStart = !connecting && !pending && readyCount >= 2;
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 py-8">
+    <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 py-8 lg:max-w-6xl lg:px-8">
       <button
         type="button"
         onClick={() => requestLeave()}
@@ -63,7 +76,7 @@ export function OnlineLobbyScreen() {
         {isHost ? "Du hostest" : "Du bist dabei"}
       </p>
       <h1 className="mt-2 font-display text-4xl font-medium text-fg">Lobby</h1>
-      <p className="mt-2 text-sm text-muted">
+      <p className="mt-2 max-w-xl text-sm text-muted">
         {connecting
           ? isHost
             ? "Raum wird geöffnet…"
@@ -71,7 +84,9 @@ export function OnlineLobbyScreen() {
           : "Code oder Link teilen. Der Host startet, sobald alle verbunden sind."}
       </p>
 
-      <section className="mt-8 rounded-xl bg-surface px-5 py-6 text-center shadow-border">
+      <div className="lg:mt-8 lg:grid lg:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)] lg:items-start lg:gap-12">
+      <div>
+      <section className="mt-8 rounded-xl bg-surface px-5 py-6 text-center shadow-border lg:mt-0">
         <p className="text-xs tracking-[0.22em] text-muted uppercase">Raumcode</p>
         <p className="mt-3 font-mono text-5xl tracking-[0.28em] text-fg">{roomCode || "····"}</p>
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
@@ -127,13 +142,14 @@ export function OnlineLobbyScreen() {
           ))}
         </ul>
       </section>
+      </div>
 
       {isHost ? (
-        <>
+        <div>
           <GameOptions value={config} onChange={requestConfig} />
           <Button
             size="lg"
-            className="mt-8 w-full"
+            className="mt-8 w-full lg:max-w-xs"
             disabled={!canStart}
             onClick={() => void requestStartOnline()}
           >
@@ -143,12 +159,13 @@ export function OnlineLobbyScreen() {
                 ? "Mindestens zwei Personen"
                 : "Abend starten"}
           </Button>
-        </>
+        </div>
       ) : (
         <p className="mt-8 rounded-md bg-raised px-4 py-3 text-sm text-muted shadow-border">
           {roomConfigSummary(config)}. Der Host startet die Runde.
         </p>
       )}
+      </div>
     </main>
   );
 }

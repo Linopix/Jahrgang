@@ -403,6 +403,34 @@ const ROWS: Row[] = [
   ["Bauch Beine Po", "Shirin David", 2024, 1],
   ["Fühlst du das auch", "Ayliva", 2023, 1],
   ["Ich hass dich", "Nina Chuba", 2022, 1],
+  ["End of Beginning", "Djo", 2022],
+  ["A Bar Song (Tipsy)", "Shaboozey", 2024],
+  ["Million Dollar Baby", "Tommy Richman", 2024],
+  ["Water", "Tyla", 2023],
+  ["Belong Together", "Mark Ambor", 2024],
+  ["Stargazing", "Myles Smith", 2024],
+  ["Austin", "Dasha", 2023],
+  ["I Had Some Help", "Post Malone", 2024],
+  ["Texas Hold 'Em", "Beyoncé", 2024],
+  ["Slow It Down", "Benson Boone", 2024],
+  ["Taste", "Sabrina Carpenter", 2024],
+  ["That's So True", "Gracie Abrams", 2024],
+  ["Ordinary", "Alex Warren", 2024],
+  ["Messy", "Lola Young", 2024],
+  ["Sports Car", "Tate McRae", 2025],
+  ["Luther", "Kendrick Lamar", 2024],
+  ["Timeless", "The Weeknd", 2024],
+  ["Abracadabra", "Lady Gaga", 2025],
+  ["Back to Friends", "sombr", 2024],
+  ["Apple", "Charli XCX", 2024],
+  ["Diet Pepsi", "Addison Rae", 2024],
+  ["Sailor Song", "Gigi Perez", 2024],
+  ["Anxiety", "Doechii", 2024],
+  ["Manchild", "Sabrina Carpenter", 2025],
+  ["tv off", "Kendrick Lamar", 2024],
+  ["SICKO MODE", "Travis Scott", 2018],
+  ["The Box", "Roddy Ricch", 2019],
+  ["First Class", "Jack Harlow", 2022],
 ];
 
 function slug(title: string, artist: string, year: number) {
@@ -437,13 +465,14 @@ export function matchCatalogSong(title: string, artist: string): CatalogSong | u
 
 export function songsForEra(era: EraId): CatalogSong[] {
   return CATALOG.filter((song) => {
-    if (era === "all") return true;
+    if (era === "all" || era === "playlist" || era === "mix") return true;
     if (era === "german") return Boolean(song.german);
     if (era === "classic") return song.year <= 1979;
     if (era === "eighties") return song.year >= 1980 && song.year <= 1989;
     if (era === "nineties") return song.year >= 1990 && song.year <= 1999;
     if (era === "two-thousands") return song.year >= 2000 && song.year <= 2009;
-    if (era === "today") return song.year >= 2010;
+    if (era === "tens") return song.year >= 2010 && song.year <= 2019;
+    if (era === "today") return song.year >= 2020;
     return true;
   });
 }

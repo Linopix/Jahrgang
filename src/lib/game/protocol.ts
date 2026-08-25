@@ -1,4 +1,4 @@
-import type { EraId, GameSnapshot, PlayVariant, TokenCount } from "./types";
+import type { EraId, GameSnapshot, GenreId, PlayVariant, TokenCount } from "./types";
 
 export type MemberWire = {
   id: string;
@@ -20,6 +20,9 @@ export type OnlineMessage =
       tokens: TokenCount;
       playlistUrl?: string;
       playlistLabel?: string;
+      mixFrom?: number;
+      mixTo?: number;
+      mixGenre?: GenreId;
     }
   | {
       t: "config";
@@ -29,6 +32,9 @@ export type OnlineMessage =
       tokens: TokenCount;
       playlistUrl?: string;
       playlistLabel?: string;
+      mixFrom?: number;
+      mixTo?: number;
+      mixGenre?: GenreId;
     }
   | { t: "loading" }
   | { t: "start-failed"; error: string }

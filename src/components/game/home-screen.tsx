@@ -11,8 +11,10 @@ export function HomeScreen() {
   const openEntry = useOnline((s) => s.openEntry);
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col justify-between px-5 py-8 sm:py-12">
-      <header className="stagger-in flex flex-col items-center text-center">
+    <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col justify-between px-5 py-8 sm:max-w-3xl sm:py-12 lg:max-w-6xl lg:justify-center lg:px-8">
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-16">
+      <div>
+      <header className="stagger-in flex flex-col items-center text-center lg:items-start lg:text-left">
         <p className="text-xs font-medium tracking-[0.28em] text-muted uppercase">
           Musik-Zeitspiel
         </p>
@@ -25,14 +27,10 @@ export function HomeScreen() {
         </p>
       </header>
 
-      <div className="flex justify-center py-10">
-        <Vinyl size="lg" spinning />
-      </div>
-
-      <div className="stagger-in mx-auto flex w-full max-w-sm flex-col gap-3">
+      <div className="stagger-in mx-auto mt-8 grid w-full max-w-sm grid-cols-1 gap-3 lg:mx-0 lg:max-w-md sm:grid-cols-2 lg:grid-cols-2">
         <Button
           size="lg"
-          className="w-full"
+          className="w-full sm:col-span-2"
           onClick={() => {
             unlockAudio();
             openEntry();
@@ -65,10 +63,16 @@ export function HomeScreen() {
           <User className="size-4" />
           Alleine spielen
         </Button>
-        <Button size="lg" variant="ghost" className="w-full" onClick={() => setRulesOpen(true)}>
+        <Button size="lg" variant="ghost" className="w-full sm:col-span-2" onClick={() => setRulesOpen(true)}>
           <Disc3 className="size-4" />
           Spielregeln
         </Button>
+      </div>
+      </div>
+
+      <div className="flex justify-center py-10 lg:py-0">
+        <Vinyl size="lg" spinning />
+      </div>
       </div>
     </main>
   );

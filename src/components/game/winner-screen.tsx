@@ -27,7 +27,7 @@ export function WinnerScreen() {
       : "Ende";
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col px-5 py-10">
+    <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col px-5 py-10 lg:max-w-6xl lg:px-8">
       <div className="flex flex-col items-center text-center">
         <Vinyl size="sm" />
         <p className="mt-6 text-xs font-medium tracking-[0.24em] text-muted uppercase">

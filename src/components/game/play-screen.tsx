@@ -78,7 +78,7 @@ export function PlayScreen() {
   const canPlaceCard = myTurn && selectedSlot !== null && !pending && guessesReady;
 
   return (
-    <main className="mx-auto flex h-dvh w-full max-w-5xl flex-col overflow-hidden px-4 pb-[env(safe-area-inset-bottom)] pt-4 sm:px-6 sm:pt-6">
+    <main className="mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden px-4 pb-[env(safe-area-inset-bottom)] pt-4 sm:px-6 sm:pt-6 lg:max-w-7xl">
       <header className="flex items-center justify-between gap-3">
         <button
           type="button"
@@ -151,7 +151,8 @@ export function PlayScreen() {
         </p>
       )}
 
-      <section className="mt-3 flex min-h-0 flex-1 flex-col items-center overflow-y-auto text-center">
+      <div className="mt-3 flex min-h-0 flex-1 flex-col lg:grid lg:grid-cols-[minmax(20rem,28rem)_minmax(0,1fr)] lg:gap-8 lg:overflow-hidden">
+      <section className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto text-center lg:justify-center">
         <p className="text-xs font-medium tracking-[0.22em] text-muted uppercase">
           {online && !myTurn ? "Du hörst mit" : original ? "Raten und legen" : "Am Zug"}
         </p>
@@ -272,19 +273,21 @@ export function PlayScreen() {
         ) : null}
       </section>
 
-      <section className="mt-3 shrink-0 rounded-t-xl bg-surface p-3 shadow-border sm:rounded-xl sm:p-4">
+      <section className="mt-3 shrink-0 rounded-t-xl bg-surface p-3 shadow-border sm:rounded-xl sm:p-4 lg:mt-0 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden">
         <div className="mb-2 flex items-center justify-between px-1">
           <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">
             Zeitlinie von {player.name}
           </p>
           <p className="text-xs text-subtle">früh → spät</p>
         </div>
+        <div className="lg:min-h-0 lg:flex-1 lg:overflow-x-auto lg:overflow-y-auto">
         <Timeline
           songs={player.timeline}
           selectedSlot={myTurn ? selectedSlot : null}
           onSelectSlot={myTurn ? selectSlot : undefined}
           interactive={myTurn}
         />
+        </div>
         <Button
           size="lg"
           className="mt-3 w-full"
@@ -294,6 +297,7 @@ export function PlayScreen() {
           {myTurn ? (original ? "Tipp ablegen" : "Hier ablegen") : `Warten auf ${player.name}`}
         </Button>
       </section>
+      </div>
     </main>
   );
 }

@@ -127,6 +127,9 @@ export async function requestStartOnline() {
     variant: online.variant,
     tokens: online.tokens,
     playlistUrl: online.playlistUrl || undefined,
+    mixFrom: online.mixFrom,
+    mixTo: online.mixTo,
+    mixGenre: online.mixGenre,
   });
   if (!ok) {
     const error = useGame.getState().loadError ?? "Start fehlgeschlagen.";

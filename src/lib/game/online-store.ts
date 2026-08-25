@@ -1,12 +1,17 @@
 import { create } from "zustand";
 import {
+  DEFAULT_MIX_FROM,
+  DEFAULT_MIX_TO,
   DEFAULT_ROOM_CONFIG,
   DEFAULT_TARGET,
   DEFAULT_TOKENS,
   DEFAULT_VARIANT,
+  isEraId,
+  isGenreId,
   isPlayVariant,
   isTokenCount,
   type EraId,
+  type GenreId,
   type PlayVariant,
   type RoomConfig,
   type TokenCount,
@@ -56,6 +61,9 @@ type OnlineStore = {
   tokens: TokenCount;
   playlistUrl: string;
   playlistLabel: string;
+  mixFrom: number;
+  mixTo: number;
+  mixGenre: GenreId;
   error: string | null;
   pending: boolean;
   inviteCode: string;
@@ -88,6 +96,9 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   tokens: DEFAULT_TOKENS,
   playlistUrl: "",
   playlistLabel: "",
+  mixFrom: DEFAULT_MIX_FROM,
+  mixTo: DEFAULT_MIX_TO,
+  mixGenre: "all",
   error: null,
   pending: false,
   inviteCode: "",
@@ -182,12 +193,15 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   setMembers: (members) => set({ members }),
   setConfig: (config) =>
     set({
-      era: config.era,
+      era: isEraId(config.era) ? config.era : DEFAULT_ROOM_CONFIG.era,
       target: config.target,
       variant: isPlayVariant(config.variant) ? config.variant : DEFAULT_VARIANT,
       tokens: isTokenCount(config.tokens) ? config.tokens : DEFAULT_TOKENS,
       playlistUrl: config.playlistUrl ?? "",
       playlistLabel: config.playlistLabel ?? "",
+      mixFrom: typeof config.mixFrom === "number" ? config.mixFrom : DEFAULT_MIX_FROM,
+      mixTo: typeof config.mixTo === "number" ? config.mixTo : DEFAULT_MIX_TO,
+      mixGenre: isGenreId(config.mixGenre) ? config.mixGenre : "all",
     }),
   setError: (error) => set({ error, pending: false }),
   setPending: (pending) => set({ pending }),
@@ -196,7 +210,18 @@ export const useOnline = create<OnlineStore>((set, get) => ({
 }));
 
 export function roomConfigFrom(
-  state: Pick<OnlineStore, "era" | "target" | "variant" | "tokens" | "playlistUrl" | "playlistLabel">,
+  state: Pick<
+    OnlineStore,
+    | "era"
+    | "target"
+    | "variant"
+    | "tokens"
+    | "playlistUrl"
+    | "playlistLabel"
+    | "mixFrom"
+    | "mixTo"
+    | "mixGenre"
+  >,
 ): RoomConfig {
   return {
     era: state.era,
@@ -205,6 +230,9 @@ export function roomConfigFrom(
     tokens: state.tokens,
     playlistUrl: state.playlistUrl,
     playlistLabel: state.playlistLabel,
+    mixFrom: state.mixFrom,
+    mixTo: state.mixTo,
+    mixGenre: state.mixGenre,
   };
 }
 
