@@ -92,7 +92,7 @@ type GameStore = {
 
 function cuePreview(song: ResolvedSong | null, variant: PlayVariant, custom?: CustomRules) {
   if (!song) return;
-  void playPreview(song.previewUrl, previewRate(rulesFor(variant, custom).warp, song.id));
+  void playPreview(song.previewUrl, previewRate(rulesFor(variant, custom).warp, song.id), song.spotifyUri);
 }
 
 function makePlayers(
@@ -368,14 +368,15 @@ export const useGame = create<GameStore>((set, get) => ({
         if (slice.length === 0) continue;
         const results = await resolvePreviews({ data: { queries: slice } });
         for (const result of results) {
-          if (!result.previewUrl) continue;
+          if (!result.previewUrl && !result.spotifyUri) continue;
           const song = slice.find((row) => row.id === result.id);
           if (!song) continue;
           resolved.push({
             ...song,
             year: song.year || result.year || song.year,
-            previewUrl: result.previewUrl,
+            previewUrl: result.previewUrl || "",
             artworkUrl: result.artworkUrl ?? undefined,
+            spotifyUri: result.spotifyUri,
           });
         }
         set({ loadProgress: { done: Math.min(resolved.length, needed), total: needed } });

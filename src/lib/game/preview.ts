@@ -13,6 +13,7 @@ export type PreviewResult = {
   previewUrl: string | null;
   artworkUrl: string | null;
   year?: number;
+  spotifyUri?: string;
 };
 
 type ITunesSong = {
@@ -200,19 +201,18 @@ export async function lookupPreview(query: PreviewQuery): Promise<PreviewResult>
   return { id: query.id, previewUrl: null, artworkUrl: null, year: undefined };
 }
 
-async function withSpotify(query: PreviewQuery, base: PreviewResult): Promise<PreviewResult> {
-  if (base.previewUrl || !SPOTIFY_LIVE) return base;
-  try {
-    const { searchSpotifyPreview } = await import("@/lib/spotify/preview.server");
-    const extra = await searchSpotifyPreview(query);
-    return extra?.previewUrl ? extra : base;
-  } catch {
-    return base;
-  }
-}
-
 async function resolveOne(query: PreviewQuery): Promise<PreviewResult> {
-  return withSpotify(query, await lookupPreview(query));
+  if (SPOTIFY_LIVE) {
+    try {
+      const { searchSpotifyPreview } = await import("@/lib/spotify/preview.server");
+      const hit = await searchSpotifyPreview(query);
+      if (hit?.spotifyUri || hit?.previewUrl) return hit;
+    } catch {
+      /* none */
+    }
+    return { id: query.id, previewUrl: null, artworkUrl: null };
+  }
+  return lookupPreview(query);
 }
 
 export const resolvePreviews = createServerFn({ method: "POST" })

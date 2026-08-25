@@ -1,3 +1,5 @@
+import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
+
 let music: HTMLAudioElement | null = null;
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -423,7 +425,15 @@ function setPitchLock(el: HTMLAudioElement, lock: boolean) {
   extra.webkitPreservesPitch = lock;
 }
 
-export function playPreview(url: string, rate = 1) {
+export async function playPreview(url: string, rate = 1, spotifyUri?: string) {
+  if (SPOTIFY_LIVE && spotifyUri && rate === 1) {
+    const { playSpotifyUri, pauseSpotify } = await import("@/lib/spotify/player");
+    music?.pause();
+    const ok = await playSpotifyUri(spotifyUri);
+    if (ok) return;
+    await pauseSpotify();
+  }
+  if (!url) return;
   const el = ensureMusic();
   if (el.src !== url) {
     el.src = url;
@@ -436,13 +446,16 @@ export function playPreview(url: string, rate = 1) {
 
 export function pausePreview() {
   music?.pause();
+  if (SPOTIFY_LIVE) void import("@/lib/spotify/player").then((m) => m.pauseSpotify());
 }
 
 export function stopPreview() {
-  if (!music) return;
-  music.pause();
-  music.removeAttribute("src");
-  music.load();
+  if (music) {
+    music.pause();
+    music.removeAttribute("src");
+    music.load();
+  }
+  if (SPOTIFY_LIVE) void import("@/lib/spotify/player").then((m) => m.pauseSpotify());
 }
 
 export function getMusicElement() {

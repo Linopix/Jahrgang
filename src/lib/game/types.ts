@@ -87,6 +87,7 @@ export interface CatalogSong {
 export interface ResolvedSong extends CatalogSong {
   previewUrl: string;
   artworkUrl?: string;
+  spotifyUri?: string;
 }
 
 export interface Player {

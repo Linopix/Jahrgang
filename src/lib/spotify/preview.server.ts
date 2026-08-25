@@ -142,9 +142,12 @@ async function embedPreview(trackId: string): Promise<{ url: string; art: string
   }
 }
 
-export async function searchSpotifyPreview(query: PreviewQuery): Promise<PreviewResult | null> {
+export async function searchSpotifyPreview(
+  query: PreviewQuery,
+  userAccess?: string | null,
+): Promise<PreviewResult | null> {
   if (!SPOTIFY_LIVE) return null;
-  const token = await clientToken();
+  const token = userAccess || (await clientToken());
   if (!token) return null;
   const market = env("SPOTIFY_MARKET") || "DE";
   const q = encodeURIComponent(`track:${query.title} artist:${query.artist}`);
@@ -183,15 +186,16 @@ export async function searchSpotifyPreview(query: PreviewQuery): Promise<Preview
     ? Number(best.row.album.release_date.slice(0, 4))
     : undefined;
   const art = best.row.album?.images?.[0]?.url ?? null;
+  const uri = `spotify:track:${best.row.id}`;
   if (best.row.preview_url) {
-    return { id: query.id, previewUrl: best.row.preview_url, artworkUrl: art, year };
+    return { id: query.id, previewUrl: best.row.preview_url, artworkUrl: art, year, spotifyUri: uri };
   }
   const clip = await embedPreview(best.row.id);
-  if (!clip) return null;
   return {
     id: query.id,
-    previewUrl: clip.url,
-    artworkUrl: clip.art ?? art,
-    year: clip.year ?? year,
+    previewUrl: clip?.url ?? "",
+    artworkUrl: clip?.art ?? art,
+    year: clip?.year ?? year,
+    spotifyUri: uri,
   };
 }

@@ -163,11 +163,11 @@ async function fillSpotify(
   query: { id: string; title: string; artist: string; year: number },
   base: PreviewResult,
 ): Promise<PreviewResult> {
-  if (base.previewUrl || !SPOTIFY_LIVE) return base;
+  if (!SPOTIFY_LIVE) return base;
   try {
     const { searchSpotifyPreview } = await import("@/lib/spotify/preview.server");
     const extra = await searchSpotifyPreview(query);
-    return extra?.previewUrl ? extra : base;
+    return extra?.spotifyUri || extra?.previewUrl ? extra : base;
   } catch {
     return base;
   }

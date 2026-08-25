@@ -18,6 +18,8 @@ import { useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { setDiscordPresence } from "@/lib/discord/presence";
 import { ACCOUNT_LIVE } from "@/lib/account/flags";
+import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
+import { useSpotify } from "@/lib/spotify/session";
 import { useAccount } from "@/lib/account/client";
 import { VARIANT_LABELS } from "@/lib/game/types";
 import { shareUrl } from "@/lib/game/room-code";
@@ -33,10 +35,15 @@ export function GameApp() {
   const variant = useGame((s) => s.variant);
   const hydrateAccount = useAccount((s) => s.hydrate);
   const account = useAccount((s) => s.user);
+  const hydrateSpotify = useSpotify((s) => s.hydrate);
 
   useEffect(() => {
     if (ACCOUNT_LIVE) void hydrateAccount();
   }, [hydrateAccount]);
+
+  useEffect(() => {
+    if (SPOTIFY_LIVE) void hydrateSpotify();
+  }, [hydrateSpotify]);
 
   useEffect(() => {
     if (ACCOUNT_LIVE && account && !useOnline.getState().selfName.trim()) {
