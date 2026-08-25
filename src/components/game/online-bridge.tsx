@@ -5,6 +5,7 @@ import { isOnlineMessage, type MemberWire, type OnlineMessage } from "@/lib/game
 import { bindNet } from "@/lib/game/net";
 import { useGame } from "@/lib/game/store";
 import { useOnline, type OnlineMember } from "@/lib/game/online-store";
+import { DEFAULT_TOKENS, DEFAULT_VARIANT, isPlayVariant, isTokenCount } from "@/lib/game/types";
 import type { PeerInfo } from "@/lib/multiplayer";
 
 const JOIN_TIMEOUT_MS = 14000;
@@ -31,6 +32,8 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   const members = useOnline((s) => s.members);
   const era = useOnline((s) => s.era);
   const target = useOnline((s) => s.target);
+  const variant = useOnline((s) => s.variant);
+  const tokens = useOnline((s) => s.tokens);
   const status = useOnline((s) => s.status);
   const sendRef = useRef(p2p.send);
   sendRef.current = p2p.send;
@@ -104,9 +107,11 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       members: wire,
       era,
       target,
+      variant,
+      tokens,
     };
     p2p.send(msg);
-  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, members]);
+  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, members]);
 
   useEffect(() => {
     return p2p.onMessage((from, data, channel) => {
@@ -173,7 +178,13 @@ function handleMessage(
         connectionState: m.id === ctx.selfId ? "self" : "connected",
       })),
     );
-    useOnline.setState({ hostId: msg.hostId, era: msg.era, target: msg.target });
+    online.setConfig({
+      era: msg.era,
+      target: msg.target,
+      variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
+      tokens: isTokenCount(msg.tokens) ? msg.tokens : DEFAULT_TOKENS,
+    });
+    useOnline.setState({ hostId: msg.hostId });
     if (online.status === "connecting" || online.status === "entry") {
       online.markLobby();
     }
@@ -181,7 +192,12 @@ function handleMessage(
   }
 
   if (msg.t === "config" && online.role === "guest") {
-    online.setConfig(msg.era, msg.target);
+    online.setConfig({
+      era: msg.era,
+      target: msg.target,
+      variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
+      tokens: isTokenCount(msg.tokens) ? msg.tokens : DEFAULT_TOKENS,
+    });
     return;
   }
 
@@ -232,7 +248,7 @@ function handleMessage(
     if (msg.kind === "place") {
       if (typeof msg.slot !== "number") return;
       useGame.setState({ selectedSlot: msg.slot });
-      game.confirmPlacement();
+      game.confirmPlacement({ title: msg.title ?? "", artist: msg.artist ?? "" });
     } else if (msg.kind === "decade") {
       game.useDecade();
     } else if (msg.kind === "skip") {

@@ -42,7 +42,15 @@ export function decadeLabel(year: number): string {
 }
 
 export function winner(players: Player[], target: number): Player | null {
-  return players.find((player) => player.timeline.length >= target) ?? null;
+  return rankPlayers(players).find((player) => player.timeline.length >= target) ?? null;
+}
+
+export function rankPlayers(players: Player[]): Player[] {
+  return players.slice().sort((a, b) => {
+    if (b.timeline.length !== a.timeline.length) return b.timeline.length - a.timeline.length;
+    if ((b.quiz ?? 0) !== (a.quiz ?? 0)) return (b.quiz ?? 0) - (a.quiz ?? 0);
+    return a.misses - b.misses;
+  });
 }
 
 export function uniqueYearsSpread(songs: CatalogSong[]): CatalogSong[] {

@@ -1,5 +1,16 @@
 import { create } from "zustand";
-import { DEFAULT_TARGET, type EraId } from "./types";
+import {
+  DEFAULT_ROOM_CONFIG,
+  DEFAULT_TARGET,
+  DEFAULT_TOKENS,
+  DEFAULT_VARIANT,
+  isPlayVariant,
+  isTokenCount,
+  type EraId,
+  type PlayVariant,
+  type RoomConfig,
+  type TokenCount,
+} from "./types";
 import { makeRoomCode, normalizeRoomCode } from "./room-code";
 
 export type OnlineStatus = "off" | "entry" | "connecting" | "lobby" | "playing";
@@ -41,6 +52,8 @@ type OnlineStore = {
   members: OnlineMember[];
   era: EraId;
   target: 6 | 8 | 10;
+  variant: PlayVariant;
+  tokens: TokenCount;
   error: string | null;
   pending: boolean;
   inviteCode: string;
@@ -52,7 +65,7 @@ type OnlineStore = {
   leaveRoom: () => void;
   setIdentity: (selfId: string, hostIfCreator: boolean) => void;
   setMembers: (members: OnlineMember[]) => void;
-  setConfig: (era: EraId, target: 6 | 8 | 10) => void;
+  setConfig: (config: RoomConfig) => void;
   setError: (error: string | null) => void;
   setPending: (pending: boolean) => void;
   markPlaying: () => void;
@@ -67,8 +80,10 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   selfName: "",
   hostId: "",
   members: [],
-  era: "all",
+  era: DEFAULT_ROOM_CONFIG.era,
   target: DEFAULT_TARGET,
+  variant: DEFAULT_VARIANT,
+  tokens: DEFAULT_TOKENS,
   error: null,
   pending: false,
   inviteCode: "",
@@ -161,12 +176,27 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   },
 
   setMembers: (members) => set({ members }),
-  setConfig: (era, target) => set({ era, target }),
+  setConfig: (config) =>
+    set({
+      era: config.era,
+      target: config.target,
+      variant: isPlayVariant(config.variant) ? config.variant : DEFAULT_VARIANT,
+      tokens: isTokenCount(config.tokens) ? config.tokens : DEFAULT_TOKENS,
+    }),
   setError: (error) => set({ error, pending: false }),
   setPending: (pending) => set({ pending }),
   markPlaying: () => set({ status: "playing", pending: false, error: null }),
   markLobby: () => set({ status: "lobby", pending: false }),
 }));
+
+export function roomConfigFrom(state: Pick<OnlineStore, "era" | "target" | "variant" | "tokens">): RoomConfig {
+  return {
+    era: state.era,
+    target: state.target,
+    variant: state.variant,
+    tokens: state.tokens,
+  };
+}
 
 export function isMyTurn(selfId: string, currentPlayerId: string | undefined) {
   if (!selfId || !currentPlayerId) return true;

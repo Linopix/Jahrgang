@@ -20,8 +20,8 @@ export function HomeScreen() {
           Jahrgang
         </h1>
         <p className="mt-4 max-w-md text-pretty text-base text-muted sm:text-lg">
-          Hits hören, auf die Zeitlinie legen. Wer die Karten in der richtigen
-          Reihenfolge hat, gewinnt den Abend.
+          Hits hören und auf die Zeitlinie legen. Zeitstrahl nach Jahr, Original
+          mit Interpret und Titel.
         </p>
       </header>
 

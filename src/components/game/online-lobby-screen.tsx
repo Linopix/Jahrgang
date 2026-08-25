@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
 import { Check, Copy, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { GameOptions, roomConfigSummary } from "./game-options";
 import { shareUrl } from "@/lib/game/room-code";
 import { requestConfig, requestLeave, requestStartOnline } from "@/lib/game/online-actions";
-import { useOnline } from "@/lib/game/online-store";
-import { ERA_LABELS, TARGET_OPTIONS, type EraId } from "@/lib/game/types";
+import { roomConfigFrom, useOnline } from "@/lib/game/online-store";
 import { cn } from "@/lib/utils";
-
-const ERAS = Object.keys(ERA_LABELS) as EraId[];
 
 export function OnlineLobbyScreen() {
   const role = useOnline((s) => s.role);
@@ -16,6 +14,8 @@ export function OnlineLobbyScreen() {
   const members = useOnline((s) => s.members);
   const era = useOnline((s) => s.era);
   const target = useOnline((s) => s.target);
+  const variant = useOnline((s) => s.variant);
+  const tokens = useOnline((s) => s.tokens);
   const error = useOnline((s) => s.error);
   const hostId = useOnline((s) => s.hostId);
   const pending = useOnline((s) => s.pending);
@@ -23,6 +23,7 @@ export function OnlineLobbyScreen() {
   const connecting = status === "connecting";
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
   const link = shareUrl(roomCode);
+  const config = roomConfigFrom({ era, target, variant, tokens });
 
   useEffect(() => {
     if (!roomCode || typeof window === "undefined") return;
@@ -127,46 +128,7 @@ export function OnlineLobbyScreen() {
 
       {isHost ? (
         <>
-          <section className="mt-8">
-            <h2 className="text-sm font-medium text-fg">Ziel</h2>
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              {TARGET_OPTIONS.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => requestConfig(era, value)}
-                  className={cn(
-                    "h-12 rounded-md text-sm font-medium transition-colors",
-                    target === value
-                      ? "bg-primary text-primary-fg"
-                      : "bg-raised text-fg shadow-border hover:bg-surface",
-                  )}
-                >
-                  {value} Karten
-                </button>
-              ))}
-            </div>
-          </section>
-          <section className="mt-8">
-            <h2 className="text-sm font-medium text-fg">Repertoire</h2>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {ERAS.map((id) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => requestConfig(id, target)}
-                  className={cn(
-                    "h-10 rounded-full px-3.5 text-sm transition-colors",
-                    era === id
-                      ? "bg-primary text-primary-fg"
-                      : "bg-raised text-fg shadow-border hover:bg-surface",
-                  )}
-                >
-                  {ERA_LABELS[id]}
-                </button>
-              ))}
-            </div>
-          </section>
+          <GameOptions value={config} onChange={requestConfig} />
           <Button
             size="lg"
             className="mt-8 w-full"
@@ -182,7 +144,7 @@ export function OnlineLobbyScreen() {
         </>
       ) : (
         <p className="mt-8 rounded-md bg-raised px-4 py-3 text-sm text-muted shadow-border">
-          Repertoire: {ERA_LABELS[era]} · {target} Karten. Der Host startet die Runde.
+          {roomConfigSummary(config)}. Der Host startet die Runde.
         </p>
       )}
     </main>

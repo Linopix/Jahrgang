@@ -1,4 +1,4 @@
-import type { EraId, GameSnapshot } from "./types";
+import type { EraId, GameSnapshot, PlayVariant, TokenCount } from "./types";
 
 export type MemberWire = {
   id: string;
@@ -6,13 +6,36 @@ export type MemberWire = {
 };
 
 export type OnlineMessage =
-  | { t: "hello"; name: string }
-  | { t: "lobby"; hostId: string; members: MemberWire[]; era: EraId; target: 6 | 8 | 10 }
-  | { t: "config"; era: EraId; target: 6 | 8 | 10 }
+  | {
+      t: "hello";
+      name: string;
+    }
+  | {
+      t: "lobby";
+      hostId: string;
+      members: MemberWire[];
+      era: EraId;
+      target: 6 | 8 | 10;
+      variant: PlayVariant;
+      tokens: TokenCount;
+    }
+  | {
+      t: "config";
+      era: EraId;
+      target: 6 | 8 | 10;
+      variant: PlayVariant;
+      tokens: TokenCount;
+    }
   | { t: "loading" }
   | { t: "start-failed"; error: string }
   | { t: "state"; snapshot: GameSnapshot }
-  | { t: "action"; kind: "place" | "decade" | "skip" | "next"; slot?: number }
+  | {
+      t: "action";
+      kind: "place" | "decade" | "skip" | "next";
+      slot?: number;
+      title?: string;
+      artist?: string;
+    }
   | { t: "back-lobby" }
   | { t: "host-left" };
 

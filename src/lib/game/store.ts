@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { songsForEra } from "./catalog";
 import { canPlace, decadeLabel, fisherYates, insertSong, winner } from "./engine";
+import { scoreGuesses } from "./guess";
 import { resolvePreviews } from "./preview";
 import {
   pausePreview,
@@ -14,25 +15,34 @@ import {
 } from "./audio";
 import {
   DEFAULT_TARGET,
+  DEFAULT_TOKENS,
+  DEFAULT_VARIANT,
   SOLO_LIVES,
-  STARTING_TOKENS,
   type EraId,
   type GameMode,
   type GameSnapshot,
   type LastResult,
   type Phase,
+  type PlayVariant,
   type Player,
   type ResolvedSong,
   type SetupConfig,
+  type TokenCount,
 } from "./types";
 
 const POOL_SIZE = 40;
+
+export type SongGuess = {
+  title: string;
+  artist: string;
+};
 
 type GameStore = {
   phase: Phase;
   mode: GameMode;
   era: EraId;
   target: number;
+  variant: PlayVariant;
   players: Player[];
   currentPlayerIndex: number;
   deck: ResolvedSong[];
@@ -50,7 +60,7 @@ type GameStore = {
   setRulesOpen: (open: boolean) => void;
   startGame: (config: SetupConfig) => Promise<boolean>;
   selectSlot: (index: number) => void;
-  confirmPlacement: () => void;
+  confirmPlacement: (guess?: SongGuess) => void;
   nextTurn: (opts?: { skipIds?: string[] }) => void;
   useDecade: () => void;
   useSkip: () => void;
@@ -63,13 +73,24 @@ type GameStore = {
 function makePlayers(
   seats: { id: string; name: string }[],
   starters: ResolvedSong[],
+  tokens: TokenCount,
 ): Player[] {
   return seats.map((seat, i) => ({
     id: seat.id,
     name: seat.name.trim() || `Spieler ${i + 1}`,
     timeline: starters[i] ? [starters[i]] : [],
-    tokens: STARTING_TOKENS,
+    tokens,
     misses: 0,
+    quiz: 0,
+  }));
+}
+
+function hydratePlayers(players: Player[]): Player[] {
+  return players.map((player) => ({
+    ...player,
+    tokens: player.tokens ?? 0,
+    misses: player.misses ?? 0,
+    quiz: player.quiz ?? 0,
   }));
 }
 
@@ -100,6 +121,7 @@ export const useGame = create<GameStore>((set, get) => ({
   mode: "party",
   era: "all",
   target: DEFAULT_TARGET,
+  variant: DEFAULT_VARIANT,
   players: [],
   currentPlayerIndex: 0,
   deck: [],
@@ -161,6 +183,7 @@ export const useGame = create<GameStore>((set, get) => ({
       mode: s.mode,
       era: s.era,
       target: s.target,
+      variant: s.variant,
       players: s.players,
       currentPlayerIndex: s.currentPlayerIndex,
       deck: s.deck,
@@ -179,7 +202,8 @@ export const useGame = create<GameStore>((set, get) => ({
       mode: snap.mode,
       era: snap.era,
       target: snap.target,
-      players: snap.players,
+      variant: snap.variant ?? DEFAULT_VARIANT,
+      players: hydratePlayers(snap.players),
       currentPlayerIndex: snap.currentPlayerIndex,
       deck: snap.deck,
       current: snap.current,
@@ -210,11 +234,14 @@ export const useGame = create<GameStore>((set, get) => ({
 
   startGame: async (config) => {
     unlockAudio();
+    const variant = config.variant ?? DEFAULT_VARIANT;
+    const tokens = config.tokens ?? DEFAULT_TOKENS;
     set({
       phase: "loading",
       mode: config.mode,
       era: config.era,
       target: config.target,
+      variant,
       loadProgress: { done: 0, total: POOL_SIZE },
       loadError: null,
     });
@@ -266,7 +293,7 @@ export const useGame = create<GameStore>((set, get) => ({
 
       const starters = resolved.slice(0, playerCount);
       const deck = resolved.slice(playerCount);
-      const players = makePlayers(seats, starters);
+      const players = makePlayers(seats, starters, tokens);
       const current = deck[0] ?? null;
       set({
         players,
@@ -300,25 +327,38 @@ export const useGame = create<GameStore>((set, get) => ({
     set({ selectedSlot: index });
   },
 
-  confirmPlacement: () => {
-    const { phase, current, selectedSlot, players, currentPlayerIndex } = get();
+  confirmPlacement: (guess) => {
+    const { phase, current, selectedSlot, players, currentPlayerIndex, variant } = get();
     if (phase !== "listen" || !current || selectedSlot === null) return;
     const player = players[currentPlayerIndex];
     if (!player) return;
     pausePreview();
     const correct = canPlace(player.timeline, selectedSlot, current.year);
+    const scored =
+      variant === "original"
+        ? scoreGuesses(guess?.title ?? "", guess?.artist ?? "", current)
+        : null;
     const nextPlayers = players.map((row, i) => {
       if (i !== currentPlayerIndex) return row;
+      const quiz = row.quiz + (scored?.quiz ?? 0);
       if (correct) {
-        return { ...row, timeline: insertSong(row.timeline, selectedSlot, current) };
+        return { ...row, timeline: insertSong(row.timeline, selectedSlot, current), quiz };
       }
-      return { ...row, misses: row.misses + 1 };
+      return { ...row, misses: row.misses + 1, quiz };
     });
     if (correct) sfxCorrect();
     else sfxWrong();
     set({
       players: nextPlayers,
-      lastResult: { correct, song: current, slot: selectedSlot },
+      lastResult: {
+        correct,
+        song: current,
+        slot: selectedSlot,
+        titleGuess: variant === "original" ? guess?.title ?? "" : undefined,
+        artistGuess: variant === "original" ? guess?.artist ?? "" : undefined,
+        titleCorrect: scored?.titleCorrect,
+        artistCorrect: scored?.artistCorrect,
+      },
       phase: "reveal",
       selectedSlot: null,
       decadeHint: null,

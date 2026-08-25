@@ -14,7 +14,11 @@ import {
 import { canControlTurn, isOnlinePlay, requestDecade, requestLeave, requestPlace, requestSkip } from "@/lib/game/online-actions";
 import { currentPlayer, useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
+import { VARIANT_LABELS } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
+
+const FIELD =
+  "h-12 w-full rounded-md bg-raised px-4 text-sm text-fg shadow-border outline-none transition-[box-shadow] focus:ring-2 focus:ring-primary/70";
 
 export function PlayScreen() {
   const players = useGame((s) => s.players);
@@ -24,6 +28,7 @@ export function PlayScreen() {
   const decadeHint = useGame((s) => s.decadeHint);
   const target = useGame((s) => s.target);
   const mode = useGame((s) => s.mode);
+  const variant = useGame((s) => s.variant);
   const deckLength = useGame((s) => s.deck.length);
   const selectSlot = useGame((s) => s.selectSlot);
   const replay = useGame((s) => s.replay);
@@ -33,11 +38,19 @@ export function PlayScreen() {
   const selfId = useOnline((s) => s.selfId);
   const online = isOnlinePlay();
   const myTurn = canControlTurn();
+  const original = variant === "original";
 
   const player = currentPlayer({ players, currentPlayerIndex });
   const [playing, setPlaying] = useState(true);
   const [muted, setMutedState] = useState(isMuted);
   const [progress, setProgress] = useState(0);
+  const [titleGuess, setTitleGuess] = useState("");
+  const [artistGuess, setArtistGuess] = useState("");
+
+  useEffect(() => {
+    setTitleGuess("");
+    setArtistGuess("");
+  }, [current?.id]);
 
   useEffect(() => {
     const el = getMusicElement();
@@ -61,6 +74,9 @@ export function PlayScreen() {
 
   if (!player || !current) return null;
 
+  const guessesReady = !original || (titleGuess.trim().length > 0 && artistGuess.trim().length > 0);
+  const canPlaceCard = myTurn && selectedSlot !== null && !pending && guessesReady;
+
   return (
     <main className="mx-auto flex h-dvh w-full max-w-5xl flex-col overflow-hidden px-4 pb-[env(safe-area-inset-bottom)] pt-4 sm:px-6 sm:pt-6">
       <header className="flex items-center justify-between gap-3">
@@ -72,6 +88,9 @@ export function PlayScreen() {
           Jahrgang
         </button>
         <div className="flex items-center gap-2">
+          <span className="hidden text-xs tracking-[0.16em] text-subtle uppercase sm:inline">
+            {VARIANT_LABELS[variant]}
+          </span>
           <button
             type="button"
             className="h-11 px-2 text-sm text-muted hover:text-fg"
@@ -112,6 +131,7 @@ export function PlayScreen() {
                 </span>
                 <span className="text-xs tabular-nums opacity-70">
                   {row.timeline.length}/{target}
+                  {original ? ` · ${row.quiz}` : ""}
                 </span>
               </li>
             );
@@ -122,22 +142,34 @@ export function PlayScreen() {
           Karten <span className="tabular-nums text-fg">{player.timeline.length}/{target}</span>
           <span className="mx-2 text-subtle">·</span>
           Fehler <span className="tabular-nums text-fg">{player.misses}/3</span>
+          {original ? (
+            <>
+              <span className="mx-2 text-subtle">·</span>
+              Treffer <span className="tabular-nums text-fg">{player.quiz}</span>
+            </>
+          ) : null}
         </p>
       )}
 
       <section className="mt-3 flex min-h-0 flex-1 flex-col items-center overflow-y-auto text-center">
         <p className="text-xs font-medium tracking-[0.22em] text-muted uppercase">
-          {online && !myTurn ? "Du hörst mit" : "Am Zug"}
+          {online && !myTurn ? "Du hörst mit" : original ? "Raten und legen" : "Am Zug"}
         </p>
         <h1 className="mt-1 font-display text-3xl font-medium text-fg sm:text-5xl">{player.name}</h1>
         <p className="mt-2 max-w-md text-sm text-muted">
           {online && !myTurn
-            ? `${player.name} legt gerade.`
-            : "Titel hören und auf der Zeitlinie einordnen. Links früher, rechts später."}
+            ? `${player.name} ist am Zug.`
+            : original
+              ? "Titel und Interpret eintragen, dann auf der Zeitlinie einordnen."
+              : "Titel hören und auf der Zeitlinie einordnen. Links früher, rechts später."}
         </p>
 
         <div className="mt-4">
-          <Vinyl spinning={playing} artworkUrl={current.artworkUrl} size="md" />
+          <Vinyl
+            spinning={playing}
+            artworkUrl={original ? undefined : current.artworkUrl}
+            size="md"
+          />
         </div>
 
         <div className="mt-4 h-1 w-48 overflow-hidden rounded-full bg-raised">
@@ -182,24 +214,62 @@ export function PlayScreen() {
           </p>
         ) : null}
 
-        <div className="mt-4 flex flex-wrap justify-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!myTurn || player.tokens <= 0 || Boolean(decadeHint)}
-            onClick={requestDecade}
+        {player.tokens > 0 || decadeHint ? (
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!myTurn || player.tokens <= 0 || Boolean(decadeHint)}
+              onClick={requestDecade}
+            >
+              Jahrzehnt · {player.tokens}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!myTurn || player.tokens <= 0 || deckLength === 0}
+              onClick={requestSkip}
+            >
+              Überspringen
+            </Button>
+          </div>
+        ) : null}
+
+        {original && myTurn ? (
+          <form
+            className="mt-5 grid w-full max-w-md gap-2 text-left sm:grid-cols-2"
+            onSubmit={(event) => event.preventDefault()}
           >
-            Jahrzehnt · {player.tokens}
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={!myTurn || player.tokens <= 0 || deckLength === 0}
-            onClick={requestSkip}
-          >
-            Überspringen
-          </Button>
-        </div>
+            <label className="block">
+              <span className="sr-only">Titel</span>
+              <input
+                value={titleGuess}
+                onChange={(event) => setTitleGuess(event.target.value)}
+                className={FIELD}
+                placeholder="Titel"
+                maxLength={80}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="next"
+              />
+            </label>
+            <label className="block">
+              <span className="sr-only">Interpret</span>
+              <input
+                value={artistGuess}
+                onChange={(event) => setArtistGuess(event.target.value)}
+                className={FIELD}
+                placeholder="Interpret"
+                maxLength={80}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="done"
+              />
+            </label>
+          </form>
+        ) : null}
       </section>
 
       <section className="mt-3 shrink-0 rounded-t-xl bg-surface p-3 shadow-border sm:rounded-xl sm:p-4">
@@ -218,10 +288,10 @@ export function PlayScreen() {
         <Button
           size="lg"
           className="mt-3 w-full"
-          disabled={!myTurn || selectedSlot === null || pending}
-          onClick={requestPlace}
+          disabled={!canPlaceCard}
+          onClick={() => requestPlace({ title: titleGuess, artist: artistGuess })}
         >
-          {myTurn ? "Hier ablegen" : `Warten auf ${player.name}`}
+          {myTurn ? (original ? "Tipp ablegen" : "Hier ablegen") : `Warten auf ${player.name}`}
         </Button>
       </section>
     </main>

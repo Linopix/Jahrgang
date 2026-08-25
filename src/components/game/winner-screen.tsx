@@ -2,20 +2,23 @@ import { Button } from "@/components/ui/button";
 import { Timeline } from "./timeline";
 import { Vinyl } from "./vinyl";
 import { isOnlinePlay, requestBackToLobby, requestLeave } from "@/lib/game/online-actions";
+import { rankPlayers } from "@/lib/game/engine";
 import { useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
-import { SOLO_LIVES } from "@/lib/game/types";
+import { SOLO_LIVES, VARIANT_LABELS } from "@/lib/game/types";
 
 export function WinnerScreen() {
   const players = useGame((s) => s.players);
   const target = useGame((s) => s.target);
   const mode = useGame((s) => s.mode);
+  const variant = useGame((s) => s.variant);
   const openSetup = useGame((s) => s.openSetup);
   const openHome = useGame((s) => s.openHome);
   const online = isOnlinePlay();
   const isHost = useOnline((s) => s.role) === "host";
-
-  const champ = [...players].sort((a, b) => b.timeline.length - a.timeline.length)[0];
+  const original = variant === "original";
+  const ranked = rankPlayers(players);
+  const champ = ranked[0];
   const soloFailed = mode === "solo" && (champ?.misses ?? 0) >= SOLO_LIVES && (champ?.timeline.length ?? 0) < target;
   const title = soloFailed
     ? "Platte zu Ende"
@@ -28,13 +31,14 @@ export function WinnerScreen() {
       <div className="flex flex-col items-center text-center">
         <Vinyl size="sm" />
         <p className="mt-6 text-xs font-medium tracking-[0.24em] text-muted uppercase">
-          {soloFailed ? "Drei Fehler" : "Gewonnen"}
+          {soloFailed ? "Drei Fehler" : VARIANT_LABELS[variant]}
         </p>
         <h1 className="mt-2 font-display text-4xl font-medium text-fg sm:text-5xl">{title}</h1>
         <p className="mt-3 max-w-md text-sm text-muted">
           {soloFailed
             ? `${champ?.timeline.length ?? 0} von ${target} Karten.`
             : `${champ?.timeline.length ?? 0} Titel in der richtigen Reihenfolge.`}
+          {original && champ ? ` ${champ.quiz} Treffer beim Raten.` : ""}
         </p>
       </div>
 
@@ -47,22 +51,20 @@ export function WinnerScreen() {
         </section>
       ) : null}
 
-      {mode === "party" && players.length > 1 ? (
+      {mode === "party" && ranked.length > 1 ? (
         <ol className="mt-6 space-y-2">
-          {players
-            .slice()
-            .sort((a, b) => b.timeline.length - a.timeline.length)
-            .map((player) => (
-              <li
-                key={player.id}
-                className="flex items-center justify-between rounded-md bg-raised px-4 py-3 text-sm shadow-border"
-              >
-                <span className="font-medium text-fg">{player.name}</span>
-                <span className="tabular-nums text-muted">
-                  {player.timeline.length}/{target}
-                </span>
-              </li>
-            ))}
+          {ranked.map((player) => (
+            <li
+              key={player.id}
+              className="flex items-center justify-between rounded-md bg-raised px-4 py-3 text-sm shadow-border"
+            >
+              <span className="font-medium text-fg">{player.name}</span>
+              <span className="tabular-nums text-muted">
+                {player.timeline.length}/{target}
+                {original ? ` · ${player.quiz}` : ""}
+              </span>
+            </li>
+          ))}
         </ol>
       ) : null}
 

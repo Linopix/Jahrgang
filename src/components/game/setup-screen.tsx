@@ -1,11 +1,10 @@
 import { useMemo, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { GameOptions } from "./game-options";
 import { useGame } from "@/lib/game/store";
-import { ERA_LABELS, TARGET_OPTIONS, type EraId } from "@/lib/game/types";
-import { cn } from "@/lib/utils";
+import { DEFAULT_ROOM_CONFIG, type RoomConfig } from "@/lib/game/types";
 
-const ERAS = Object.keys(ERA_LABELS) as EraId[];
 const PARTY_NAMES = ["Alex", "Sam", "Kim", "Jo", "Mo", "Lee", "Nik", "Rae"];
 
 export function SetupScreen() {
@@ -16,8 +15,7 @@ export function SetupScreen() {
 
   const [count, setCount] = useState(mode === "solo" ? 1 : 3);
   const [names, setNames] = useState(mode === "solo" ? ["Du"] : PARTY_NAMES);
-  const [target, setTarget] = useState<6 | 8 | 10>(8);
-  const [era, setEra] = useState<EraId>("all");
+  const [options, setOptions] = useState<RoomConfig>(DEFAULT_ROOM_CONFIG);
 
   const visibleNames = useMemo(
     () => (mode === "solo" ? names.slice(0, 1) : names.slice(0, count)),
@@ -91,47 +89,10 @@ export function SetupScreen() {
         ))}
       </section>
 
-      <section className="mt-8">
-        <h2 className="text-sm font-medium text-fg">Ziel</h2>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {TARGET_OPTIONS.map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setTarget(value)}
-              className={cn(
-                "h-12 rounded-md text-sm font-medium transition-colors",
-                target === value
-                  ? "bg-primary text-primary-fg"
-                  : "bg-raised text-fg shadow-border hover:bg-surface",
-              )}
-            >
-              {value} Karten
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="mt-8">
-        <h2 className="text-sm font-medium text-fg">Repertoire</h2>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {ERAS.map((id) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setEra(id)}
-              className={cn(
-                "h-10 rounded-full px-3.5 text-sm transition-colors",
-                era === id
-                  ? "bg-primary text-primary-fg"
-                  : "bg-raised text-muted shadow-border hover:text-fg",
-              )}
-            >
-              {ERA_LABELS[id]}
-            </button>
-          ))}
-        </div>
-      </section>
+      <GameOptions
+        value={options}
+        onChange={(patch) => setOptions((current) => ({ ...current, ...patch }))}
+      />
 
       {loadError ? (
         <p className="mt-6 rounded-md bg-danger/15 px-3 py-2 text-sm text-fg">{loadError}</p>
@@ -144,8 +105,7 @@ export function SetupScreen() {
           void startGame({
             mode,
             names: visibleNames,
-            target,
-            era,
+            ...options,
           })
         }
       >

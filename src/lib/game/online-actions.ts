@@ -1,8 +1,8 @@
 import { netSend } from "./net";
-import { useGame } from "./store";
-import { useOnline } from "./online-store";
+import { useGame, type SongGuess } from "./store";
+import { roomConfigFrom, useOnline } from "./online-store";
 import { clearRoomFromUrl } from "./room-code";
-import type { EraId } from "./types";
+import type { RoomConfig } from "./types";
 import type { OnlineMessage } from "./protocol";
 
 function skipIds() {
@@ -27,21 +27,27 @@ export function canControlTurn() {
   return Boolean(current && current.id === online.selfId);
 }
 
-export function requestPlace() {
+export function requestPlace(guess?: SongGuess) {
   const online = useOnline.getState();
   const game = useGame.getState();
   if (online.status !== "playing") {
-    game.confirmPlacement();
+    game.confirmPlacement(guess);
     return;
   }
   if (!canControlTurn() || game.selectedSlot === null) return;
   if (online.role === "host") {
-    game.confirmPlacement();
+    game.confirmPlacement(guess);
     pushState();
     return;
   }
   online.setPending(true);
-  netSend({ t: "action", kind: "place", slot: game.selectedSlot } satisfies OnlineMessage);
+  netSend({
+    t: "action",
+    kind: "place",
+    slot: game.selectedSlot,
+    title: guess?.title,
+    artist: guess?.artist,
+  } satisfies OnlineMessage);
 }
 
 export function requestDecade() {
@@ -95,11 +101,12 @@ export function requestNext() {
   netSend({ t: "action", kind: "next" } satisfies OnlineMessage);
 }
 
-export function requestConfig(era: EraId, target: 6 | 8 | 10) {
+export function requestConfig(patch: Partial<RoomConfig>) {
   const online = useOnline.getState();
-  online.setConfig(era, target);
+  const next: RoomConfig = { ...roomConfigFrom(online), ...patch };
+  online.setConfig(next);
   if (online.role === "host") {
-    netSend({ t: "config", era, target } satisfies OnlineMessage);
+    netSend({ t: "config", ...next } satisfies OnlineMessage);
   }
 }
 
@@ -117,6 +124,8 @@ export async function requestStartOnline() {
     ids: seats.map((m) => m.id),
     era: online.era,
     target: online.target,
+    variant: online.variant,
+    tokens: online.tokens,
   });
   if (!ok) {
     const error = useGame.getState().loadError ?? "Start fehlgeschlagen.";

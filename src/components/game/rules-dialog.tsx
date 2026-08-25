@@ -11,27 +11,27 @@ const STEPS = [
   {
     n: "02",
     title: "Hören",
-    body: "Ein neuer Titel spielt ohne Angabe von Name oder Jahr. Einordnen, nicht das genaue Jahr raten.",
+    body: "Ein neuer Titel spielt ohne Angabe von Name oder Jahr. Im Zeitstrahl zählt nur die Lage. Im Original rätst du zusätzlich Interpret und Titel.",
   },
   {
     n: "03",
     title: "Legen",
-    body: "Platz vor, zwischen oder hinter den Karten wählen. Entscheidend ist nur, ob der Titel früher oder später erschien.",
+    body: "Platz vor, zwischen oder hinter den Karten wählen. Entscheidend für die Karte ist, ob der Titel früher oder später erschien.",
   },
   {
     n: "04",
     title: "Aufdecken",
-    body: "Stimmt die Lage, bleibt die Karte. Liegt sie falsch, wird sie zurückgelegt. Gleiches Jahr darf direkt daneben stehen.",
+    body: "Stimmt die Lage, bleibt die Karte. Liegt sie falsch, wird sie zurückgelegt. Im Original gibt es extra Treffer für richtige Tipps. Gleiches Jahr darf direkt daneben stehen.",
   },
   {
     n: "05",
     title: "Joker",
-    body: "Zwei Joker pro Person: Jahrzehnt anzeigen oder den Titel überspringen. Wer zuerst das Ziel erreicht, gewinnt.",
+    body: "Je nach Einstellung keine, eine oder zwei Hilfen: Jahrzehnt anzeigen oder den Titel überspringen. Wer zuerst das Ziel erreicht, gewinnt.",
   },
   {
     n: "06",
     title: "Online",
-    body: "Der Host teilt einen vierstelligen Code oder den Einladungslink. Jede Person spielt auf dem eigenen Gerät.",
+    body: "Der Host teilt einen vierstelligen Code oder den Einladungslink. Jede Person spielt auf dem eigenen Gerät. Spiel, Ziel, Joker und Repertoire stellt der Host in der Lobby ein.",
   },
 ];
 
@@ -52,7 +52,7 @@ export function RulesDialog({ open, onOpenChange }: RulesDialogProps) {
                 So wird gespielt
               </Dialog.Title>
               <Dialog.Description className="mt-1 text-sm text-muted">
-                Musik nach Erscheinungsjahr einordnen.
+                Zwei Varianten: Zeitstrahl und Original.
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>
