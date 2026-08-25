@@ -10,9 +10,9 @@ export function OnlineConnectingScreen() {
     <main className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">
       <Vinyl spinning size="md" />
       <p className="mt-8 font-mono text-3xl tracking-[0.28em] text-fg">{roomCode}</p>
-      <h1 className="mt-4 font-display text-3xl font-medium text-fg">Klopf an</h1>
+      <h1 className="mt-4 font-display text-3xl font-medium text-fg">Verbinden</h1>
       <p className="mt-2 max-w-sm text-sm text-muted">
-        Wir verbinden dich mit dem Host. Das dauert meist nur ein paar Sekunden.
+        Verbindung zum Host wird hergestellt.
       </p>
       <Button variant="ghost" className="mt-8" onClick={() => requestLeave()}>
         Abbrechen

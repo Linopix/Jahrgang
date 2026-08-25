@@ -39,7 +39,7 @@ export function RevealScreen() {
       <p className="mt-2 text-sm text-muted">
         {lastResult.correct
           ? "Die Karte bleibt auf der Zeitlinie."
-          : "Die Karte wandert zurück. Nächste Runde."}
+          : "Die Karte wird zurückgelegt."}
       </p>
 
       <div className="mt-8">

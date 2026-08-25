@@ -115,7 +115,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
     const raw = code ?? get().inviteCode;
     const roomCode = normalizeRoomCode(raw);
     if (roomCode.length < 4) {
-      set({ error: "Vierstelligen Code eingeben oder den Discord-Link einfügen." });
+      set({ error: "Bitte einen vierstelligen Code oder den Einladungslink eingeben." });
       return;
     }
     const name = get().selfName.trim() || readStoredName() || "Gast";

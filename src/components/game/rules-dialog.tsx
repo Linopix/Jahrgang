@@ -6,32 +6,32 @@ const STEPS = [
   {
     n: "01",
     title: "Start",
-    body: "Jeder bekommt eine offene Karte. Das ist der Anfang der eigenen Zeitlinie – links früh, rechts spät.",
+    body: "Jede Person erhält eine offene Karte als Beginn der Zeitlinie. Links steht früher, rechts später.",
   },
   {
     n: "02",
     title: "Hören",
-    body: "Ein neuer Hit spielt. Du siehst weder Titel noch Jahr. Erkennen ist erlaubt, das Jahr musst du einordnen.",
+    body: "Ein neuer Titel spielt ohne Angabe von Name oder Jahr. Einordnen, nicht das genaue Jahr raten.",
   },
   {
     n: "03",
     title: "Legen",
-    body: "Tippe den Platz vor, zwischen oder hinter deinen Karten. Du musst nicht das genaue Jahr wissen – nur, ob der Song früher oder später kommt.",
+    body: "Platz vor, zwischen oder hinter den Karten wählen. Entscheidend ist nur, ob der Titel früher oder später erschien.",
   },
   {
     n: "04",
     title: "Aufdecken",
-    body: "Stimmt die Lage, bleibt die Karte. Liegt sie falsch, wandert sie weg. Gleiches Jahr darf direkt davor oder danach liegen.",
+    body: "Stimmt die Lage, bleibt die Karte. Liegt sie falsch, wird sie zurückgelegt. Gleiches Jahr darf direkt daneben stehen.",
   },
   {
     n: "05",
     title: "Joker",
-    body: "Zwei Joker pro Person: Jahrzehnt anzeigen oder den Song überspringen. Wer zuerst das Ziel erreicht, ist der Jahrgang.",
+    body: "Zwei Joker pro Person: Jahrzehnt anzeigen oder den Titel überspringen. Wer zuerst das Ziel erreicht, gewinnt.",
   },
   {
     n: "06",
     title: "Online",
-    body: "Beim Online-Abend bekommt der Host einen vierstelligen Code. Den Link in Discord posten — jede Person spielt auf dem eigenen Gerät, Voice bleibt im Call.",
+    body: "Der Host teilt einen vierstelligen Code oder den Einladungslink. Jede Person spielt auf dem eigenen Gerät.",
   },
 ];
 
@@ -52,7 +52,7 @@ export function RulesDialog({ open, onOpenChange }: RulesDialogProps) {
                 So wird gespielt
               </Dialog.Title>
               <Dialog.Description className="mt-1 text-sm text-muted">
-                Wie Hitster, nur ohne Kartenstapel und ohne App-Scan.
+                Musik nach Erscheinungsjahr einordnen.
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>

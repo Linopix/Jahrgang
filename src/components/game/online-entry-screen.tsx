@@ -25,11 +25,11 @@ export function OnlineEntryScreen() {
       </button>
 
       <header className="mt-6">
-        <p className="text-xs font-medium tracking-[0.24em] text-muted uppercase">Discord-Abend</p>
+        <p className="text-xs font-medium tracking-[0.24em] text-muted uppercase">Mehrspieler</p>
         <h1 className="mt-2 font-display text-4xl font-medium text-fg">Online-Abend</h1>
         <p className="mt-3 max-w-md text-sm text-muted">
-          Ein Host öffnet den Raum, alle anderen kommen mit Code oder Link. Jede Person spielt auf
-          dem eigenen Gerät — Voice bleibt bei Discord.
+          Ein Host öffnet den Raum. Mitspieler treten mit Code oder Einladungslink bei, jedes Gerät
+          für sich.
         </p>
       </header>
 
@@ -42,7 +42,7 @@ export function OnlineEntryScreen() {
         <input
           value={selfName}
           onChange={(event) => setSelfName(event.target.value)}
-          placeholder="Wie dich die Runde sieht"
+          placeholder="Name"
           maxLength={18}
           autoComplete="nickname"
           className="mt-2 h-12 w-full rounded-md bg-raised px-4 text-sm text-fg shadow-border outline-none transition-[box-shadow] focus:ring-2 focus:ring-primary/70"

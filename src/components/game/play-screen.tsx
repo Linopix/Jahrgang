@@ -132,8 +132,8 @@ export function PlayScreen() {
         <h1 className="mt-1 font-display text-3xl font-medium text-fg sm:text-5xl">{player.name}</h1>
         <p className="mt-2 max-w-md text-sm text-muted">
           {online && !myTurn
-            ? `${player.name} legt gerade. Der Hit läuft bei allen.`
-            : "Höre den Hit und lege ihn auf deine Zeitlinie. Links ist früher, rechts ist später."}
+            ? `${player.name} legt gerade.`
+            : "Titel hören und auf der Zeitlinie einordnen. Links früher, rechts später."}
         </p>
 
         <div className="mt-4">

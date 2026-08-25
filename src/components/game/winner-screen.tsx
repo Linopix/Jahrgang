@@ -33,8 +33,8 @@ export function WinnerScreen() {
         <h1 className="mt-2 font-display text-4xl font-medium text-fg sm:text-5xl">{title}</h1>
         <p className="mt-3 max-w-md text-sm text-muted">
           {soloFailed
-            ? `${champ?.timeline.length ?? 0} von ${target} Karten. Nochmal auflegen und die Jahre schärfer hören.`
-            : `${champ?.timeline.length ?? 0} Hits in der richtigen Reihenfolge.`}
+            ? `${champ?.timeline.length ?? 0} von ${target} Karten.`
+            : `${champ?.timeline.length ?? 0} Titel in der richtigen Reihenfolge.`}
         </p>
       </div>
 
@@ -71,11 +71,11 @@ export function WinnerScreen() {
           <>
             {isHost ? (
               <Button size="lg" className="flex-1" onClick={requestBackToLobby}>
-                Nochmal in der Lobby
+                Zurück zur Lobby
               </Button>
             ) : (
               <p className="flex-1 self-center text-center text-sm text-muted">
-                Der Host legt die nächste Runde auf.
+                Der Host startet die nächste Runde.
               </p>
             )}
             <Button size="lg" variant="secondary" className="flex-1" onClick={requestLeave}>

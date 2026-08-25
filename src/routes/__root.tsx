@@ -14,7 +14,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Jahrgang: Hits hören, auf die Zeitlinie legen. Mit Raumcode über Discord oder an einem Bildschirm.",
+          "Jahrgang: Titel hören und nach Erscheinungsjahr auf der Zeitlinie einordnen.",
       },
       { name: "theme-color", content: "#0c0b0a" },
     ],

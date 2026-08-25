@@ -65,7 +65,7 @@ export function OnlineLobbyScreen() {
           ? isHost
             ? "Raum wird geöffnet…"
             : `Verbinde mit ${roomCode}…`
-          : "Code in Discord posten. Alle bleiben in ihrem Call — hier nur das Spiel."}
+          : "Code oder Link teilen. Der Host startet, sobald alle verbunden sind."}
       </p>
 
       <section className="mt-8 rounded-xl bg-surface px-5 py-6 text-center shadow-border">
@@ -78,7 +78,7 @@ export function OnlineLobbyScreen() {
           </Button>
           <Button className="flex-1" onClick={() => void copy("link")}>
             {copied === "link" ? <Check className="size-4" /> : <Link2 className="size-4" />}
-            {copied === "link" ? "Link kopiert" : "Discord-Link"}
+            {copied === "link" ? "Link kopiert" : "Link kopieren"}
           </Button>
         </div>
       </section>
@@ -174,15 +174,15 @@ export function OnlineLobbyScreen() {
             onClick={() => void requestStartOnline()}
           >
             {pending
-              ? "Platten werden aufgelegt…"
+              ? "Titel werden geladen…"
               : readyCount < 2
-                ? "Warte auf Mitspieler"
+                ? "Mindestens zwei Personen"
                 : "Abend starten"}
           </Button>
         </>
       ) : (
         <p className="mt-8 rounded-md bg-raised px-4 py-3 text-sm text-muted shadow-border">
-          Repertoire: {ERA_LABELS[era]} · {target} Karten. Der Host startet, sobald alle da sind.
+          Repertoire: {ERA_LABELS[era]} · {target} Karten. Der Host startet die Runde.
         </p>
       )}
     </main>

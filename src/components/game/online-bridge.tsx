@@ -59,7 +59,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
     const timer = window.setTimeout(() => {
       const current = useOnline.getState();
       if (current.status === "connecting") {
-        current.setError("Raum nicht gefunden oder Verbindung blockiert. Code prüfen, VPN aus, Link nochmal öffnen.");
+        current.setError("Raum nicht gefunden oder Verbindung blockiert. Code prüfen und erneut versuchen.");
         current.leaveRoom();
         current.openEntry(roomCode);
       }
@@ -123,7 +123,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
     if (role !== "guest") return;
     const hostPeer = p2p.peers.find((p) => p.id === hostId);
     if (hostPeer?.connectionState === "failed") {
-      useOnline.getState().setError("Verbindung zum Host fehlgeschlagen. Anderes Netz oder ohne VPN versuchen.");
+      useOnline.getState().setError("Verbindung zum Host fehlgeschlagen. Anderes Netz versuchen.");
     }
   }, [p2p.peers, hostId, role]);
 
@@ -151,7 +151,7 @@ function handleMessage(
 
   if (msg.t === "hello" && online.role === "host") {
     if (online.status === "playing") {
-      ctx.send({ t: "start-failed", error: "Die Runde läuft schon. Warte auf die nächste." }, from);
+      ctx.send({ t: "start-failed", error: "Die Runde läuft bereits." }, from);
       return;
     }
     const members = online.members.slice();
