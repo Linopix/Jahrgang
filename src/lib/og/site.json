@@ -3,6 +3,6 @@
   "type": "x:game",
   "card": "custom",
   "color": "0c0b0a",
-  "description": "Hören, legen, Jahr treffen.",
+  "description": "Musik-Zeitspiel. Einen Hit hören und auf der Zeitlinie einordnen.",
   "image": "https://jahrgang.vercel.app/og.jpg"
 }

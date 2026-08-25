@@ -74,7 +74,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
     const timer = window.setTimeout(() => {
       const current = useOnline.getState();
       if (current.status === "connecting") {
-        current.setError("Raum nicht gefunden.");
+        current.setError("Raum nicht gefunden oder Verbindung blockiert. Code prüfen und erneut versuchen.");
         current.leaveRoom();
         current.openEntry(roomCode);
       }
@@ -151,7 +151,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
     if (role !== "guest") return;
     const hostPeer = p2p.peers.find((p) => p.id === hostId);
     if (hostPeer?.connectionState === "failed") {
-      useOnline.getState().setError("Host nicht erreichbar.");
+      useOnline.getState().setError("Verbindung zum Host fehlgeschlagen. Anderes Netz versuchen.");
     }
   }, [p2p.peers, hostId, role]);
 
@@ -299,7 +299,7 @@ function handleMessage(
     game.resetBoard();
     online.leaveRoom();
     online.openEntry(code);
-    online.setError("Der Host hat dich rausgeworfen.");
+    online.setError("Der Host hat dich aus dem Raum genommen. Namen prüfen und erneut beitreten.");
     return;
   }
 

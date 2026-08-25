@@ -2,9 +2,9 @@
 
 **[Spielen](https://jahrgang.vercel.app)**
 
-Ein Titel läuft. Name und Jahr bleiben zu. Du legst ihn auf die Zeitlinie: links früher, rechts später. Wer zuerst voll hat, gewinnt.
+Ein Titel läuft. Name und Jahr bleiben verdeckt. Du ordnest ihn auf deiner Zeitlinie ein: links früher, rechts später. Wer zuerst alle Karten richtig liegen hat, gewinnt.
 
-Läuft im Browser.
+Läuft im Browser auf Handy und Rechner.
 
 ![Jahrgang Start](docs/shots/home.jpg)
 

@@ -211,9 +211,9 @@ export function WinnerScreen() {
           {soloFailed
             ? `${champ?.timeline.length ?? 0} von ${target} Karten.`
             : open
-              ? `${champ?.timeline.length ?? 0} Titel, frei gelegt.`
-              : `${champ?.timeline.length ?? 0} richtig.`}
-          {original && champ ? ` ${champ.quiz} Treffer.` : ""}
+              ? `${champ?.timeline.length ?? 0} Titel, ohne Zeitlinie-Regel.`
+              : `${champ?.timeline.length ?? 0} Titel in der richtigen Reihenfolge.`}
+          {original && champ ? ` ${champ.quiz} Treffer beim Raten.` : ""}
         </p>
       </div>
 
@@ -245,6 +245,7 @@ export function WinnerScreen() {
       {series.some((row) => row.wins > 0 || row.points > 0) ? (
         <section className="mt-8">
           <h2 className="text-sm font-medium text-fg">Abend-Stand</h2>
+          <p className="mt-1 text-sm text-muted">Gleicher Raum, gleicher Code. Siege bleiben.</p>
           <ol className="mt-3 space-y-2">
             {series.map((row) => (
               <li

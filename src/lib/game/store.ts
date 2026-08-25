@@ -322,7 +322,7 @@ export const useGame = create<GameStore>((set, get) => ({
       if (config.era === "playlist" && !config.playlistUrl) {
         set({
           phase: "setup",
-          loadError: "Öffentlichen Playlist-Link übernehmen.",
+          loadError: "Bitte einen öffentlichen Spotify- oder Deezer-Link übernehmen.",
         });
         return false;
       }
@@ -385,8 +385,8 @@ export const useGame = create<GameStore>((set, get) => ({
         set({
           phase: "setup",
           loadError: config.playlistUrl
-            ? "Zu wenige Titel. Playlist öffentlich machen oder anderes Repertoire."
-            : "Zu wenige Titel mit Vorschau. Anderes Repertoire.",
+            ? "Zu wenige Titel mit Jahr und Vorschau. Playlist öffentlich teilen oder Repertoire nutzen."
+            : "Zu wenige Songs mit Vorschau gefunden. Anderes Repertoire wählen oder später nochmal versuchen.",
         });
         return false;
       }
@@ -416,7 +416,7 @@ export const useGame = create<GameStore>((set, get) => ({
     } catch {
       set({
         phase: "setup",
-        loadError: "Vorschauen nicht geladen.",
+        loadError: "Vorschauen konnten nicht geladen werden. Verbindung prüfen und erneut starten.",
       });
       return false;
     }

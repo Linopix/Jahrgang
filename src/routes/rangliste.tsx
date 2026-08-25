@@ -31,7 +31,9 @@ function BoardPage() {
           Zurück
         </a>
         <h1 className="mt-6 font-display text-4xl font-medium text-fg">Rangliste</h1>
-        <p className="mt-3 text-sm text-muted">Gerade aus.</p>
+        <p className="mt-3 text-sm text-muted">
+          Die Rangliste ist vorbereitet, derzeit aber ausgeschaltet.
+        </p>
       </main>
     );
   }

@@ -14,43 +14,61 @@ function HinweisePage() {
       </a>
       <h1 className="mt-6 font-display text-4xl font-medium text-fg">Hinweise</h1>
       <p className="mt-3 text-sm text-muted">
-        Privates Spiel, kein Gewinn, kein Label, kein offizielles Produkt.
+        Jahrgang ist ein Zeitspiel für den privaten Abend. Es erzielt keinen
+        Gewinn. Kein offizielles Produkt, keine Verbindung zu anderen Spielen
+        oder Labels.
       </p>
 
       <section className="mt-10 space-y-3">
         <h2 className="font-display text-2xl font-medium text-fg">Name</h2>
         <p className="text-sm leading-relaxed text-muted">
-          Heißt Jahrgang. Nicht unter einem anderen Markennamen zeigen.
+          Jahrgang steht für sich. Es ist weder lizenziert noch unterstützt von
+          Herstellern ähnlicher Gesellschaftsspiele. Wer die Runde öffentlich
+          zeigt, soll sie als Jahrgang benennen — nicht unter einem anderen
+          Markennamen.
         </p>
       </section>
 
       <section className="mt-10 space-y-3">
         <h2 className="font-display text-2xl font-medium text-fg">Musik</h2>
         <p className="text-sm leading-relaxed text-muted">
-          Kurze Vorschauen aus den Stores. Nichts wird gespeichert. Playlists
-          nur, um Titel zu finden.
+          Zum Raten läuft eine kurze Vorschau, die die Stores öffentlich
+          anbieten. Jahrgang ist kein Streamingdienst und speichert die Dateien
+          nicht. Öffentliche Playlists von Spotify oder Deezer dienen nur dazu,
+          Titel für die Runde zu finden.
         </p>
       </section>
 
       <section className="mt-10 space-y-3">
         <h2 className="font-display text-2xl font-medium text-fg">Daten</h2>
         <p className="text-sm leading-relaxed text-muted">
-          Ohne Konto bleibt der Stand auf dem Gerät. Räume sind nur die Leitung,
-          Züge gehen Gerät zu Gerät.
+          Namen bleiben auf dem Gerät. Online-Räume dienen nur der Verbindung;
+          Spielzüge gehen direkt zwischen den Geräten. Ein optionales Konto für
+          die Rangliste ist im Code vorbereitet, derzeit aber ausgeschaltet.
+        </p>
+      </section>
+
+      <section className="mt-10 space-y-3">
+        <h2 className="font-display text-2xl font-medium text-fg">Projekt</h2>
+        <p className="text-sm leading-relaxed text-muted">
+          Jahrgang ist privat und unentgeltlich. Keine Werbung, kein Shop, keine
+          Beiträge. Es wird kein Gewinn erzielt.
         </p>
       </section>
 
       <section className="mt-10 space-y-3">
         <h2 className="font-display text-2xl font-medium text-fg">Discord</h2>
         <p className="text-sm leading-relaxed text-muted">
-          Voice in Discord, Spiel im Browser.
+          Stimme bleibt in Discord, das Spiel im Browser. Ein Status im
+          Discord-Profil aus dem normalen Tab geht nicht — Discord erlaubt das
+          nur in einer Activity.
         </p>
       </section>
 
       <section className="mt-10 space-y-3">
         <h2 className="font-display text-2xl font-medium text-fg">Kontakt</h2>
         <p className="text-sm leading-relaxed text-muted">
-          Rechtliches und Fragen:{" "}
+          Rechtliche Hinweise, Abmahnungen und Fragen an{" "}
           <a
             href={`mailto:${CONTACT}`}
             className="text-fg underline decoration-border underline-offset-4 hover:decoration-fg"

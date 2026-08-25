@@ -160,7 +160,7 @@ function PlaylistField({
   return (
     <div className="mt-3 rounded-xl bg-raised p-4 shadow-border" data-playlist-field>
       <p className="text-sm text-muted">
-        Öffentlichen Link oder Zeilen Interpret – Titel.
+        Öffentlichen Spotify- oder Deezer-Link einfügen, oder Zeilen: Interpret – Titel.
       </p>
       <textarea
         value={draft}
@@ -480,9 +480,9 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
           <p className="mt-2 text-sm text-muted">
             {value.variant === "custom"
               ? custom.open
-                ? "Kein Ziel. Bis der Stapel leer ist."
-                : "Karten bis zum Sieg."
-              : "Karten bis zum Sieg. Joker pro Person."}
+                ? "Kein Kartenziel. Der Stapel läuft sich leer."
+                : "Karten bis zum Sieg, Regeln wie eingestellt."
+              : "Karten bis zum Sieg · Joker pro Person."}
           </p>
         </section>
       </div>
@@ -528,7 +528,7 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
               />
             </div>
           </div>
-          <p className="mt-2 text-sm text-muted">Host stellt ein.</p>
+          <p className="mt-2 text-sm text-muted">Beides einzeln. Nur der Host stellt das ein.</p>
         </section>
       ) : null}
 

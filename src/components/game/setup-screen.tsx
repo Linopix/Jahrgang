@@ -40,8 +40,8 @@ export function SetupScreen() {
           </h1>
           <p className="mt-2 text-sm text-muted">
             {mode === "solo"
-              ? "Drei Fehler, dann vorbei."
-              : "Ein Gerät, reihum."}
+              ? "Drei Fehlversuche. Ziel ist eine vollständige Zeitlinie."
+              : "Ein Gerät, reihum. Wer am Zug ist, legt auf der eigenen Zeitlinie."}
           </p>
 
           {mode === "party" ? (

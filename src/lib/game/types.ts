@@ -247,28 +247,28 @@ export const ERA_LABELS: Record<EraId, string> = {
 };
 
 export const ERA_BLURBS: Record<EraId, string> = {
-  all: "Alles.",
+  all: "Der ganze Katalog.",
   classic: "Bis 1979.",
-  eighties: "1980–89.",
-  nineties: "1990–99.",
-  "two-thousands": "2000–09.",
-  tens: "2010–19.",
+  eighties: "1980 bis 1989.",
+  nineties: "1990 bis 1999.",
+  "two-thousands": "2000 bis 2009.",
+  tens: "2010 bis 2019.",
   today: "Ab 2020.",
-  german: "Deutsch.",
-  pop: "Pop.",
-  rock: "Rock.",
-  rap: "Rap.",
-  dance: "Dance.",
-  soul: "Soul.",
-  metal: "Metal.",
-  indie: "Indie.",
-  latin: "Latin.",
-  schlager: "Schlager.",
-  party: "Laut.",
-  charts: "Hits ab 2015.",
-  "rap-charts": "Rap der letzten Jahre.",
-  mix: "Jahre und Genre selbst.",
-  playlist: "Spotify, Deezer oder Liste.",
+  german: "Deutschsprachige Titel.",
+  pop: "Pop über die Jahrzehnte.",
+  rock: "Rock, Alternative, Classic Rock.",
+  rap: "Hip-Hop und Rap.",
+  dance: "Dance, Disco, elektronische Hits.",
+  soul: "Soul, R&B, Funk.",
+  metal: "Metal und härterer Rock.",
+  indie: "Indie, Alternative, Gitarren abseits der Arena.",
+  latin: "Latin, Reggaeton, tropische Hits.",
+  schlager: "Schlager und Deutschpop der Bühne.",
+  party: "Laut, bekannt, für den Abend.",
+  charts: "Große Single-Hits ab 2015.",
+  "rap-charts": "Hip-Hop-Hits der letzten Jahre.",
+  mix: "Zeitraum und Genre selbst wählen.",
+  playlist: "Öffentliche Spotify- oder Deezer-Playlist, oder eine Titelliste.",
 };
 
 export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [
@@ -311,13 +311,13 @@ export const VARIANT_LABELS: Record<PlayVariant, string> = {
 };
 
 export const VARIANT_BLURBS: Record<PlayVariant, string> = {
-  timeline: "Nur das Jahr. Cover an.",
-  blind: "Nur das Jahr. Cover zu.",
-  original: "Interpret und Titel, dann legen.",
-  star: "Nur Interpret, dann legen.",
-  hook: "Nur Titel, dann legen.",
-  wild: "Raten, Cover zu, Jahre weg, Tempo spinnt.",
-  custom: "Alles selbst.",
+  timeline: "Nur das Erscheinungsjahr. Das Cover darf während des Hörens sichtbar sein.",
+  blind: "Wie Zeitstrahl, aber das Cover bleibt bis zum Aufdecken verdeckt.",
+  original: "Interpret und Titel raten, danach einordnen. Das Cover bleibt verdeckt.",
+  star: "Nur den Interpreten raten, dann einordnen. Das Cover bleibt verdeckt.",
+  hook: "Nur den Titel raten, dann einordnen. Das Cover bleibt verdeckt.",
+  wild: "Kenner, Cover zu, Jahre weg, links ist später — und die Platte läuft zu schnell oder zu langsam.",
+  custom: "Regeln selbst setzen: Raten, Cover, Linie, Tempo, Ziel.",
 };
 
 export type ResolvedRules = {
@@ -416,17 +416,17 @@ export const GENRE_LABELS: Record<GenreId, string> = {
 };
 
 export const GENRE_BLURBS: Record<GenreId, string> = {
-  all: "Kein Filter.",
-  pop: "Pop.",
-  rock: "Rock.",
-  rap: "Rap.",
-  dance: "Dance.",
-  soul: "Soul.",
-  metal: "Metal.",
-  indie: "Indie.",
-  latin: "Latin.",
-  schlager: "Schlager.",
-  german: "Deutsch.",
+  all: "Kein Filter, der ganze Mix.",
+  pop: "Pop über die Jahrzehnte.",
+  rock: "Rock, Alternative, Classic Rock.",
+  rap: "Hip-Hop und Rap.",
+  dance: "Dance, Disco, elektronische Hits.",
+  soul: "Soul, R&B, Funk.",
+  metal: "Metal und härterer Rock.",
+  indie: "Indie, Alternative, Gitarren abseits der Arena.",
+  latin: "Latin, Reggaeton, tropische Hits.",
+  schlager: "Schlager und Deutschpop der Bühne.",
+  german: "Deutschsprachige Titel.",
 };
 
 export const NEXT_ROUND_OPTIONS = ["host", "all"] as const;
@@ -435,8 +435,8 @@ export const NEXT_ROUND_LABELS: Record<NextRoundPolicy, string> = {
   all: "Alle",
 };
 export const NEXT_ROUND_BLURB: Record<NextRoundPolicy, string> = {
-  host: "Nur der Host legt die nächste Platte auf.",
-  all: "Jeder darf weiter.",
+  host: "Nach dem Sieg startet nur der Host weiter. Der Raum und der Abend-Stand bleiben.",
+  all: "Jede Person im Raum darf weiter spielen. Der Code bleibt, der Stand auch.",
 };
 
 export const YEAR_MIN = 1960;
