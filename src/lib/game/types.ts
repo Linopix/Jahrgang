@@ -13,8 +13,6 @@ export type EraId =
   | "dance"
   | "party"
   | "charts"
-  | "viral-2024"
-  | "viral-2025"
   | "rap-charts"
   | "mix"
   | "playlist";
@@ -134,8 +132,6 @@ export const ERA_IDS: EraId[] = [
   "dance",
   "party",
   "charts",
-  "viral-2024",
-  "viral-2025",
   "rap-charts",
   "mix",
   "playlist",
@@ -156,8 +152,6 @@ export const ERA_LABELS: Record<EraId, string> = {
   dance: "Dance",
   party: "Party",
   charts: "Charts",
-  "viral-2024": "Viral 2024",
-  "viral-2025": "Viral 2025",
   "rap-charts": "Rap Charts",
   mix: "Mix",
   playlist: "Playlist",
@@ -178,8 +172,6 @@ export const ERA_BLURBS: Record<EraId, string> = {
   dance: "Dance, Disco, elektronische Hits.",
   party: "Laut, bekannt, für den Abend.",
   charts: "Große Single-Hits ab 2015.",
-  "viral-2024": "Viel gespielte Titel von 2024.",
-  "viral-2025": "Viel gespielte Titel von 2025.",
   "rap-charts": "Hip-Hop-Hits der letzten Jahre.",
   mix: "Zeitraum und Genre selbst wählen.",
   playlist: "Öffentliche Spotify- oder Deezer-Playlist, oder eine Titelliste.",
@@ -196,7 +188,7 @@ export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [
   },
   {
     title: "Kits",
-    ids: ["all", "party", "charts", "viral-2024", "viral-2025", "rap-charts"],
+    ids: ["all", "party", "charts", "rap-charts"],
   },
   {
     title: "Eigene",
@@ -233,7 +225,8 @@ export const NEXT_ROUND_BLURB: Record<NextRoundPolicy, string> = {
   all: "Jede Person im Raum darf die nächste Runde starten.",
 };
 
-export const DECADE_OPTIONS = [1960, 1970, 1980, 1990, 2000, 2010, 2020] as const;
+export const YEAR_MIN = 1960;
+export const YEAR_MAX = new Date().getFullYear();
 export const TARGET_OPTIONS = [6, 8, 10] as const;
 export const TOKEN_OPTIONS = [0, 1, 2] as const;
 export const DEFAULT_TARGET = 8;
@@ -241,7 +234,7 @@ export const DEFAULT_TOKENS: TokenCount = 2;
 export const DEFAULT_VARIANT: PlayVariant = "timeline";
 export const DEFAULT_NEXT_ROUND: NextRoundPolicy = "host";
 export const DEFAULT_MIX_FROM = 1980;
-export const DEFAULT_MIX_TO = 2020;
+export const DEFAULT_MIX_TO = YEAR_MAX;
 export const SOLO_LIVES = 3;
 
 export const DEFAULT_ROOM_CONFIG: RoomConfig = {

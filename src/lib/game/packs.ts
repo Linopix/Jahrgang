@@ -140,76 +140,6 @@ export function inferGenre(artist: string, german?: boolean): Genre {
   return "pop";
 }
 
-const TIKTOK_2024 = [
-  ["Beautiful Things", "Benson Boone"],
-  ["Lose Control", "Teddy Swims"],
-  ["Espresso", "Sabrina Carpenter"],
-  ["Birds of a Feather", "Billie Eilish"],
-  ["Stick Season", "Noah Kahan"],
-  ["Greedy", "Tate McRae"],
-  ["Lovin On Me", "Jack Harlow"],
-  ["Too Sweet", "Hozier"],
-  ["Good Luck, Babe!", "Chappell Roan"],
-  ["Pink Pony Club", "Chappell Roan"],
-  ["Please Please Please", "Sabrina Carpenter"],
-  ["APT.", "ROSÉ"],
-  ["Die with a Smile", "Lady Gaga"],
-  ["Fortnight", "Taylor Swift"],
-  ["Not Like Us", "Kendrick Lamar"],
-  ["Cruel Summer", "Taylor Swift"],
-  ["End of Beginning", "Djo"],
-  ["A Bar Song (Tipsy)", "Shaboozey"],
-  ["Million Dollar Baby", "Tommy Richman"],
-  ["Water", "Tyla"],
-  ["Belong Together", "Mark Ambor"],
-  ["Stargazing", "Myles Smith"],
-  ["Austin", "Dasha"],
-  ["I Had Some Help", "Post Malone"],
-  ["Texas Hold 'Em", "Beyoncé"],
-  ["Slow It Down", "Benson Boone"],
-  ["Taste", "Sabrina Carpenter"],
-  ["Komet", "Udo Lindenberg"],
-  ["Friesenjung", "Ski Aggu"],
-  ["Bauch Beine Po", "Shirin David"],
-  ["That's So True", "Gracie Abrams"],
-].map(([title, artist]) => keyOf(title, artist));
-
-const TIKTOK_2025 = [
-  ["APT.", "ROSÉ"],
-  ["Die with a Smile", "Lady Gaga"],
-  ["Birds of a Feather", "Billie Eilish"],
-  ["That's So True", "Gracie Abrams"],
-  ["Ordinary", "Alex Warren"],
-  ["Messy", "Lola Young"],
-  ["Pink Pony Club", "Chappell Roan"],
-  ["Sports Car", "Tate McRae"],
-  ["Luther", "Kendrick Lamar"],
-  ["Timeless", "The Weeknd"],
-  ["Taste", "Sabrina Carpenter"],
-  ["Good Luck, Babe!", "Chappell Roan"],
-  ["Beautiful Things", "Benson Boone"],
-  ["Lose Control", "Teddy Swims"],
-  ["Espresso", "Sabrina Carpenter"],
-  ["Abracadabra", "Lady Gaga"],
-  ["Back to Friends", "sombr"],
-  ["Fühlst du das auch", "Ayliva"],
-  ["Please Please Please", "Sabrina Carpenter"],
-  ["Not Like Us", "Kendrick Lamar"],
-  ["Million Dollar Baby", "Tommy Richman"],
-  ["A Bar Song (Tipsy)", "Shaboozey"],
-  ["Water", "Tyla"],
-  ["Austin", "Dasha"],
-  ["Flowers", "Miley Cyrus"],
-  ["Greedy", "Tate McRae"],
-  ["Stick Season", "Noah Kahan"],
-  ["Apple", "Charli XCX"],
-  ["Diet Pepsi", "Addison Rae"],
-  ["Sailor Song", "Gigi Perez"],
-  ["Anxiety", "Doechii"],
-  ["Manchild", "Sabrina Carpenter"],
-  ["tv off", "Kendrick Lamar"],
-].map(([title, artist]) => keyOf(title, artist));
-
 const PARTY = [
   ["Bohemian Rhapsody", "Queen"],
   ["We Will Rock You", "Queen"],
@@ -263,8 +193,6 @@ const PARTY = [
   ["Major Tom (Völlig losgelöst)", "Peter Schilling"],
 ].map(([title, artist]) => keyOf(title, artist));
 
-const TIKTOK_2024_SET = new Set(TIKTOK_2024);
-const TIKTOK_2025_SET = new Set(TIKTOK_2025);
 const PARTY_SET = new Set(PARTY);
 
 function inKit(song: CatalogSong, kit: Set<string>) {
@@ -279,10 +207,12 @@ function matchesGenre(song: CatalogSong, genre: GenreId) {
 
 function mixBounds(mix?: MixFilter) {
   const from = mix?.from ?? 1960;
-  const to = mix?.to ?? 2020;
-  const start = Math.min(from, to);
-  const end = Math.max(from, to) + 9;
-  return { start, end, genre: mix?.genre ?? "all" };
+  const to = mix?.to ?? new Date().getFullYear();
+  return {
+    start: Math.min(from, to),
+    end: Math.max(from, to),
+    genre: mix?.genre ?? "all",
+  };
 }
 
 export function songsForPack(pack: EraId, mix?: MixFilter): CatalogSong[] {
@@ -320,10 +250,6 @@ export function songsForPack(pack: EraId, mix?: MixFilter): CatalogSong[] {
         return inKit(song, PARTY_SET);
       case "charts":
         return song.year >= 2015;
-      case "viral-2024":
-        return inKit(song, TIKTOK_2024_SET);
-      case "viral-2025":
-        return inKit(song, TIKTOK_2025_SET);
       case "rap-charts":
         return matchesGenre(song, "rap") && song.year >= 2015;
       default:

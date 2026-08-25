@@ -12,14 +12,6 @@ test("each playable pack has enough songs for a round", () => {
   }
 });
 
-test("viral packs are distinct curated kits", () => {
-  const a = songsForPack("viral-2024");
-  const b = songsForPack("viral-2025");
-  assert.ok(a.some((s) => s.title === "Espresso"));
-  assert.ok(b.some((s) => s.title === "Ordinary" || s.title === "APT."));
-  assert.ok(b.length >= 20);
-});
-
 test("rap charts stays recent hip-hop", () => {
   const rows = songsForPack("rap-charts");
   assert.ok(rows.length >= 12);
@@ -28,7 +20,7 @@ test("rap charts stays recent hip-hop", () => {
 });
 
 test("mix respects year range and german genre", () => {
-  const mix = songsForPack("mix", { from: 1980, to: 1980, genre: "german" });
+  const mix = songsForPack("mix", { from: 1980, to: 1989, genre: "german" });
   assert.ok(mix.length >= 4);
   assert.ok(mix.every((s) => s.year >= 1980 && s.year <= 1989 && s.german));
 });

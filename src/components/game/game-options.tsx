@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { peekPlaylist } from "@/lib/game/playlist";
 import { sfxHover, sfxTick } from "@/lib/game/audio";
 import {
-  DECADE_OPTIONS,
   ERA_BLURBS,
   ERA_LABELS,
   GENRE_LABELS,
@@ -11,11 +11,10 @@ import {
   NEXT_ROUND_LABELS,
   NEXT_ROUND_OPTIONS,
   PACK_GROUPS,
-  TARGET_OPTIONS,
-  TOKEN_OPTIONS,
   VARIANT_BLURBS,
   VARIANT_LABELS,
-  decadeLabelYear,
+  YEAR_MAX,
+  YEAR_MIN,
   type GenreId,
   type NextRoundPolicy,
   type PlayVariant,
@@ -144,6 +143,106 @@ function PlaylistField({
   );
 }
 
+const SELECT =
+  "h-12 w-full appearance-none rounded-md bg-surface px-4 pr-10 text-sm text-fg shadow-border outline-none transition-[box-shadow] focus:ring-2 focus:ring-primary/70";
+
+function SnapSlider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  display,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  display: string;
+  onChange: (next: number) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="flex items-baseline justify-between gap-3">
+        <span className="text-sm text-muted">{label}</span>
+        <span className="text-sm tabular-nums text-fg">{display}</span>
+      </span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        aria-label={label}
+        onChange={(event) => {
+          const next = Number(event.target.value);
+          if (next !== value) sfxTick();
+          onChange(next);
+        }}
+        className="range-single mt-2 w-full"
+      />
+    </label>
+  );
+}
+
+function DualYearSlider({
+  from,
+  to,
+  onChange,
+}: {
+  from: number;
+  to: number;
+  onChange: (from: number, to: number) => void;
+}) {
+  const span = YEAR_MAX - YEAR_MIN;
+  const start = Math.min(from, to);
+  const end = Math.max(from, to);
+  const left = ((start - YEAR_MIN) / span) * 100;
+  const right = ((end - YEAR_MIN) / span) * 100;
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-3 text-sm">
+        <span className="tabular-nums text-fg">{start}</span>
+        <span className="text-muted">Zeitraum</span>
+        <span className="tabular-nums text-fg">{end}</span>
+      </div>
+      <div className="range-dual mt-2">
+        <div className="range-dual-track" aria-hidden="true">
+          <div
+            className="range-dual-fill"
+            style={{ left: `${left}%`, width: `${Math.max(right - left, 0)}%` }}
+          />
+        </div>
+        <input
+          type="range"
+          min={YEAR_MIN}
+          max={YEAR_MAX}
+          value={start}
+          aria-label="Von Jahr"
+          onChange={(event) => {
+            const next = Number(event.target.value);
+            onChange(Math.min(next, end), end);
+          }}
+        />
+        <input
+          type="range"
+          min={YEAR_MIN}
+          max={YEAR_MAX}
+          value={end}
+          aria-label="Bis Jahr"
+          onChange={(event) => {
+            const next = Number(event.target.value);
+            onChange(start, Math.max(next, start));
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function MixField({
   value,
   onChange,
@@ -153,42 +252,34 @@ function MixField({
 }) {
   return (
     <div className="mt-3 space-y-4 rounded-xl bg-raised p-4 shadow-border" data-mix-field>
-      <div>
-        <p className="text-xs font-medium tracking-[0.16em] text-muted uppercase">Von</p>
-        <div className="mt-2">
-          <Choice
-            items={DECADE_OPTIONS}
-            value={value.mixFrom as (typeof DECADE_OPTIONS)[number]}
-            onChange={(mixFrom) => onChange({ era: "mix", mixFrom })}
-            label={decadeLabelYear}
-            columns="grid-cols-4 sm:grid-cols-7"
-          />
-        </div>
-      </div>
-      <div>
-        <p className="text-xs font-medium tracking-[0.16em] text-muted uppercase">Bis</p>
-        <div className="mt-2">
-          <Choice
-            items={DECADE_OPTIONS}
-            value={value.mixTo as (typeof DECADE_OPTIONS)[number]}
-            onChange={(mixTo) => onChange({ era: "mix", mixTo })}
-            label={decadeLabelYear}
-            columns="grid-cols-4 sm:grid-cols-7"
-          />
-        </div>
-      </div>
-      <div>
-        <p className="text-xs font-medium tracking-[0.16em] text-muted uppercase">Genre</p>
-        <div className="mt-2">
-          <Choice
-            items={GENRES}
+      <DualYearSlider
+        from={value.mixFrom}
+        to={value.mixTo}
+        onChange={(mixFrom, mixTo) => onChange({ era: "mix", mixFrom, mixTo })}
+      />
+      <label className="block">
+        <span className="mb-2 block text-xs font-medium tracking-[0.16em] text-muted uppercase">
+          Genre
+        </span>
+        <span className="relative block">
+          <select
             value={value.mixGenre}
-            onChange={(mixGenre) => onChange({ era: "mix", mixGenre })}
-            label={(item) => GENRE_LABELS[item]}
-            columns="grid-cols-3 sm:grid-cols-6"
-          />
-        </div>
-      </div>
+            aria-label="Genre"
+            onChange={(event) => {
+              sfxTick();
+              onChange({ era: "mix", mixGenre: event.target.value as GenreId });
+            }}
+            className={SELECT}
+          >
+            {GENRES.map((id) => (
+              <option key={id} value={id}>
+                {GENRE_LABELS[id]}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted" />
+        </span>
+      </label>
     </div>
   );
 }
@@ -213,18 +304,24 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
 
         <section>
           <h2 className="text-sm font-medium text-fg">Ziel und Joker</h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <Choice
-              items={TARGET_OPTIONS}
+          <div className="mt-3 grid gap-5">
+            <SnapSlider
+              label="Karten"
               value={value.target}
-              onChange={(target) => onChange({ target })}
-              label={(item) => `${item}`}
+              min={6}
+              max={10}
+              step={2}
+              display={`${value.target}`}
+              onChange={(target) => onChange({ target: target as 6 | 8 | 10 })}
             />
-            <Choice
-              items={TOKEN_OPTIONS}
+            <SnapSlider
+              label="Joker"
               value={value.tokens}
+              min={0}
+              max={2}
+              step={1}
+              display={value.tokens === 0 ? "Keine" : String(value.tokens)}
               onChange={(tokens) => onChange({ tokens: tokens as TokenCount })}
-              label={(item) => (item === 0 ? "Keine" : String(item))}
             />
           </div>
           <p className="mt-2 text-sm text-muted">Karten bis zum Sieg · Joker pro Person.</p>
@@ -297,7 +394,7 @@ export function roomConfigSummary(config: RoomConfig) {
     return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · ${config.playlistLabel}`;
   }
   if (config.era === "mix") {
-    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · Mix ${decadeLabelYear(config.mixFrom)}–${decadeLabelYear(config.mixTo)} · ${GENRE_LABELS[config.mixGenre]}`;
+    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · Mix ${config.mixFrom}–${config.mixTo} · ${GENRE_LABELS[config.mixGenre]}`;
   }
   return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · ${ERA_LABELS[config.era]}`;
 }
