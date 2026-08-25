@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   hydrateUiMute,
   isUiMuted,
+  setDiscoAudio,
   setRetroAudio,
   setUiMuted,
   sfxTick,
@@ -98,6 +99,7 @@ export function ThemePicker() {
     setTheme(id);
     applyTheme(id);
     setRetroAudio(id === "retro");
+    setDiscoAudio(id === "disco");
     setPalette(visibleThemes());
   }
 
@@ -110,6 +112,7 @@ export function ThemePicker() {
       setTheme(readTheme());
       setPalette(visibleThemes());
       setRetroAudio(readTheme() === "retro");
+      setDiscoAudio(readTheme() === "disco");
     };
     window.addEventListener("jahrgang-theme", sync);
     const unsub = subscribeUiAudio(() => setUiMutedState(isUiMuted()));

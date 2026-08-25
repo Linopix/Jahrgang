@@ -13,15 +13,24 @@ let previewMuted = false;
 let uiMuted = false;
 let lobbyWanted = true;
 let retro = false;
+let discoLobby = false;
 const uiListeners = new Set<() => void>();
 
 const LOBBY_BPM = 76;
 const LOBBY_STEP = 60 / LOBBY_BPM / 4;
+const DISCO_BPM = 118;
+const DISCO_STEP = 60 / DISCO_BPM / 4;
 const LOBBY_CHORDS = [
   [220.0, 261.63, 329.63],
   [146.83, 220.0, 293.66],
   [196.0, 246.94, 293.66],
   [130.81, 196.0, 261.63],
+];
+const DISCO_CHORDS = [
+  [110.0, 164.81, 220.0],
+  [146.83, 220.0, 293.66],
+  [130.81, 196.0, 261.63],
+  [164.81, 220.0, 329.63],
 ];
 
 function notifyUi() {
@@ -182,8 +191,67 @@ function playChord(when: number, step: number) {
   bass.stop(when + 0.45);
 }
 
+function playDiscoKick(when: number) {
+  if (!ctx || !lobbyGain) return;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(140, when);
+  osc.frequency.exponentialRampToValueAtTime(48, when + 0.11);
+  g.gain.setValueAtTime(0.22, when);
+  g.gain.exponentialRampToValueAtTime(0.0001, when + 0.16);
+  osc.connect(g);
+  g.connect(lobbyGain);
+  osc.start(when);
+  osc.stop(when + 0.18);
+}
+
+function playDiscoHat(when: number, open: boolean) {
+  if (!ctx || !lobbyGain) return;
+  noiseHit(lobbyGain, when, open ? 0.1 : 0.03, open ? 0.05 : 0.028, 5000, 12000);
+}
+
+function playDiscoBass(when: number, freq: number) {
+  if (!ctx || !lobbyGain) return;
+  toneInto(lobbyGain, {
+    freq,
+    freqEnd: freq * 0.96,
+    duration: 0.18,
+    type: "sawtooth",
+    gain: 0.05,
+    filter: 420,
+    whenAbs: when,
+  });
+}
+
+function playDiscoChord(when: number, step: number) {
+  if (!ctx || !lobbyGain) return;
+  const chord = DISCO_CHORDS[Math.floor(step / 16) % DISCO_CHORDS.length];
+  for (const freq of chord) {
+    toneInto(lobbyGain, {
+      freq: freq * 2,
+      duration: 0.28,
+      type: "square",
+      gain: 0.018,
+      filter: 1400,
+      whenAbs: when,
+    });
+  }
+}
+
 function playLobbyStep(step: number, when: number) {
   if (!ctx || !lobbyGain) return;
+  if (discoLobby) {
+    const beat = step % 16;
+    if (beat % 4 === 0) playDiscoKick(when);
+    if (beat % 2 === 0) playDiscoHat(when, beat % 8 === 6);
+    if (beat === 0 || beat === 6 || beat === 10) {
+      const chord = DISCO_CHORDS[Math.floor(step / 16) % DISCO_CHORDS.length];
+      playDiscoBass(when, chord[0]);
+    }
+    if (beat === 0) playDiscoChord(when, step);
+    return;
+  }
   const beat = step % 16;
   if (beat === 0 || beat === 8) playKick(when);
   if (beat === 4 || beat === 12) {
@@ -240,7 +308,7 @@ function startLobby() {
     while (lobbyNext < audioCtx.currentTime + 0.18) {
       playLobbyStep(lobbyStep16, lobbyNext);
       lobbyStep16 += 1;
-      lobbyNext += LOBBY_STEP;
+      lobbyNext += discoLobby ? DISCO_STEP : LOBBY_STEP;
     }
     lobbyTimer = window.setTimeout(tick, 70);
   };
@@ -255,6 +323,17 @@ function stopLobby() {
 
 export function setRetroAudio(next: boolean) {
   retro = next;
+  if (next) discoLobby = false;
+  ensureCtx();
+  applyUiVolume();
+}
+
+export function setDiscoAudio(next: boolean) {
+  if (discoLobby === next) return;
+  discoLobby = next;
+  if (next) retro = false;
+  stopLobby();
+  lobbyStep16 = 0;
   ensureCtx();
   applyUiVolume();
 }
@@ -429,44 +508,61 @@ export function sfxPop() {
   tone({ freq: 1240, duration: 0.07, type: "triangle", when: 0.02, gain: 0.018, filter: 2800 });
 }
 
+const EMOJI_FILES: Record<string, string> = {
+  "🔥": "/sfx/fire.mp3",
+  "😂": "/sfx/laugh.mp3",
+  "😱": "/sfx/shock.mp3",
+  "👏": "/sfx/clap.mp3",
+  "💯": "/sfx/ding.mp3",
+  "💀": "/sfx/skull.mp3",
+  "❤️": "/sfx/heart.mp3",
+  "🎵": "/sfx/note.mp3",
+};
+
+function playSample(src: string, gain = 0.5) {
+  if (uiMuted) return;
+  const el = new Audio(src);
+  el.volume = Math.min(1, gain);
+  void el.play().catch(() => {});
+}
+
 export function sfxReact(emoji: string) {
-  switch (emoji) {
-    case "🔥":
-      tone({ freq: 210, freqEnd: 560, duration: 0.16, type: "sawtooth", gain: 0.026, filter: 1500 });
-      thunk(0.02, 0.028);
-      break;
-    case "😂":
-      tone({ freq: 640, duration: 0.055, type: "triangle", gain: 0.034, filter: 2200 });
-      tone({ freq: 500, duration: 0.06, type: "triangle", when: 0.07, gain: 0.028, filter: 2000 });
-      tone({ freq: 720, duration: 0.05, type: "triangle", when: 0.14, gain: 0.022, filter: 2400 });
-      break;
-    case "😱":
-      tone({ freq: 260, freqEnd: 980, duration: 0.2, type: "sine", gain: 0.04, filter: 2600 });
-      break;
-    case "👏":
-      thunk(0, 0.07);
-      thunk(0.055, 0.05);
-      break;
-    case "💯":
-      tone({ freq: 880, duration: 0.08, type: "sine", gain: 0.038, filter: 2800 });
-      tone({ freq: 1320, duration: 0.12, type: "triangle", when: 0.05, gain: 0.028, filter: 3200 });
-      break;
-    case "💀":
-      tone({ freq: 92, duration: 0.18, type: "sine", gain: 0.055, filter: 380 });
-      thunk(0, 0.045);
-      break;
-    case "❤️":
-      tone({ freq: 392, duration: 0.12, type: "sine", gain: 0.038, filter: 1800 });
-      tone({ freq: 523.25, duration: 0.18, type: "sine", when: 0.08, gain: 0.032, filter: 2000 });
-      break;
-    case "🎵":
-      tone({ freq: 659.25, duration: 0.1, type: "triangle", gain: 0.036, filter: 2600 });
-      tone({ freq: 783.99, duration: 0.14, type: "triangle", when: 0.09, gain: 0.03, filter: 2800 });
-      break;
-    default:
-      sfxPop();
+  const file = EMOJI_FILES[emoji];
+  if (file) {
+    playSample(file, 0.52);
+    if (retro && sfxBus && ctx) noiseHit(sfxBus, ctx.currentTime, 0.045, 0.016, 1800, 6200);
+    return;
   }
-  if (retro && sfxBus && ctx) noiseHit(sfxBus, ctx.currentTime, 0.045, 0.016, 1800, 6200);
+  sfxPop();
+}
+
+let gagClip: HTMLAudioElement | null = null;
+let gagTimer = 0;
+
+export async function playStoreClip(song: { title: string; artist: string; year: number }) {
+  if (uiMuted) return;
+  try {
+    const { resolvePreviews } = await import("./preview");
+    const rows = await resolvePreviews({
+      data: {
+        queries: [{ id: "gag", title: song.title, artist: song.artist, year: song.year }],
+      },
+    });
+    const url = rows[0]?.previewUrl;
+    if (!url) return;
+    gagClip?.pause();
+    window.clearTimeout(gagTimer);
+    const el = new Audio(url);
+    gagClip = el;
+    el.volume = 0.55;
+    void el.play().catch(() => {});
+    gagTimer = window.setTimeout(() => {
+      el.pause();
+      if (gagClip === el) gagClip = null;
+    }, 9000);
+  } catch {
+    /* ignore */
+  }
 }
 
 export function sfxScratch() {

@@ -1,6 +1,7 @@
 import { create } from "zustand";
-import { sfxScratch, sfxWin, setRetroAudio } from "@/lib/game/audio";
+import { playStoreClip, sfxScratch, sfxWin, setDiscoAudio, setRetroAudio } from "@/lib/game/audio";
 import { applyTheme, unlockTheme } from "@/lib/theme";
+import { GAG_CLIPS } from "@/lib/gag-book";
 import type { EraId, PlayVariant } from "@/lib/game/types";
 
 export type GagToast = { id: number; text: string; disco?: boolean };
@@ -22,6 +23,7 @@ export type EggId = (typeof EGG_IDS)[number];
 export const EGG_TOTAL = EGG_IDS.length;
 
 const EGG_KEY = "jahrgang-eggs";
+const FOUND_KEY = "jahrgang-gag-found";
 
 function isEggId(value: string): value is EggId {
   return (EGG_IDS as readonly string[]).includes(value);
@@ -44,6 +46,16 @@ function eggBucket(id: string): EggId | null {
   if (id.startsWith("p-")) return "pack";
   if (id.startsWith("v-")) return "mode";
   return "name";
+}
+
+function readFound(): string[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(FOUND_KEY) || "[]") as unknown;
+    if (!Array.isArray(raw)) return [];
+    return raw.filter((item): item is string => typeof item === "string");
+  } catch {
+    return [];
+  }
 }
 
 let nextId = 1;
@@ -70,12 +82,14 @@ type GagStore = {
   disco: boolean;
   scramble: boolean;
   eggs: EggId[];
+  found: string[];
   push: (text: string, disco?: boolean) => void;
   drop: (id: number) => void;
   setDisco: (on: boolean) => void;
   setScramble: (on: boolean) => void;
   hydrateEggs: () => void;
   addEgg: (id: EggId) => void;
+  addFound: (id: string) => void;
 };
 
 export const useGags = create<GagStore>((set, get) => ({
@@ -83,6 +97,7 @@ export const useGags = create<GagStore>((set, get) => ({
   disco: false,
   scramble: false,
   eggs: [],
+  found: [],
   push: (text, disco) => {
     const id = nextId++;
     set((state) => ({ toasts: [...state.toasts.slice(-3), { id, text, disco }] }));
@@ -93,7 +108,11 @@ export const useGags = create<GagStore>((set, get) => ({
   drop: (id) => set((state) => ({ toasts: state.toasts.filter((row) => row.id !== id) })),
   setDisco: (on) => set({ disco: on }),
   setScramble: (on) => set({ scramble: on }),
-  hydrateEggs: () => set({ eggs: readEggs() }),
+  hydrateEggs: () => {
+    const found = readFound();
+    found.forEach((id) => said.add(id));
+    set({ eggs: readEggs(), found });
+  },
   addEgg: (id) => {
     const current = get().eggs;
     if (current.includes(id)) return;
@@ -108,6 +127,17 @@ export const useGags = create<GagStore>((set, get) => ({
       window.setTimeout(() => toastGag(`${EGG_TOTAL}/${EGG_TOTAL}. Die B-Seite ist leer.`), 900);
     }
   },
+  addFound: (id) => {
+    const current = get().found;
+    if (current.includes(id)) return;
+    const found = [...current, id];
+    try {
+      localStorage.setItem(FOUND_KEY, JSON.stringify(found));
+    } catch {
+      /* ignore */
+    }
+    set({ found });
+  },
 }));
 
 export function toastGag(text: string) {
@@ -118,8 +148,11 @@ function onceGag(id: string, text: string) {
   if (said.has(id)) return false;
   said.add(id);
   toastGag(text);
+  useGags.getState().addFound(id);
   const egg = eggBucket(id);
   if (egg) useGags.getState().addEgg(egg);
+  const clip = GAG_CLIPS[id];
+  if (clip) void playStoreClip(clip);
   return true;
 }
 
@@ -129,6 +162,7 @@ export function markEgg(id: EggId) {
 
 export function notePaperSign() {
   markEgg("paper");
+  useGags.getState().addFound("paper");
 }
 
 export function noteVinylLabel() {
@@ -160,6 +194,7 @@ export function noteVinylClick() {
   sfxScratch();
   toastGag("Die Nadel hängt fest.");
   markEgg("vinyl");
+  useGags.getState().addFound("vinyl");
   document.querySelectorAll(".vinyl-disc").forEach((node) => {
     node.classList.add("is-stuck");
     window.setTimeout(() => node.classList.remove("is-stuck"), 1600);
@@ -173,6 +208,7 @@ export function noteTitleClick() {
   useGags.getState().setScramble(true);
   toastGag("Jahrgang? Jahrgang.");
   markEgg("title");
+  useGags.getState().addFound("title");
   window.setTimeout(() => useGags.getState().setScramble(false), 1400);
 }
 
@@ -186,9 +222,13 @@ export function noteKonamiKey(key: string) {
       unlockTheme("disco");
       applyTheme("disco");
       setRetroAudio(false);
+      setDiscoAudio(true);
       useGags.getState().setDisco(true);
       toastGag("Disco-Edit freigeschaltet. Niemand hat etwas gesehen.");
       markEgg("disco");
+      useGags.getState().addFound("disco");
+      const clip = GAG_CLIPS.disco;
+      if (clip) void playStoreClip(clip);
       window.setTimeout(() => useGags.getState().setDisco(false), 1800);
     }
     return;

@@ -93,7 +93,8 @@ export function HomeScreen() {
         <a href="mailto:jahrgang.game@icloud.com" className="hover:text-fg">
           Kontakt
         </a>
-        <EggTally />
+        <span>·</span>
+        <EggTally className="hover:text-fg" />
       </p>
     </main>
   );
