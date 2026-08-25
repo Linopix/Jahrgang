@@ -67,15 +67,12 @@ function SleeveChip({
       }}
       className={cn(
         CHIP,
-        "overflow-hidden",
         selected
-          ? "pack-selected col-span-2 h-auto min-h-12 flex-col items-stretch py-3 text-primary-fg bg-primary"
+          ? "text-primary-fg bg-primary"
           : "bg-raised text-fg shadow-border hover:bg-surface",
       )}
     >
-      <span className={cn("pack-sleeve", selected && "is-open")}>
-        <span className="pack-sleeve-inner flex justify-center">{art}</span>
-      </span>
+      {art}
       <span className="truncate">{label}</span>
     </button>
   );
@@ -315,14 +312,9 @@ function MixField({
             id,
             label: GENRE_LABELS[id],
             blurb: GENRE_BLURBS[id],
-            art: <GenreArt id={id} className="size-10" />,
+            art: <GenreArt id={id} className="size-7" />,
           }))}
         />
-        <div className="pack-sleeve is-open mt-3">
-          <div className="pack-sleeve-inner flex justify-center">
-            <GenreArt id={value.mixGenre} className="pack-cover" />
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -418,16 +410,9 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
                       id,
                       label: ERA_LABELS[id],
                       blurb: ERA_BLURBS[id],
-                      art: <PackArt id={id} className="size-10" />,
+                      art: <PackArt id={id} className="size-7" />,
                     }))}
                   />
-                  {STIL_IDS.includes(value.era) ? (
-                    <div className="pack-sleeve is-open mt-3">
-                      <div className="pack-sleeve-inner flex justify-center">
-                        <PackArt id={value.era} className="pack-cover" />
-                      </div>
-                    </div>
-                  ) : null}
                 </div>
               ) : (
                 <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -437,7 +422,7 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
                       packId={id}
                       selected={value.era === id}
                       label={ERA_LABELS[id]}
-                      art={<PackArt id={id} className="pack-cover" />}
+                      art={<PackArt id={id} />}
                       onSelect={() => onChange({ era: id })}
                     />
                   ))}
