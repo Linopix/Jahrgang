@@ -360,7 +360,7 @@ export function PlayScreen() {
             {rules.free ? "frei" : rules.reverse ? "spät → früh" : "früh → spät"}
           </p>
         </div>
-        <div className="lg:min-h-0 lg:flex-1 lg:overflow-x-auto lg:overflow-y-auto">
+        <div className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
         <Timeline
           songs={player.timeline}
           selectedSlot={myTurn ? selectedSlot : null}
