@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
 
 export type PreviewQuery = {
   id: string;
@@ -175,150 +176,6 @@ async function fromDeezerQuoted(query: PreviewQuery): Promise<PreviewResult | nu
   };
 }
 
-const SPOTIFY_HEADERS = {
-  "User-Agent":
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-  Accept: "text/html,application/json",
-};
-
-type SpotifyEmbedState = {
-  props?: {
-    pageProps?: {
-      state?: {
-        data?: {
-          entity?: {
-            audioPreview?: { url?: string };
-            visualIdentity?: { image?: { url?: string; maxWidth?: number }[] };
-            releaseDate?: { isoString?: string };
-          };
-        };
-        settings?: {
-          session?: {
-            accessToken?: string;
-            accessTokenExpirationTimestampMs?: number;
-          };
-        };
-      };
-    };
-  };
-};
-
-let spotifyAuth: { token: string; exp: number } | null = null;
-let spotifyChain: Promise<unknown> = Promise.resolve();
-
-function parseNextData(html: string): SpotifyEmbedState | null {
-  const match = html.match(
-    /<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/,
-  );
-  if (!match?.[1]) return null;
-  try {
-    return JSON.parse(match[1]) as SpotifyEmbedState;
-  } catch {
-    return null;
-  }
-}
-
-async function spotifyEmbed(trackId: string): Promise<SpotifyEmbedState | null> {
-  const res = await fetch(`https://open.spotify.com/embed/track/${trackId}`, {
-    headers: SPOTIFY_HEADERS,
-    signal: AbortSignal.timeout(10000),
-  });
-  if (!res.ok) return null;
-  return parseNextData(await res.text());
-}
-
-async function spotifyToken(): Promise<string | null> {
-  if (spotifyAuth && Date.now() < spotifyAuth.exp - 20_000) return spotifyAuth.token;
-  const data = await spotifyEmbed("4cOdK2wGLETKBW3PvgPWqT");
-  const session = data?.props?.pageProps?.state?.settings?.session;
-  if (!session?.accessToken) return null;
-  spotifyAuth = {
-    token: session.accessToken,
-    exp: session.accessTokenExpirationTimestampMs ?? Date.now() + 30 * 60 * 1000,
-  };
-  return spotifyAuth.token;
-}
-
-type SpotifyTrack = {
-  id?: string;
-  name?: string;
-  preview_url?: string | null;
-  album?: { images?: { url?: string }[]; release_date?: string };
-  artists?: { name?: string }[];
-};
-
-async function fromSpotify(query: PreviewQuery): Promise<PreviewResult | null> {
-  const token = await spotifyToken();
-  if (!token) return null;
-  const q = encodeURIComponent(`track:${query.title} artist:${query.artist}`);
-  const res = await fetch(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=8&market=DE`, {
-    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-    signal: AbortSignal.timeout(8000),
-  });
-  if (res.status === 401) {
-    spotifyAuth = null;
-    return null;
-  }
-  if (!res.ok) return null;
-  const json = (await res.json()) as { tracks?: { items?: SpotifyTrack[] } };
-  const ranked = (json.tracks?.items ?? [])
-    .map((row) => {
-      const year = row.album?.release_date
-        ? Number(row.album.release_date.slice(0, 4))
-        : undefined;
-      return {
-        row,
-        score: scoreMatch(
-          query.artist,
-          query.title,
-          query.year,
-          row.artists?.[0]?.name ?? "",
-          row.name ?? "",
-          year,
-        ),
-      };
-    })
-    .sort((a, b) => b.score - a.score);
-  const best = ranked[0];
-  if (!best || best.score < 5 || !best.row.id) return null;
-  if (best.row.preview_url) {
-    return {
-      id: query.id,
-      previewUrl: best.row.preview_url,
-      artworkUrl: best.row.album?.images?.[0]?.url ?? null,
-      year: best.row.album?.release_date
-        ? Number(best.row.album.release_date.slice(0, 4))
-        : undefined,
-    };
-  }
-  const embed = await spotifyEmbed(best.row.id);
-  const entity = embed?.props?.pageProps?.state?.data?.entity;
-  const preview = entity?.audioPreview?.url;
-  if (!preview) return null;
-  const art =
-    [...(entity?.visualIdentity?.image ?? [])].sort(
-      (a, b) => (b.maxWidth ?? 0) - (a.maxWidth ?? 0),
-    )[0]?.url ??
-    best.row.album?.images?.[0]?.url ??
-    null;
-  const yearRaw = entity?.releaseDate?.isoString;
-  return {
-    id: query.id,
-    previewUrl: preview,
-    artworkUrl: art,
-    year: yearRaw ? new Date(yearRaw).getFullYear() : undefined,
-  };
-}
-
-function enqueueSpotify(query: PreviewQuery): Promise<PreviewResult | null> {
-  const run = spotifyChain.then(() => fromSpotify(query), () => fromSpotify(query));
-  spotifyChain = run.then(
-    () => undefined,
-    () => undefined,
-  );
-  return run;
-}
-
 export async function lookupPreview(query: PreviewQuery): Promise<PreviewResult> {
   for (const country of ["de", "us"] as const) {
     try {
@@ -338,19 +195,24 @@ export async function lookupPreview(query: PreviewQuery): Promise<PreviewResult>
     const quoted = await fromDeezerQuoted(query);
     if (quoted?.previewUrl) return quoted;
   } catch {
-    /* next */
-  }
-  try {
-    const spotify = await enqueueSpotify(query);
-    if (spotify?.previewUrl) return spotify;
-  } catch {
     /* fall through */
   }
   return { id: query.id, previewUrl: null, artworkUrl: null, year: undefined };
 }
 
+async function withSpotify(query: PreviewQuery, base: PreviewResult): Promise<PreviewResult> {
+  if (base.previewUrl || !SPOTIFY_LIVE) return base;
+  try {
+    const { searchSpotifyPreview } = await import("@/lib/spotify/preview.server");
+    const extra = await searchSpotifyPreview(query);
+    return extra?.previewUrl ? extra : base;
+  } catch {
+    return base;
+  }
+}
+
 async function resolveOne(query: PreviewQuery): Promise<PreviewResult> {
-  return lookupPreview(query);
+  return withSpotify(query, await lookupPreview(query));
 }
 
 export const resolvePreviews = createServerFn({ method: "POST" })

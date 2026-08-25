@@ -1,8 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { matchCatalogSong, songId } from "./catalog";
-import { lookupPreview } from "./preview";
+import { lookupPreview, type PreviewResult } from "./preview";
 import { parsePlaylistInput, type ListedTrack, type PlaylistRef } from "./playlist-url";
 import type { CatalogSong } from "./types";
+import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
 
 const MAX_TRACKS = 80;
 
@@ -158,6 +159,20 @@ function fromList(tracks: ListedTrack[]): { title: string; tracks: RawTrack[] } 
   };
 }
 
+async function fillSpotify(
+  query: { id: string; title: string; artist: string; year: number },
+  base: PreviewResult,
+): Promise<PreviewResult> {
+  if (base.previewUrl || !SPOTIFY_LIVE) return base;
+  try {
+    const { searchSpotifyPreview } = await import("@/lib/spotify/preview.server");
+    const extra = await searchSpotifyPreview(query);
+    return extra?.previewUrl ? extra : base;
+  } catch {
+    return base;
+  }
+}
+
 async function loadRaw(url: string): Promise<{ title: string; tracks: RawTrack[]; url: string }> {
   const ref = parsePlaylistInput(url);
   if (!ref) {
@@ -212,7 +227,11 @@ async function hydrate(tracks: RawTrack[]): Promise<PlaylistTrack[]> {
           artist: raw.artist,
           year: raw.year ?? 0,
         });
-        const year = found.year;
+        const filled = await fillSpotify(
+          { id, title: raw.title, artist: raw.artist, year: raw.year ?? 0 },
+          found,
+        );
+        const year = filled.year;
         const maxYear = new Date().getFullYear() + 1;
         if (!year || year < 1950 || year > maxYear) return null;
         const song: PlaylistTrack = {
@@ -220,8 +239,8 @@ async function hydrate(tracks: RawTrack[]): Promise<PlaylistTrack[]> {
           title: raw.title,
           artist: raw.artist,
           year,
-          previewUrl: found.previewUrl || raw.previewUrl,
-          artworkUrl: found.artworkUrl || raw.artworkUrl,
+          previewUrl: filled.previewUrl || raw.previewUrl,
+          artworkUrl: filled.artworkUrl || raw.artworkUrl,
         };
         return song;
       }),
