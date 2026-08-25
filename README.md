@@ -42,6 +42,8 @@ Ohne Internet keine Vorschau und keine Online-Runde. Code ohne Null und Eins vor
 
 Kleine Tippfehler beim Raten sind in Ordnung. „Beatles“ zählt für The Beatles, „YMCA“ für Y.M.C.A.
 
+Jahrgang ist ein eigenes Spiel, keine Lizenz eines anderen Gesellschaftsspiels. Rechtliches an [jahrgang.game@icloud.com](mailto:jahrgang.game@icloud.com).
+
 ## Entwicklung
 
 ```bash

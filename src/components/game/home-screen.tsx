@@ -79,6 +79,10 @@ export function HomeScreen() {
         <Link to="/hinweise" className="hover:text-fg">
           Hinweise
         </Link>
+        <span className="mx-2">·</span>
+        <a href="mailto:jahrgang.game@icloud.com" className="hover:text-fg">
+          Kontakt
+        </a>
       </p>
     </main>
   );
