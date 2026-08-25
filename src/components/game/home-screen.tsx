@@ -5,11 +5,15 @@ import { Vinyl } from "./vinyl";
 import { useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { unlockAudio } from "@/lib/game/audio";
+import { noteTitleClick, useGags } from "@/lib/gags";
+import { cn } from "@/lib/utils";
 
 export function HomeScreen() {
   const openSetup = useGame((s) => s.openSetup);
   const setRulesOpen = useGame((s) => s.setRulesOpen);
   const openEntry = useOnline((s) => s.openEntry);
+
+  const scramble = useGags((s) => s.scramble);
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col justify-between px-5 py-8 sm:max-w-3xl sm:py-12 lg:max-w-6xl lg:justify-center lg:px-8">
@@ -19,7 +23,13 @@ export function HomeScreen() {
         <p className="text-xs font-medium tracking-[0.28em] text-muted uppercase">
           Musik-Zeitspiel
         </p>
-        <h1 className="mt-3 font-display text-5xl font-medium tracking-tight text-fg sm:text-7xl">
+        <h1
+          className={cn(
+            "mt-3 font-display text-5xl font-medium tracking-tight text-fg sm:text-7xl",
+            scramble && "title-scramble",
+          )}
+          onClick={noteTitleClick}
+        >
           Jahrgang
         </h1>
         <p className="mt-4 max-w-md text-pretty text-base text-muted sm:text-lg">

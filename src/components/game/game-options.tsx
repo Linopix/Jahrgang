@@ -3,6 +3,8 @@ import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { peekPlaylist } from "@/lib/game/playlist";
 import { sfxHover, sfxSlide, sfxTick } from "@/lib/game/audio";
+import { GenreArt, PackArt } from "@/components/game/pack-art";
+import { noteMixYears } from "@/lib/gags";
 import {
   ERA_BLURBS,
   ERA_LABELS,
@@ -33,7 +35,7 @@ type GameOptionsProps = {
 };
 
 const CHIP =
-  "h-12 rounded-md px-3 text-sm font-medium transition-[background-color,color,transform,box-shadow] duration-150 ease-out hover:-translate-y-px active:scale-[0.96]";
+  "flex h-12 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium transition-[background-color,color,transform,box-shadow] duration-150 ease-out hover:-translate-y-px active:scale-[0.96]";
 
 function Choice<T extends string | number>({
   items,
@@ -226,6 +228,7 @@ function DualYearSlider({
             const next = Number(event.target.value);
             sfxSlide(next);
             onChange(Math.min(next, end), end);
+            noteMixYears(Math.min(next, end), end);
           }}
         />
         <input
@@ -238,6 +241,7 @@ function DualYearSlider({
             const next = Number(event.target.value);
             sfxSlide(next);
             onChange(start, Math.max(next, start));
+            noteMixYears(start, Math.max(next, start));
           }}
         />
       </div>
@@ -263,7 +267,10 @@ function MixField({
         <span className="mb-2 block text-xs font-medium tracking-[0.16em] text-muted uppercase">
           Genre
         </span>
-        <span className="relative block">
+        <span className="relative flex items-center">
+          <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2">
+            <GenreArt id={value.mixGenre} />
+          </span>
           <select
             value={value.mixGenre}
             aria-label="Genre"
@@ -271,7 +278,7 @@ function MixField({
               sfxTick();
               onChange({ era: "mix", mixGenre: event.target.value as GenreId });
             }}
-            className={SELECT}
+            className={cn(SELECT, "pl-12")}
           >
             {GENRES.map((id) => (
               <option key={id} value={id}>
@@ -371,11 +378,12 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
                     className={cn(
                       CHIP,
                       value.era === id
-                        ? "bg-primary text-primary-fg"
+                        ? "pack-selected justify-start bg-primary px-2 text-primary-fg"
                         : "bg-raised text-fg shadow-border hover:bg-surface",
                     )}
                   >
-                    {ERA_LABELS[id]}
+                    {value.era === id ? <PackArt id={id} /> : null}
+                    <span className="truncate">{ERA_LABELS[id]}</span>
                   </button>
                 ))}
               </div>

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { GagLayer } from "./gag-layer";
 import { HomeScreen } from "./home-screen";
 import { LoadingScreen } from "./loading-screen";
 import { OnlineBridge } from "./online-bridge";
@@ -63,6 +64,7 @@ export function GameApp() {
       {localPhase && phase === "winner" ? <WinnerScreen /> : null}
       {onlineStatus === "playing" && phase === "home" ? <LoadingScreen /> : null}
       <ReactionDock />
+      <GagLayer />
       <RulesDialog open={rulesOpen} onOpenChange={setRulesOpen} />
     </>
   );

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Vinyl } from "./vinyl";
 import { unlockAudio } from "@/lib/game/audio";
 import { useOnline } from "@/lib/game/online-store";
+import { notePlayerName, noteRoomCode } from "@/lib/gags";
 
 export function OnlineEntryScreen() {
   const selfName = useOnline((s) => s.selfName);
@@ -43,7 +44,10 @@ export function OnlineEntryScreen() {
         <span className="text-sm font-medium text-fg">Dein Name</span>
         <input
           value={selfName}
-          onChange={(event) => setSelfName(event.target.value)}
+          onChange={(event) => {
+            setSelfName(event.target.value);
+            notePlayerName(event.target.value);
+          }}
           placeholder="Name"
           maxLength={18}
           autoComplete="nickname"
@@ -75,7 +79,10 @@ export function OnlineEntryScreen() {
         <span className="text-sm font-medium text-fg">Code oder Link</span>
         <input
           value={inviteCode}
-          onChange={(event) => setInviteCode(event.target.value)}
+          onChange={(event) => {
+            setInviteCode(event.target.value);
+            noteRoomCode(event.target.value);
+          }}
           placeholder="K7M2"
           autoCapitalize="characters"
           autoCorrect="off"

@@ -1,3 +1,4 @@
+import { noteVinylClick } from "@/lib/gags";
 import { cn } from "@/lib/utils";
 
 type VinylProps = {
@@ -22,7 +23,7 @@ export function Vinyl({
   artworkUrl,
 }: VinylProps) {
   return (
-    <div className={cn("relative", sizes[size])} aria-hidden="true">
+    <div className={cn("relative", sizes[size])} aria-hidden="true" onClick={noteVinylClick}>
       <div
         className={cn(
           "vinyl-disc size-full rounded-full",

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   hydrateUiMute,
   isUiMuted,
+  setRetroAudio,
   setUiMuted,
   sfxTick,
   subscribeUiAudio,
@@ -12,17 +13,90 @@ import {
 import { THEMES, applyTheme, readTheme, type ThemeId } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
+function SignaturePad({ onInk }: { onInk: (enough: boolean) => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawing = useRef(false);
+  const ink = useRef(0);
+  const last = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(rect.width * ratio);
+      canvas.height = Math.floor(rect.height * ratio);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.scale(ratio, ratio);
+      ctx.strokeStyle = getComputedStyle(canvas).color;
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
+
+  function point(event: React.PointerEvent<HTMLCanvasElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  }
+
+  function move(event: React.PointerEvent<HTMLCanvasElement>) {
+    if (!drawing.current) return;
+    const ctx = canvasRef.current?.getContext("2d");
+    const next = point(event);
+    if (!ctx || !last.current) {
+      last.current = next;
+      return;
+    }
+    ctx.beginPath();
+    ctx.moveTo(last.current.x, last.current.y);
+    ctx.lineTo(next.x, next.y);
+    ctx.stroke();
+    ink.current += Math.hypot(next.x - last.current.x, next.y - last.current.y);
+    last.current = next;
+    onInk(ink.current > 90);
+  }
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="mt-3 h-24 w-full cursor-crosshair touch-none rounded-md bg-raised text-fg shadow-border"
+      onPointerDown={(event) => {
+        event.currentTarget.setPointerCapture(event.pointerId);
+        drawing.current = true;
+        last.current = point(event);
+      }}
+      onPointerMove={move}
+      onPointerUp={() => {
+        drawing.current = false;
+        last.current = null;
+      }}
+    />
+  );
+}
+
 export function ThemePicker() {
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState<ThemeId>("night");
   const [uiMuted, setUiMutedState] = useState(false);
   const [paperWarn, setPaperWarn] = useState(false);
+  const [signed, setSigned] = useState(false);
   const root = useRef<HTMLDivElement>(null);
+
+  function commit(id: ThemeId) {
+    setTheme(id);
+    applyTheme(id);
+    setRetroAudio(id === "retro");
+  }
 
   useEffect(() => {
     const id = readTheme();
-    setTheme(id);
-    applyTheme(id);
+    commit(id);
     hydrateUiMute();
     setUiMutedState(isUiMuted());
     return subscribeUiAudio(() => setUiMutedState(isUiMuted()));
@@ -36,8 +110,10 @@ export function ThemePicker() {
     };
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        if (paperWarn) setPaperWarn(false);
-        else setOpen(false);
+        if (paperWarn) {
+          setPaperWarn(false);
+          setSigned(false);
+        } else setOpen(false);
       }
     };
     window.addEventListener("pointerdown", onPointer);
@@ -51,17 +127,17 @@ export function ThemePicker() {
   function pick(id: ThemeId) {
     sfxTick();
     if (id === "paper" && theme !== "paper") {
+      setSigned(false);
       setPaperWarn(true);
       return;
     }
-    setTheme(id);
-    applyTheme(id);
+    commit(id);
   }
 
   function acceptPaper() {
+    if (!signed) return;
     sfxTick();
-    setTheme("paper");
-    applyTheme("paper");
+    commit("paper");
     setPaperWarn(false);
   }
 
@@ -82,7 +158,7 @@ export function ThemePicker() {
       {open ? (
         <div className="absolute right-0 mt-2 w-56 rounded-lg bg-surface p-3 shadow-lift">
           <p className="text-xs font-medium tracking-[0.16em] text-muted uppercase">Thema</p>
-          <div className="mt-2 grid grid-cols-5 gap-2">
+          <div className="mt-2 grid grid-cols-3 gap-2">
             {THEMES.map((row) => {
               const active = theme === row.id;
               return (
@@ -139,7 +215,10 @@ export function ThemePicker() {
             type="button"
             aria-label="Abbrechen"
             className="dialog-overlay absolute inset-0 bg-bg/70"
-            onClick={() => setPaperWarn(false)}
+            onClick={() => {
+              setPaperWarn(false);
+              setSigned(false);
+            }}
           />
           <div
             role="dialog"
@@ -157,11 +236,26 @@ export function ThemePicker() {
               Tränen und der Wunsch, sofort wieder auf Nacht umzuschalten: alles
               selbst schuld. Jahrgang haftet nicht für verbrannte Augen.
             </p>
+            <p className="mt-4 text-xs font-medium tracking-[0.16em] text-muted uppercase">
+              Unterschrift der geblendeten Person
+            </p>
+            <SignaturePad onInk={setSigned} />
+            <p className="mt-1 text-[0.7rem] text-subtle">
+              {signed ? "Gilt als Einverständnis." : "Bitte unterschreiben. Ein Punkt zählt nicht."}
+            </p>
             <div className="mt-5 grid gap-2 sm:grid-cols-2">
-              <Button variant="secondary" onClick={() => setPaperWarn(false)}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setPaperWarn(false);
+                  setSigned(false);
+                }}
+              >
                 Lieber dunkel
               </Button>
-              <Button onClick={acceptPaper}>Augen zu und durch</Button>
+              <Button disabled={!signed} onClick={acceptPaper}>
+                Augen zu und durch
+              </Button>
             </div>
           </div>
         </div>

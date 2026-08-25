@@ -1,4 +1,4 @@
-export const THEME_IDS = ["night", "paper", "ink", "ember", "glass"] as const;
+export const THEME_IDS = ["night", "paper", "ink", "ember", "glass", "retro"] as const;
 
 export type ThemeId = (typeof THEME_IDS)[number];
 
@@ -8,6 +8,7 @@ export const THEMES: { id: ThemeId; label: string; swatch: string; chrome?: stri
   { id: "ink", label: "Tinte", swatch: "#0b0e14" },
   { id: "ember", label: "Glut", swatch: "#140c0a" },
   { id: "glass", label: "Glas", swatch: "#7eb4e8", chrome: "#0a1220" },
+  { id: "retro", label: "Retro", swatch: "#c9a15b", chrome: "#1a1610" },
 ];
 
 const KEY = "jahrgang-theme";
