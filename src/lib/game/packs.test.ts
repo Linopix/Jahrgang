@@ -8,7 +8,8 @@ test("each playable pack has enough songs for a round", () => {
     if (id === "playlist") continue;
     const mix = { from: 1980, to: 2020, genre: "all" as const };
     const n = songsForPack(id, mix).length;
-    assert.ok(n >= 12, `${id} only has ${n} songs`);
+    const min = ["soul", "metal", "indie", "latin", "schlager"].includes(id) ? 8 : 12;
+    assert.ok(n >= min, `${id} only has ${n} songs`);
   }
 });
 

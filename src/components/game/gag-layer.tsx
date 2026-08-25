@@ -1,9 +1,25 @@
 import { useEffect } from "react";
-import { noteKonamiKey, useGags } from "@/lib/gags";
+import { EGG_TOTAL, noteKonamiKey, useGags } from "@/lib/gags";
+import { cn } from "@/lib/utils";
+
+export function EggTally({ className }: { className?: string }) {
+  const eggs = useGags((s) => s.eggs);
+  if (eggs.length === 0) return null;
+  return (
+    <p className={cn("tabular-nums text-xs text-subtle", className)}>
+      {eggs.length} / {EGG_TOTAL} gefunden
+    </p>
+  );
+}
 
 export function GagLayer() {
   const toasts = useGags((s) => s.toasts);
   const disco = useGags((s) => s.disco);
+  const hydrateEggs = useGags((s) => s.hydrateEggs);
+
+  useEffect(() => {
+    hydrateEggs();
+  }, [hydrateEggs]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {

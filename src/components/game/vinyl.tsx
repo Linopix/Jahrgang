@@ -1,4 +1,4 @@
-import { noteVinylClick } from "@/lib/gags";
+import { noteVinylClick, noteVinylLabel } from "@/lib/gags";
 import { cn } from "@/lib/utils";
 
 type VinylProps = {
@@ -25,7 +25,7 @@ export function Vinyl({
   artworkUrl,
 }: VinylProps) {
   return (
-    <div className={cn("relative", sizes[size])} aria-hidden="true" onClick={noteVinylClick}>
+    <div className={cn("relative", sizes[size])} onClick={noteVinylClick}>
       <div
         className={cn(
           "vinyl-disc size-full rounded-full",
@@ -34,7 +34,15 @@ export function Vinyl({
           reverse && "is-reverse",
         )}
       >
-        <div className="vinyl-label">
+        <button
+          type="button"
+          aria-label="Plattenmitte"
+          className="vinyl-label z-10 cursor-pointer"
+          onClick={(event) => {
+            event.stopPropagation();
+            noteVinylLabel();
+          }}
+        >
           {artworkUrl ? (
             <img src={artworkUrl} alt="" className="size-full object-cover" />
           ) : (
@@ -44,7 +52,7 @@ export function Vinyl({
               </span>
             </div>
           )}
-        </div>
+        </button>
       </div>
       <div className="vinyl-sheen" />
     </div>

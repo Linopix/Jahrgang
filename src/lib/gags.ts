@@ -5,6 +5,47 @@ import type { EraId, PlayVariant } from "@/lib/game/types";
 
 export type GagToast = { id: number; text: string; disco?: boolean };
 
+export const EGG_IDS = [
+  "label",
+  "vinyl",
+  "title",
+  "disco",
+  "paper",
+  "year",
+  "name",
+  "room",
+  "pack",
+  "mode",
+] as const;
+
+export type EggId = (typeof EGG_IDS)[number];
+export const EGG_TOTAL = EGG_IDS.length;
+
+const EGG_KEY = "jahrgang-eggs";
+
+function isEggId(value: string): value is EggId {
+  return (EGG_IDS as readonly string[]).includes(value);
+}
+
+function readEggs(): EggId[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(EGG_KEY) || "[]") as unknown;
+    if (!Array.isArray(raw)) return [];
+    return raw.filter((item): item is EggId => typeof item === "string" && isEggId(item));
+  } catch {
+    return [];
+  }
+}
+
+function eggBucket(id: string): EggId | null {
+  if (isEggId(id)) return id;
+  if (id.startsWith("y")) return "year";
+  if (id.startsWith("c-")) return "room";
+  if (id.startsWith("p-")) return "pack";
+  if (id.startsWith("v-")) return "mode";
+  return "name";
+}
+
 let nextId = 1;
 let vinylHits = 0;
 let titleHits = 0;
@@ -28,16 +69,20 @@ type GagStore = {
   toasts: GagToast[];
   disco: boolean;
   scramble: boolean;
+  eggs: EggId[];
   push: (text: string, disco?: boolean) => void;
   drop: (id: number) => void;
   setDisco: (on: boolean) => void;
   setScramble: (on: boolean) => void;
+  hydrateEggs: () => void;
+  addEgg: (id: EggId) => void;
 };
 
-export const useGags = create<GagStore>((set) => ({
+export const useGags = create<GagStore>((set, get) => ({
   toasts: [],
   disco: false,
   scramble: false,
+  eggs: [],
   push: (text, disco) => {
     const id = nextId++;
     set((state) => ({ toasts: [...state.toasts.slice(-3), { id, text, disco }] }));
@@ -48,6 +93,21 @@ export const useGags = create<GagStore>((set) => ({
   drop: (id) => set((state) => ({ toasts: state.toasts.filter((row) => row.id !== id) })),
   setDisco: (on) => set({ disco: on }),
   setScramble: (on) => set({ scramble: on }),
+  hydrateEggs: () => set({ eggs: readEggs() }),
+  addEgg: (id) => {
+    const current = get().eggs;
+    if (current.includes(id)) return;
+    const eggs = [...current, id];
+    try {
+      localStorage.setItem(EGG_KEY, JSON.stringify(eggs));
+    } catch {
+      /* ignore */
+    }
+    set({ eggs });
+    if (eggs.length === EGG_TOTAL) {
+      window.setTimeout(() => toastGag(`${EGG_TOTAL}/${EGG_TOTAL}. Die B-Seite ist leer.`), 900);
+    }
+  },
 }));
 
 export function toastGag(text: string) {
@@ -58,7 +118,21 @@ function onceGag(id: string, text: string) {
   if (said.has(id)) return false;
   said.add(id);
   toastGag(text);
+  const egg = eggBucket(id);
+  if (egg) useGags.getState().addEgg(egg);
   return true;
+}
+
+export function markEgg(id: EggId) {
+  useGags.getState().addEgg(id);
+}
+
+export function notePaperSign() {
+  markEgg("paper");
+}
+
+export function noteVinylLabel() {
+  if (onceGag("label", "Die Mitte hält.")) return;
 }
 
 function fold(value: string) {
@@ -85,6 +159,7 @@ export function noteVinylClick() {
   vinylHits = 0;
   sfxScratch();
   toastGag("Die Nadel hängt fest.");
+  markEgg("vinyl");
   document.querySelectorAll(".vinyl-disc").forEach((node) => {
     node.classList.add("is-stuck");
     window.setTimeout(() => node.classList.remove("is-stuck"), 1600);
@@ -97,6 +172,7 @@ export function noteTitleClick() {
   titleHits = 0;
   useGags.getState().setScramble(true);
   toastGag("Jahrgang? Jahrgang.");
+  markEgg("title");
   window.setTimeout(() => useGags.getState().setScramble(false), 1400);
 }
 
@@ -112,6 +188,7 @@ export function noteKonamiKey(key: string) {
       setRetroAudio(false);
       useGags.getState().setDisco(true);
       toastGag("Disco-Edit freigeschaltet. Niemand hat etwas gesehen.");
+      markEgg("disco");
       window.setTimeout(() => useGags.getState().setDisco(false), 1800);
     }
     return;

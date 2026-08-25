@@ -27,7 +27,18 @@ import {
 } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
 
-const STIL_IDS: EraId[] = ["pop", "rock", "rap", "dance", "german"];
+const STIL_IDS: EraId[] = [
+  "pop",
+  "rock",
+  "rap",
+  "dance",
+  "soul",
+  "metal",
+  "indie",
+  "latin",
+  "schlager",
+  "german",
+];
 
 type GameOptionsProps = {
   value: RoomConfig;

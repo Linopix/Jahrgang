@@ -11,6 +11,8 @@ import {
   unlockAudio,
 } from "@/lib/game/audio";
 import { THEMES, applyTheme, readTheme, visibleThemes, type ThemeId } from "@/lib/theme";
+import { notePaperSign } from "@/lib/gags";
+import { EggTally } from "@/components/game/gag-layer";
 import { cn } from "@/lib/utils";
 
 function SignaturePad({ onInk }: { onInk: (enough: boolean) => void }) {
@@ -154,6 +156,7 @@ export function ThemePicker() {
     sfxTick();
     commit("paper");
     setPaperWarn(false);
+    notePaperSign();
   }
 
   return (
@@ -227,6 +230,7 @@ export function ThemePicker() {
             Leise Töne im Menü und Effekt-Töne. Die Songvorschau hat eine eigene
             Stummschaltung.
           </p>
+          <EggTally className="mt-2 text-center" />
         </div>
       ) : null}
       {paperWarn ? (

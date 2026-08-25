@@ -17,10 +17,13 @@ function keyOf(title: string, artist: string) {
 const METAL_ARTISTS = new Set(
   [
     "Deep Purple",
+    "Def Leppard",
+    "Guns N' Roses",
     "Linkin Park",
     "Metallica",
     "Rage Against the Machine",
     "Rammstein",
+    "Scorpions",
     "Soundgarden",
   ].map(fold),
 );
@@ -160,7 +163,6 @@ const ROCK_ARTISTS = new Set(
     "Europe",
     "Fleetwood Mac",
     "Green Day",
-    "Guns N' Roses",
     "Jimi Hendrix",
     "Journey",
     "Led Zeppelin",
@@ -337,7 +339,12 @@ export function songsForPack(pack: EraId, mix?: MixFilter): CatalogSong[] {
       case "rock":
       case "rap":
       case "dance":
-        return matchesGenre(song, pack);
+      case "soul":
+      case "metal":
+      case "indie":
+      case "latin":
+      case "schlager":
+        return matchesGenre(song, pack as GenreId);
       case "party":
         return inKit(song, PARTY_SET);
       case "charts":

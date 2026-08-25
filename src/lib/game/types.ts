@@ -11,6 +11,11 @@ export type EraId =
   | "rock"
   | "rap"
   | "dance"
+  | "soul"
+  | "metal"
+  | "indie"
+  | "latin"
+  | "schlager"
   | "party"
   | "charts"
   | "rap-charts"
@@ -177,6 +182,11 @@ export const ERA_IDS: EraId[] = [
   "rock",
   "rap",
   "dance",
+  "soul",
+  "metal",
+  "indie",
+  "latin",
+  "schlager",
   "party",
   "charts",
   "rap-charts",
@@ -197,6 +207,11 @@ export const ERA_LABELS: Record<EraId, string> = {
   rock: "Rock",
   rap: "Rap",
   dance: "Dance",
+  soul: "Soul",
+  metal: "Metal",
+  indie: "Indie",
+  latin: "Latin",
+  schlager: "Schlager",
   party: "Party",
   charts: "Charts",
   "rap-charts": "Rap Charts",
@@ -217,6 +232,11 @@ export const ERA_BLURBS: Record<EraId, string> = {
   rock: "Rock, Alternative, Classic Rock.",
   rap: "Hip-Hop und Rap.",
   dance: "Dance, Disco, elektronische Hits.",
+  soul: "Soul, R&B, Funk.",
+  metal: "Metal und härterer Rock.",
+  indie: "Indie, Alternative, Gitarren abseits der Arena.",
+  latin: "Latin, Reggaeton, tropische Hits.",
+  schlager: "Schlager und Deutschpop der Bühne.",
   party: "Laut, bekannt, für den Abend.",
   charts: "Große Single-Hits ab 2015.",
   "rap-charts": "Hip-Hop-Hits der letzten Jahre.",
@@ -231,7 +251,7 @@ export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [
   },
   {
     title: "Stil",
-    ids: ["pop", "rock", "rap", "dance", "german"],
+    ids: ["pop", "rock", "rap", "dance", "soul", "metal", "indie", "latin", "schlager", "german"],
   },
   {
     title: "Kits",

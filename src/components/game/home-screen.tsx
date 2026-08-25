@@ -6,6 +6,7 @@ import { useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { unlockAudio } from "@/lib/game/audio";
 import { noteTitleClick, useGags } from "@/lib/gags";
+import { EggTally } from "./gag-layer";
 import { cn } from "@/lib/utils";
 
 export function HomeScreen() {
@@ -84,14 +85,15 @@ export function HomeScreen() {
         <Vinyl size="lg" spinning />
       </div>
       </div>
-      <p className="mt-8 text-center text-xs text-subtle lg:mt-10 lg:text-left">
+      <p className="mt-8 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-subtle lg:mt-10 lg:justify-start lg:text-left">
         <Link to="/hinweise" className="hover:text-fg">
           Hinweise
         </Link>
-        <span className="mx-2">·</span>
+        <span>·</span>
         <a href="mailto:jahrgang.game@icloud.com" className="hover:text-fg">
           Kontakt
         </a>
+        <EggTally />
       </p>
     </main>
   );
