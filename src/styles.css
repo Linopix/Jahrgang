@@ -219,6 +219,54 @@
   animation: grain-shift 1.2s steps(3) infinite;
 }
 
+[data-theme="disco"] {
+  color-scheme: dark;
+  --color-bg: #120016;
+  --color-surface: #1e0828;
+  --color-raised: #2c103c;
+  --color-fg: #ffe8ff;
+  --color-muted: #c89ad4;
+  --color-subtle: #8a5a98;
+  --color-primary: #ff4de8;
+  --color-primary-fg: #120016;
+  --color-border: #4a2058;
+  --color-card: #f4c8f0;
+  --color-card-fg: #1e0828;
+  --color-card-muted: #7a4a80;
+  --color-success: #7ee0c0;
+  --color-danger: #ff6a8a;
+  --color-groove: #0c0012;
+  --groove-spot: rgb(255 77 232 / 0.28);
+  --groove-ring: rgb(80 220 255 / 0.06);
+  --vinyl-mid: #3a1848;
+  --vinyl-dark: #0c0012;
+  --vinyl-groove: #1e0828;
+  --shadow-border: 0 0 0 1px rgb(255 232 255 / 0.12);
+  --shadow-lift: 0 0 0 1px rgb(255 77 232 / 0.35), 0 18px 40px -24px rgb(80 0 90 / 0.8);
+}
+
+[data-theme="disco"] .groove-bg {
+  background-color: #120016;
+  background-image:
+    radial-gradient(820px 520px at 8% -10%, rgb(255 70 200 / 0.38), transparent 56%),
+    radial-gradient(720px 480px at 110% 8%, rgb(40 200 255 / 0.28), transparent 52%),
+    radial-gradient(circle at 50% -8%, var(--groove-spot), transparent 44%);
+}
+
+[data-theme="disco"] body::after {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  opacity: 0.12;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.08) 0 1px,
+    transparent 1px 3px
+  );
+}
+
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
@@ -753,7 +801,8 @@
   .podium-burst i,
   .disco-flash,
   .title-scramble,
-  [data-theme="retro"] body::after {
+  [data-theme="retro"] body::after,
+  [data-theme="disco"] body::after {
     animation: none;
     transition: none;
   }

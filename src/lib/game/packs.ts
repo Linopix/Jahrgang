@@ -14,6 +14,99 @@ function keyOf(title: string, artist: string) {
   return `${fold(title)}|${fold(artist)}`;
 }
 
+const METAL_ARTISTS = new Set(
+  [
+    "Deep Purple",
+    "Linkin Park",
+    "Metallica",
+    "Rage Against the Machine",
+    "Rammstein",
+    "Soundgarden",
+  ].map(fold),
+);
+
+const SOUL_ARTISTS = new Set(
+  [
+    "Alicia Keys",
+    "Amy Winehouse",
+    "Aretha Franklin",
+    "Ben E. King",
+    "Beyoncé",
+    "Destiny's Child",
+    "Jamiroquai",
+    "John Legend",
+    "Marvin Gaye",
+    "Prince",
+    "Ray Charles",
+    "Stevie Wonder",
+    "TLC",
+    "Teddy Swims",
+    "The Weeknd",
+    "Usher",
+    "Whitney Houston",
+  ].map(fold),
+);
+
+const LATIN_ARTISTS = new Set(
+  [
+    "Culcha Candela",
+    "Los Del Rio",
+    "Lou Bega",
+    "Luis Fonsi",
+    "Rema",
+    "Santana",
+    "Shakira",
+    "Tyla",
+  ].map(fold),
+);
+
+const SCHLAGER_ARTISTS = new Set(
+  [
+    "Andreas Bourani",
+    "DJ Ötzi",
+    "Dschinghis Khan",
+    "Echt",
+    "Helene Fischer",
+    "Ich + Ich",
+    "Lena",
+    "Mark Forster",
+    "Matthias Reim",
+    "Modern Talking",
+    "Namika",
+    "No Angels",
+    "Pur",
+    "Rosenstolz",
+    "Silbermond",
+    "Unheilig",
+    "Wincent Weiss",
+  ].map(fold),
+);
+
+const INDIE_ARTISTS = new Set(
+  [
+    "AnnenMayKantereit",
+    "Foster the People",
+    "fun.",
+    "Glass Animals",
+    "Gotye",
+    "Hozier",
+    "Imagine Dragons",
+    "Kings of Leon",
+    "Lorde",
+    "Milky Chance",
+    "Noah Kahan",
+    "Passenger",
+    "Pixies",
+    "R.E.M.",
+    "Radiohead",
+    "The Cranberries",
+    "The Killers",
+    "The Verve",
+    "The White Stripes",
+    "Tracy Chapman",
+  ].map(fold),
+);
+
 const RAP_ARTISTS = new Set(
   [
     "50 Cent",
@@ -24,6 +117,7 @@ const RAP_ARTISTS = new Set(
     "Cro",
     "DaBaby",
     "Die Fantastischen Vier",
+    "Doechii",
     "Doja Cat",
     "Drake",
     "Eminem",
@@ -42,7 +136,6 @@ const RAP_ARTISTS = new Set(
     "Pashanim",
     "Peter Fox",
     "Post Malone",
-    "Rage Against the Machine",
     "Roddy Ricch",
     "Run-D.M.C.",
     "Seeed",
@@ -51,7 +144,6 @@ const RAP_ARTISTS = new Set(
     "Ski Aggu",
     "The Kid LAROI",
     "Travis Scott",
-    "Usher",
     "Wiz Khalifa",
   ].map(fold),
 );
@@ -61,7 +153,6 @@ const ROCK_ARTISTS = new Set(
     "BAP",
     "Bon Jovi",
     "Bruce Springsteen",
-    "Deep Purple",
     "Def Leppard",
     "Die Toten Hosen",
     "Die Ärzte",
@@ -72,34 +163,26 @@ const ROCK_ARTISTS = new Set(
     "Guns N' Roses",
     "Jimi Hendrix",
     "Journey",
-    "Kings of Leon",
     "Led Zeppelin",
-    "Linkin Park",
-    "Metallica",
     "Nickelback",
     "Nirvana",
     "Oasis",
     "Pink Floyd",
-    "Pixies",
     "Queen",
-    "R.E.M.",
-    "Radiohead",
-    "Rammstein",
     "Red Hot Chili Peppers",
     "Scorpions",
-    "Soundgarden",
     "Sportfreunde Stiller",
     "Survivor",
     "The Clash",
     "The Doors",
-    "The Killers",
     "The Police",
     "The Rolling Stones",
-    "The Verve",
-    "The White Stripes",
     "The Who",
+    "Tom Petty",
     "Toto",
     "U2",
+    "Udo Lindenberg",
+    "Westernhagen",
     "Wir sind Helden",
   ].map(fold),
 );
@@ -109,15 +192,17 @@ const DANCE_ARTISTS = new Set(
     "Avicii",
     "Bee Gees",
     "Boney M.",
+    "Charli XCX",
     "Culture Beat",
     "Daft Punk",
     "David Guetta",
     "Depeche Mode",
     "Eiffel 65",
+    "Frankie Goes to Hollywood",
     "Gloria Gaynor",
     "Kraftwerk",
+    "Kylie Minogue",
     "LMFAO",
-    "Los Del Rio",
     "Mr. President",
     "O-Zone",
     "PSY",
@@ -125,7 +210,9 @@ const DANCE_ARTISTS = new Set(
     "Scooter",
     "Snap!",
     "Soft Cell",
+    "Tears for Fears",
     "The Buggles",
+    "The Human League",
     "Village People",
     "a-ha",
   ].map(fold),
@@ -133,6 +220,11 @@ const DANCE_ARTISTS = new Set(
 
 export function inferGenre(artist: string, german?: boolean): Genre {
   const key = fold(artist);
+  if (METAL_ARTISTS.has(key)) return "metal";
+  if (SOUL_ARTISTS.has(key)) return "soul";
+  if (LATIN_ARTISTS.has(key)) return "latin";
+  if (SCHLAGER_ARTISTS.has(key)) return "schlager";
+  if (INDIE_ARTISTS.has(key)) return "indie";
   if (RAP_ARTISTS.has(key)) return "rap";
   if (ROCK_ARTISTS.has(key)) return "rock";
   if (DANCE_ARTISTS.has(key)) return "dance";

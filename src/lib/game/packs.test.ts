@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { songsForPack } from "./packs.ts";
-import { ERA_IDS } from "./types.ts";
+import { inferGenre, songsForPack } from "./packs.ts";
+import { ERA_IDS, GENRE_IDS } from "./types.ts";
 
 test("each playable pack has enough songs for a round", () => {
   for (const id of ERA_IDS) {
@@ -23,4 +23,21 @@ test("mix respects year range and german genre", () => {
   const mix = songsForPack("mix", { from: 1980, to: 1989, genre: "german" });
   assert.ok(mix.length >= 4);
   assert.ok(mix.every((s) => s.year >= 1980 && s.year <= 1989 && s.german));
+});
+
+test("each mix genre has a playable pile", () => {
+  for (const genre of GENRE_IDS) {
+    if (genre === "all") continue;
+    const rows = songsForPack("mix", { from: 1960, to: 2026, genre });
+    assert.ok(rows.length >= 6, `${genre} only has ${rows.length} songs`);
+  }
+});
+
+test("inferGenre splits metal soul and schlager", () => {
+  assert.equal(inferGenre("Metallica"), "metal");
+  assert.equal(inferGenre("Aretha Franklin"), "soul");
+  assert.equal(inferGenre("Helene Fischer", true), "schlager");
+  assert.equal(inferGenre("Shakira"), "latin");
+  assert.equal(inferGenre("The Killers"), "indie");
+  assert.equal(inferGenre("Usher"), "soul");
 });

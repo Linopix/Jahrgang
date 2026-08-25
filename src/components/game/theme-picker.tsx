@@ -10,7 +10,7 @@ import {
   subscribeUiAudio,
   unlockAudio,
 } from "@/lib/game/audio";
-import { THEMES, applyTheme, readTheme, type ThemeId } from "@/lib/theme";
+import { THEMES, applyTheme, readTheme, visibleThemes, type ThemeId } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 function SignaturePad({ onInk }: { onInk: (enough: boolean) => void }) {
@@ -88,10 +88,15 @@ export function ThemePicker() {
   const [signed, setSigned] = useState(false);
   const root = useRef<HTMLDivElement>(null);
 
+  const [palette, setPalette] = useState(() =>
+    typeof window === "undefined" ? THEMES.filter((row) => !row.secret) : visibleThemes(),
+  );
+
   function commit(id: ThemeId) {
     setTheme(id);
     applyTheme(id);
     setRetroAudio(id === "retro");
+    setPalette(visibleThemes());
   }
 
   useEffect(() => {
@@ -99,7 +104,17 @@ export function ThemePicker() {
     commit(id);
     hydrateUiMute();
     setUiMutedState(isUiMuted());
-    return subscribeUiAudio(() => setUiMutedState(isUiMuted()));
+    const sync = () => {
+      setTheme(readTheme());
+      setPalette(visibleThemes());
+      setRetroAudio(readTheme() === "retro");
+    };
+    window.addEventListener("jahrgang-theme", sync);
+    const unsub = subscribeUiAudio(() => setUiMutedState(isUiMuted()));
+    return () => {
+      window.removeEventListener("jahrgang-theme", sync);
+      unsub();
+    };
   }, []);
 
   useEffect(() => {
@@ -159,7 +174,7 @@ export function ThemePicker() {
         <div className="absolute right-0 mt-2 w-56 rounded-lg bg-surface p-3 shadow-lift">
           <p className="text-xs font-medium tracking-[0.16em] text-muted uppercase">Thema</p>
           <div className="mt-2 grid grid-cols-3 gap-2">
-            {THEMES.map((row) => {
+            {palette.map((row) => {
               const active = theme === row.id;
               return (
                 <button
@@ -188,6 +203,11 @@ export function ThemePicker() {
           {theme === "paper" ? (
             <p className="mt-2 text-[0.7rem] leading-snug text-subtle">
               Papier-Modus. Netzhaut auf eigene Gefahr.
+            </p>
+          ) : null}
+          {theme === "disco" ? (
+            <p className="mt-2 text-[0.7rem] leading-snug text-subtle">
+              Cheat-Modus. Konami lässt grüßen.
             </p>
           ) : null}
           <button

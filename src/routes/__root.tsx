@@ -6,7 +6,7 @@ import appCss from "../styles.css?url";
 
 const APP_NAME = "Jahrgang";
 
-const THEME_BOOT = `(function(){try{var t=localStorage.getItem("jahrgang-theme");if(t==="night"||t==="paper"||t==="ink"||t==="ember"||t==="glass"||t==="retro")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`;
+const THEME_BOOT = `(function(){try{var t=localStorage.getItem("jahrgang-theme");var u=[];try{u=JSON.parse(localStorage.getItem("jahrgang-theme-unlocks")||"[]")}catch(e){}var ok=t==="night"||t==="paper"||t==="ink"||t==="ember"||t==="glass"||t==="retro"||(t==="disco"&&u.indexOf("disco")>=0);if(ok)document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`;
 
 export const Route = createRootRoute({
   head: () => ({

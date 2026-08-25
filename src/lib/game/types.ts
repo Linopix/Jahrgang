@@ -17,7 +17,18 @@ export type EraId =
   | "mix"
   | "playlist";
 
-export type GenreId = "all" | "pop" | "rock" | "rap" | "dance" | "german";
+export type GenreId =
+  | "all"
+  | "pop"
+  | "rock"
+  | "rap"
+  | "dance"
+  | "soul"
+  | "metal"
+  | "indie"
+  | "latin"
+  | "schlager"
+  | "german";
 
 export type GameMode = "party" | "solo";
 
@@ -203,7 +214,7 @@ export const ERA_BLURBS: Record<EraId, string> = {
   today: "Ab 2020.",
   german: "Deutschsprachige Titel.",
   pop: "Pop über die Jahrzehnte.",
-  rock: "Rock, Alternative, Metal.",
+  rock: "Rock, Alternative, Classic Rock.",
   rap: "Hip-Hop und Rap.",
   dance: "Dance, Disco, elektronische Hits.",
   party: "Laut, bekannt, für den Abend.",
@@ -267,7 +278,19 @@ export function reversesTimeline(variant: PlayVariant) {
   return variant === "wild";
 }
 
-export const GENRE_IDS: GenreId[] = ["all", "pop", "rock", "rap", "dance", "german"];
+export const GENRE_IDS: GenreId[] = [
+  "all",
+  "pop",
+  "rock",
+  "rap",
+  "dance",
+  "soul",
+  "metal",
+  "indie",
+  "latin",
+  "schlager",
+  "german",
+];
 
 export const GENRE_LABELS: Record<GenreId, string> = {
   all: "Alle",
@@ -275,15 +298,25 @@ export const GENRE_LABELS: Record<GenreId, string> = {
   rock: "Rock",
   rap: "Rap",
   dance: "Dance",
+  soul: "Soul",
+  metal: "Metal",
+  indie: "Indie",
+  latin: "Latin",
+  schlager: "Schlager",
   german: "Deutsch",
 };
 
 export const GENRE_BLURBS: Record<GenreId, string> = {
   all: "Kein Filter, der ganze Mix.",
   pop: "Pop über die Jahrzehnte.",
-  rock: "Rock, Alternative, Metal.",
+  rock: "Rock, Alternative, Classic Rock.",
   rap: "Hip-Hop und Rap.",
   dance: "Dance, Disco, elektronische Hits.",
+  soul: "Soul, R&B, Funk.",
+  metal: "Metal und härterer Rock.",
+  indie: "Indie, Alternative, Gitarren abseits der Arena.",
+  latin: "Latin, Reggaeton, tropische Hits.",
+  schlager: "Schlager und Deutschpop der Bühne.",
   german: "Deutschsprachige Titel.",
 };
 
@@ -339,14 +372,7 @@ export function isEraId(value: unknown): value is EraId {
 }
 
 export function isGenreId(value: unknown): value is GenreId {
-  return (
-    value === "all" ||
-    value === "pop" ||
-    value === "rock" ||
-    value === "rap" ||
-    value === "dance" ||
-    value === "german"
-  );
+  return typeof value === "string" && (GENRE_IDS as string[]).includes(value);
 }
 
 export function decadeLabelYear(year: number) {

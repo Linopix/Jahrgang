@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { sfxScratch, sfxWin } from "@/lib/game/audio";
+import { sfxScratch, sfxWin, setRetroAudio } from "@/lib/game/audio";
+import { applyTheme, unlockTheme } from "@/lib/theme";
 import type { EraId, PlayVariant } from "@/lib/game/types";
 
 export type GagToast = { id: number; text: string; disco?: boolean };
@@ -106,6 +107,9 @@ export function noteKonamiKey(key: string) {
     if (konami === KONAMI.length) {
       konami = 0;
       sfxWin();
+      unlockTheme("disco");
+      applyTheme("disco");
+      setRetroAudio(false);
       useGags.getState().setDisco(true);
       toastGag("Disco-Edit freigeschaltet. Niemand hat etwas gesehen.");
       window.setTimeout(() => useGags.getState().setDisco(false), 1800);

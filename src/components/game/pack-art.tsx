@@ -27,6 +27,11 @@ const GENRE_INK: Record<GenreId, { a: string; b: string; c: string; mark: string
   rock: PACK_INK.rock,
   rap: PACK_INK.rap,
   dance: PACK_INK.dance,
+  soul: { a: "#201410", b: "#e0a060", c: "#8a4030", mark: "SL" },
+  metal: { a: "#0c0c0c", b: "#8a8a90", c: "#c04030", mark: "MTL" },
+  indie: { a: "#1a1820", b: "#c8b8d8", c: "#68a090", mark: "IND" },
+  latin: { a: "#201008", b: "#f0a040", c: "#d04050", mark: "LAT" },
+  schlager: { a: "#201818", b: "#f0d0e0", c: "#c06080", mark: "HIT" },
   german: PACK_INK.german,
 };
 
