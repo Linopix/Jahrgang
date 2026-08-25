@@ -1,87 +1,81 @@
-# Jahrgang
+<p align="center">
+  <img src="docs/shots/banner.jpg" alt="Jahrgang" width="840" />
+</p>
 
-**[Spielen](https://jahrgang.vercel.app)**
+<h1 align="center">Jahrgang</h1>
 
-Ein Titel läuft. Name und Jahr bleiben verdeckt. Du ordnest ihn auf deiner Zeitlinie ein: links früher, rechts später. Wer zuerst alle Karten richtig liegen hat, gewinnt.
+<p align="center">
+  Einen Hit hören und auf die Zeitlinie legen.<br />
+  Links früher, rechts später.
+</p>
 
-Läuft im Browser auf Handy und Rechner.
+<p align="center">
+  <a href="https://jahrgang.vercel.app"><strong>Spielen</strong></a>
+  · Handy und Rechner · ohne Anmeldung
+</p>
 
-![Jahrgang Start](docs/shots/home.jpg)
+<p align="center">
+  <img src="docs/shots/home.jpg" alt="Start" width="720" />
+</p>
 
-## Handy
+<table>
+  <tr>
+    <td width="38%" valign="top">
+      <img src="docs/shots/home-mobile.jpg" alt="Start auf dem Handy" />
+    </td>
+    <td width="62%" valign="top">
+      <img src="docs/shots/setup.jpg" alt="Abend einrichten" />
+    </td>
+  </tr>
+</table>
 
-Die Menüs sind Listen, kein Chip-Salat.
+## So läuft eine Runde
 
-![Start auf dem Handy](docs/shots/home-mobile.jpg)
+Jeder fängt mit einer offenen Karte an. Dann kommt ein neuer Titel — ohne Namen, ohne Jahr. Du hörst ihn und suchst den Platz auf deiner Linie. Sitzt das Jahr, bleibt die Karte. Liegt sie falsch, geht sie zurück.
 
-![Spielmodus auf dem Handy](docs/shots/menu-spiel-mobile.jpg)
+Joker: Jahrzehnt sehen oder überspringen. Ziel sind 6, 8 oder 10 Karten — oder Custom ohne Ziel, bis der Stapel leer ist.
 
-![Stil auf dem Handy](docs/shots/menu-stil-mobile.jpg)
-
-![Genre im Mix](docs/shots/menu-genre-mobile.jpg)
-
-![Abend einrichten](docs/shots/setup-mobile.jpg)
-
-![Am Zug](docs/shots/play-mobile.jpg)
-
-## Rechner
-
-Namen links, Repertoire rechts.
-
-![Partyabend](docs/shots/setup.jpg)
-
-![Spielmodus](docs/shots/menu-spiel.jpg)
-
-![Jahrzehnt-Pack](docs/shots/pack-open.jpg)
-
-![Am Zug am Rechner](docs/shots/play.jpg)
-
-## So wird gespielt
-
-Jede Person beginnt mit einer offenen Karte. Dann kommt ein neuer Titel. Du hörst ihn und wählst den Platz auf deiner Zeitlinie. Sitzt die Lage, bleibt die Karte. Liegt sie falsch, geht sie zurück.
-
-| Modus | Ablauf |
+| Spiel | Was passiert |
 | --- | --- |
-| Zeitstrahl | Nur das Erscheinungsjahr. Cover darf sichtbar sein. |
-| Blind | Wie Zeitstrahl, Cover bleibt zu. |
-| Kenner | Interpret und Titel raten, dann einordnen. |
-| Star | Nur den Interpreten raten. |
-| Titel | Nur den Songtitel raten. |
-| Verrückter | Kenner, Cover zu, Jahre weg, links ist später. Die Platte läuft zu schnell oder zu langsam. |
+| Zeitstrahl | Nur das Jahr. Cover darfst du sehen. |
+| Blind | Dasselbe, Cover bleibt zu. |
+| Kenner | Interpret und Titel, dann legen. |
+| Star | Nur den Interpreten. |
+| Titel | Nur den Songtitel. |
+| Verrückter | Raten, Cover zu, keine Jahreszahlen, links ist später. Die Platte spinnt am Tempo. |
+| Custom | Raten, Cover, Linie, Tempo und Ziel stellst du selbst ein. |
 
-Joker nach Einstellung: keine, eine oder zwei. Damit lässt sich das Jahrzehnt anzeigen oder der Titel überspringen.
+Repertoire: Jahrzehnt, Stil, Party, Charts — oder Mix und eine öffentliche Spotify- bzw. Deezer-Playlist.
 
-Ziel sind 6, 8 oder 10 Karten. Repertoire als Pack: Jahrzehnt, Stil, Party, Charts, Rap Charts. Mix aus Zeitraum plus Genre. Oder eine öffentliche Spotify- bzw. Deezer-Playlist.
+<table>
+  <tr>
+    <td><img src="docs/shots/menu-spiel.jpg" alt="Spielmodus" /></td>
+    <td><img src="docs/shots/menu-stil.jpg" alt="Stil wählen" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/shots/menu-spiel-mobile.jpg" alt="Spielmodus auf dem Handy" /></td>
+    <td><img src="docs/shots/setup-mobile.jpg" alt="Einrichten auf dem Handy" /></td>
+  </tr>
+</table>
 
-## Mit anderen spielen
+## Mit anderen
 
-![Online-Abend](docs/shots/online.jpg)
+Eine Person öffnet den Raum, die anderen kommen mit Code oder Link. Bis zu acht Geräte. Nur wer am Zug ist, legt — alle hören denselben Titel. Stimme bleibt in Discord, das Spiel im Browser.
 
-![Online auf dem Handy](docs/shots/online-mobile.jpg)
+Der Host stellt ein, wer die nächste Runde startet, und ob Chat und Emoji an sind.
 
-1. Eine Person öffnet [jahrgang.vercel.app](https://jahrgang.vercel.app) und wählt **Online-Abend**.
-2. Namen eingeben, **Raum öffnen**.
-3. Den Code oder den Link an die Runde schicken.
-4. Die anderen treten bei.
-5. Der Host wählt Spiel, Repertoire und ob nur der Host oder alle die nächste Runde starten dürfen.
+<table>
+  <tr>
+    <td width="62%"><img src="docs/shots/online.jpg" alt="Online-Abend" /></td>
+    <td width="38%"><img src="docs/shots/online-mobile.jpg" alt="Online auf dem Handy" /></td>
+  </tr>
+</table>
 
-Nur wer am Zug ist, legt. Alle hören denselben Titel. Bis zu acht Personen.
+**Ein Bildschirm:** ein Gerät, reihum, am selben Tisch.
 
-## Ein Bildschirm oder Solo
+**Alleine:** eine Linie, drei Fehler.
 
-**Ein Bildschirm:** ein Gerät, reihum. Gut für denselben Tisch.
-
-**Solo:** eine Zeitlinie, drei Fehlversuche.
-
-## Hinweise
-
-Ohne Internet keine Vorschau und keine Online-Runde. Code ohne Null und Eins vorlesen.
-
-Kleine Tippfehler beim Raten sind in Ordnung. „Beatles“ zählt für The Beatles, „YMCA“ für Y.M.C.A.
-
-Jahrgang ist ein eigenes Spiel, keine Lizenz eines anderen Gesellschaftsspiels. Es erzielt keinen Gewinn. Rechtliches an [jahrgang.game@icloud.com](mailto:jahrgang.game@icloud.com).
-
-## Entwicklung
+## Lokal
 
 ```bash
 git clone https://github.com/Linopix/Jahrgang.git
@@ -90,4 +84,10 @@ npm install
 npm run dev
 ```
 
-Node 22. Die App läuft unter `http://localhost:8080`.
+Node 22, dann [localhost:8080](http://localhost:8080). Ohne Netz keine Vorschau und keine Online-Runde.
+
+Kleine Tippfehler beim Raten sind in Ordnung. „Beatles“ zählt für The Beatles.
+
+## Hinweise
+
+Jahrgang ist ein eigenes Spiel, keine Lizenz von irgendwem, und verdient nichts. Fragen an [jahrgang.game@icloud.com](mailto:jahrgang.game@icloud.com).
