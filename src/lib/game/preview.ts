@@ -30,12 +30,32 @@ type DeezerTrack = {
 };
 
 function fold(value: string) {
-  return value
+  const parts = value
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\$/g, "s")
     .replace(/[^a-z0-9]+/g, " ")
-    .trim();
+    .trim()
+    .split(" ")
+    .filter(Boolean);
+  const out: string[] = [];
+  let letters = "";
+  const flush = () => {
+    if (letters) {
+      out.push(letters);
+      letters = "";
+    }
+  };
+  for (const part of parts) {
+    if (part.length === 1) letters += part;
+    else {
+      flush();
+      out.push(part);
+    }
+  }
+  flush();
+  return out.join(" ");
 }
 
 function scoreMatch(
@@ -60,9 +80,10 @@ function scoreMatch(
   return score;
 }
 
-async function fromItunes(query: PreviewQuery): Promise<PreviewResult | null> {
+async function fromItunes(query: PreviewQuery, country?: string): Promise<PreviewResult | null> {
   const term = encodeURIComponent(`${query.artist} ${query.title}`);
-  const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=8`;
+  const region = country ? `&country=${country}` : "";
+  const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=8${region}`;
   const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
   if (!res.ok) return null;
   const json = (await res.json()) as { results?: ITunesSong[] };
@@ -127,16 +148,51 @@ async function fromDeezer(query: PreviewQuery): Promise<PreviewResult | null> {
   };
 }
 
+async function fromDeezerQuoted(query: PreviewQuery): Promise<PreviewResult | null> {
+  const q = `artist:"${query.artist}" track:"${query.title.replace(/"/g, "")}"`;
+  const url = `https://api.deezer.com/search?q=${encodeURIComponent(q)}&limit=5`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!res.ok) return null;
+  const json = (await res.json()) as { data?: DeezerTrack[] };
+  const hit = (json.data ?? []).find((row) => {
+    if (!row.preview) return false;
+    const titleScore = scoreMatch(
+      query.artist,
+      query.title,
+      query.year,
+      row.artist?.name ?? "",
+      row.title ?? "",
+    );
+    const t = fold(query.title);
+    const ft = fold(row.title ?? "");
+    return ft === t || ft.includes(t) || t.includes(ft) || titleScore >= 4;
+  });
+  if (!hit?.preview) return null;
+  return {
+    id: query.id,
+    previewUrl: hit.preview,
+    artworkUrl: hit.album?.cover_big ?? hit.album?.cover_medium ?? null,
+  };
+}
+
 export async function lookupPreview(query: PreviewQuery): Promise<PreviewResult> {
-  try {
-    const itunes = await fromItunes(query);
-    if (itunes?.previewUrl) return itunes;
-  } catch {
-    /* fall through */
+  for (const country of ["de", "us"] as const) {
+    try {
+      const itunes = await fromItunes(query, country);
+      if (itunes?.previewUrl) return itunes;
+    } catch {
+      /* next */
+    }
   }
   try {
     const deezer = await fromDeezer(query);
     if (deezer?.previewUrl) return deezer;
+  } catch {
+    /* next */
+  }
+  try {
+    const quoted = await fromDeezerQuoted(query);
+    if (quoted?.previewUrl) return quoted;
   } catch {
     /* fall through */
   }
