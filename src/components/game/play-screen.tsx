@@ -123,18 +123,20 @@ export function PlayScreen() {
 
   return (
     <main className="screen-in mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden px-4 pb-[env(safe-area-inset-bottom)] pt-4 sm:px-6 sm:pt-6 lg:max-w-7xl">
-      <header className="flex items-center justify-between gap-3 pr-16">
-        <button
-          type="button"
-          onClick={() => (online ? requestLeave() : openHome())}
-          className="font-display text-lg tracking-tight text-fg"
-        >
-          Jahrgang
-        </button>
-        <div className="flex items-center gap-2">
-          <span className="hidden text-xs tracking-[0.16em] text-subtle uppercase sm:inline">
+      <header className="flex items-center justify-between gap-3 pr-14">
+        <div className="min-w-0">
+          <button
+            type="button"
+            onClick={() => (online ? requestLeave() : openHome())}
+            className="font-display text-lg tracking-tight text-fg"
+          >
+            Jahrgang
+          </button>
+          <p className="truncate text-[0.65rem] tracking-[0.16em] text-subtle uppercase">
             {VARIANT_LABELS[variant]}
-          </span>
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
             className="h-11 px-2 text-sm text-muted hover:text-fg"

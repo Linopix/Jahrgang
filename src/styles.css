@@ -331,10 +331,15 @@
   transform-origin: var(--radix-select-content-transform-origin);
 }
 
-@keyframes menu-in {
+[data-menu],
+[data-pack] {
+  scroll-margin-bottom: 6rem;
+}
+
+@keyframes menu-sheet {
   from {
     opacity: 0;
-    transform: translateY(-0.4rem);
+    transform: translateY(1rem);
   }
   to {
     opacity: 1;
@@ -742,6 +747,7 @@
   .pack-cover,
   .pack-sleeve,
   .menu-panel,
+  .menu-sheet,
   .podium-bar,
   .podium-name,
   .podium-burst i,

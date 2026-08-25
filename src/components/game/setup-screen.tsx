@@ -24,11 +24,11 @@ export function SetupScreen() {
   );
 
   return (
-    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 py-8 lg:max-w-6xl lg:px-8">
+    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pb-32 pt-8 lg:max-w-6xl lg:px-8 lg:pb-8">
       <button
         type="button"
         onClick={openHome}
-        className="self-start text-sm text-muted transition-colors hover:text-fg"
+        className="inline-flex h-11 items-center self-start text-sm text-muted transition-colors hover:text-fg"
       >
         Zurück
       </button>
@@ -105,20 +105,22 @@ export function SetupScreen() {
             <p className="mt-6 rounded-md bg-danger/15 px-3 py-2 text-sm text-fg">{loadError}</p>
           ) : null}
 
-          <Button
-            size="lg"
-            className="mt-8 w-full lg:max-w-xs"
-            onClick={() => {
-              sfxScratch();
-              void startGame({
-                mode,
-                names: visibleNames,
-                ...options,
-              });
-            }}
-          >
-            Platte auflegen
-          </Button>
+          <div className="fixed inset-x-0 bottom-0 z-20 bg-bg/90 px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:static lg:inset-auto lg:bg-transparent lg:px-0 lg:pt-8 lg:pb-0 lg:backdrop-blur-none">
+            <Button
+              size="lg"
+              className="w-full lg:max-w-xs"
+              onClick={() => {
+                sfxScratch();
+                void startGame({
+                  mode,
+                  names: visibleNames,
+                  ...options,
+                });
+              }}
+            >
+              Platte auflegen
+            </Button>
+          </div>
         </div>
       </div>
     </main>

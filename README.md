@@ -4,23 +4,60 @@
 
 Ein Titel läuft. Name und Jahr bleiben verdeckt. Du ordnest ihn auf deiner Zeitlinie ein: links früher, rechts später. Wer zuerst alle Karten richtig liegen hat, gewinnt.
 
-Zwei Varianten: **Zeitstrahl** nur nach Jahr, **Kenner** mit Interpret und Titel. Dazu Blind, Star, Titel und **Verrückter** (Zeitlinie rückwärts, Jahre weg, Platte zu schnell oder zu langsam). Keine Anmeldung. Läuft im Browser auf Handy und Rechner.
+Keine Anmeldung. Läuft im Browser auf Handy und Rechner.
 
-![Jahrgang](public/og.jpg)
+![Jahrgang Start](docs/shots/home.jpg)
+
+## Handy
+
+Die Auswahl klappt als Blatt von unten auf. Spiel, Stil und Genre liegen als ganze Liste da, nicht als winzige Chips.
+
+![Start auf dem Handy](docs/shots/home-mobile.jpg)
+
+![Spielmodus auf dem Handy](docs/shots/menu-spiel-mobile.jpg)
+
+![Stil auf dem Handy](docs/shots/menu-stil-mobile.jpg)
+
+![Genre im Mix](docs/shots/menu-genre-mobile.jpg)
+
+![Abend einrichten](docs/shots/setup-mobile.jpg)
+
+![Am Zug](docs/shots/play-mobile.jpg)
+
+## Rechner
+
+Auf dem großen Schirm stehen Namen links, Repertoire rechts. Packs öffnen ein Sleeve. Modi haben Name und Kurztext.
+
+![Partyabend](docs/shots/setup.jpg)
+
+![Spielmodus](docs/shots/menu-spiel.jpg)
+
+![Jahrzehnt-Pack](docs/shots/pack-open.jpg)
+
+![Am Zug am Rechner](docs/shots/play.jpg)
 
 ## So wird gespielt
 
 Jede Person beginnt mit einer offenen Karte. Dann kommt ein neuer Titel. Du hörst ihn und wählst den Platz auf deiner Zeitlinie. Sitzt die Lage, bleibt die Karte. Liegt sie falsch, geht sie zurück.
 
-**Zeitstrahl** ist das Einordnen nach Erscheinungsjahr.
-
-**Kenner** verlangt zusätzlich einen Tipp zu Interpret und Titel. Richtige Tipps zählen als Treffer, die Karte selbst hängt weiter am Jahr.
+| Modus | Ablauf |
+| --- | --- |
+| Zeitstrahl | Nur das Erscheinungsjahr. Cover darf sichtbar sein. |
+| Blind | Wie Zeitstrahl, Cover bleibt zu. |
+| Kenner | Interpret und Titel raten, dann einordnen. |
+| Star | Nur den Interpreten raten. |
+| Titel | Nur den Songtitel raten. |
+| Verrückter | Kenner, Cover zu, Jahre weg, links ist später. Die Platte läuft zu schnell oder zu langsam. |
 
 Joker nach Einstellung: keine, eine oder zwei. Damit lässt sich das Jahrzehnt anzeigen oder der Titel überspringen.
 
 Ziel sind 6, 8 oder 10 Karten. Repertoire als Pack: Jahrzehnt, Stil, Party, Charts, Rap Charts. Mix aus Zeitraum plus Genre. Oder eine öffentliche Spotify- bzw. Deezer-Playlist.
 
 ## Mit anderen spielen
+
+![Online-Abend](docs/shots/online.jpg)
+
+![Online auf dem Handy](docs/shots/online-mobile.jpg)
 
 1. Eine Person öffnet [jahrgang.vercel.app](https://jahrgang.vercel.app) und wählt **Online-Abend**.
 2. Namen eingeben, **Raum öffnen**.

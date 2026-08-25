@@ -66,11 +66,11 @@ export function OnlineLobbyScreen() {
   const canStart = !connecting && !pending && readyCount >= 2;
 
   return (
-    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 py-8 lg:max-w-6xl lg:px-8">
+    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pb-28 pt-8 lg:max-w-6xl lg:px-8 lg:pb-8">
       <button
         type="button"
         onClick={() => requestLeave()}
-        className="self-start text-sm text-muted transition-colors hover:text-fg"
+        className="inline-flex h-11 items-center self-start text-sm text-muted transition-colors hover:text-fg"
       >
         Raum verlassen
       </button>
@@ -150,21 +150,23 @@ export function OnlineLobbyScreen() {
       {isHost ? (
         <div>
           <GameOptions value={config} onChange={requestConfig} online />
-          <Button
-            size="lg"
-            className="mt-8 w-full lg:max-w-xs"
-            disabled={!canStart}
-            onClick={() => {
-              sfxScratch();
-              void requestStartOnline();
-            }}
-          >
-            {pending
-              ? "Titel werden geladen…"
-              : readyCount < 2
-                ? "Mindestens zwei Personen"
-                : "Abend starten"}
-          </Button>
+          <div className="fixed inset-x-0 bottom-0 z-20 bg-bg/90 px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:static lg:inset-auto lg:bg-transparent lg:px-0 lg:pt-8 lg:pb-0 lg:backdrop-blur-none">
+            <Button
+              size="lg"
+              className="w-full lg:max-w-xs"
+              disabled={!canStart}
+              onClick={() => {
+                sfxScratch();
+                void requestStartOnline();
+              }}
+            >
+              {pending
+                ? "Titel werden geladen…"
+                : readyCount < 2
+                  ? "Mindestens zwei Personen"
+                  : "Abend starten"}
+            </Button>
+          </div>
         </div>
       ) : (
         <p className="mt-8 rounded-md bg-raised px-4 py-3 text-sm text-muted shadow-border">

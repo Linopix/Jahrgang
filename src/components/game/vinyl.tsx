@@ -12,7 +12,7 @@ type VinylProps = {
 
 const sizes = {
   sm: "size-24",
-  md: "size-36 sm:size-52",
+  md: "size-36 sm:size-52 lg:size-64",
   lg: "size-56 sm:size-72",
 };
 

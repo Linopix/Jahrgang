@@ -20,7 +20,7 @@ export function OnlineEntryScreen() {
       <button
         type="button"
         onClick={() => leaveRoom()}
-        className="self-start text-sm text-muted transition-colors hover:text-fg"
+        className="inline-flex h-11 items-center self-start text-sm text-muted transition-colors hover:text-fg"
       >
         Zurück
       </button>
