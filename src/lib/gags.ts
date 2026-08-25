@@ -85,10 +85,12 @@ type GagStore = {
   scramble: boolean;
   eggs: EggId[];
   found: string[];
+  hintEmote: boolean;
   push: (text: string, disco?: boolean) => void;
   drop: (id: number) => void;
   setDisco: (on: boolean) => void;
   setScramble: (on: boolean) => void;
+  setHintEmote: (on: boolean) => void;
   hydrateEggs: () => void;
   addEgg: (id: EggId) => void;
   addFound: (id: string) => void;
@@ -100,6 +102,7 @@ export const useGags = create<GagStore>((set, get) => ({
   scramble: false,
   eggs: [],
   found: [],
+  hintEmote: false,
   push: (text, disco) => {
     const id = nextId++;
     set((state) => ({ toasts: [...state.toasts.slice(-3), { id, text, disco }] }));
@@ -110,6 +113,7 @@ export const useGags = create<GagStore>((set, get) => ({
   drop: (id) => set((state) => ({ toasts: state.toasts.filter((row) => row.id !== id) })),
   setDisco: (on) => set({ disco: on }),
   setScramble: (on) => set({ scramble: on }),
+  setHintEmote: (on) => set({ hintEmote: on }),
   hydrateEggs: () => {
     const found = readFound();
     found.forEach((id) => said.add(id));
@@ -363,10 +367,8 @@ export function noteVariant(id: PlayVariant) {
 
 export function noteChat(text: string) {
   const key = fold(text).replace(/\s+/g, "");
-  if (key === "schweinebein") {
-    onceGag(
-      "schweinebein",
-      "Neues Emote: Schweinebein. Links bei den Reaktionen.",
-    );
-  }
+  if (key !== "schweinebein") return false;
+  if (!onceGag("schweinebein", "Easter egg entdeckt.")) return false;
+  useGags.getState().setHintEmote(true);
+  return true;
 }

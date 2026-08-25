@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Smile } from "lucide-react";
+import { ArrowLeft, Smile } from "lucide-react";
 import { EMOTE_SRC, HIDDEN_EMOTES, REACTION_EMOJIS, sendReaction, useReactions } from "@/lib/game/reactions";
 import { useOnline } from "@/lib/game/online-store";
 import { sfxHover, unlockAudio } from "@/lib/game/audio";
@@ -12,10 +12,22 @@ export function ReactionDock() {
   const enabled = useOnline((s) => s.emoji);
   const bursts = useReactions((s) => s.bursts);
   const found = useGags((s) => s.found);
+  const hint = useGags((s) => s.hintEmote);
+  const setHintEmote = useGags((s) => s.setHintEmote);
   const extra = HIDDEN_EMOTES.filter((id) => found.includes(id));
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const live = status === "lobby" || status === "playing" || status === "connecting";
+
+  useEffect(() => {
+    if (hint) setOpen(true);
+  }, [hint]);
+
+  useEffect(() => {
+    if (!hint) return;
+    const timer = window.setTimeout(() => setHintEmote(false), 8000);
+    return () => window.clearTimeout(timer);
+  }, [hint, setHintEmote]);
 
   useEffect(() => {
     if (!open) return;
@@ -82,11 +94,21 @@ export function ReactionDock() {
                 onMouseEnter={() => sfxHover()}
                 onClick={() => {
                   unlockAudio();
+                  setHintEmote(false);
                   sendReaction(id);
                 }}
-                className="flex size-11 items-center justify-center rounded-md transition-[transform,background-color] duration-150 ease-out hover:-translate-y-px hover:bg-raised active:scale-[0.94]"
+                className={cn(
+                  "relative flex size-11 items-center justify-center rounded-md transition-[transform,background-color] duration-150 ease-out hover:-translate-y-px hover:bg-raised active:scale-[0.94]",
+                  hint && "ring-2 ring-primary",
+                )}
               >
                 <img src={EMOTE_SRC[id]} alt="" className="size-8 rounded-sm object-cover" />
+                {hint ? (
+                  <span className="pointer-events-none absolute top-1/2 left-full z-10 ml-2 flex -translate-y-1/2 items-center gap-1 whitespace-nowrap rounded-md bg-surface px-2 py-1 text-xs text-fg shadow-lift">
+                    <ArrowLeft className="size-3.5" />
+                    schau da
+                  </span>
+                ) : null}
               </button>
             ))}
           </div>

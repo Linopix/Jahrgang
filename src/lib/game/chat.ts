@@ -54,7 +54,10 @@ export function sendChat(raw: string) {
   lastSentAt = now;
   useChat.getState().push(online.selfName || "Du", text, true);
   sfxTick();
-  noteChat(text);
+  if (noteChat(text)) {
+    useChat.getState().push("", "du schweinebein", false);
+    useChat.getState().setOpen(true);
+  }
   netSend({ t: "chat", text });
   return true;
 }
@@ -66,5 +69,8 @@ export function receiveChat(raw: unknown, name: string) {
   if (!text) return;
   useChat.getState().push(name || "Gast", text, false);
   sfxTick();
-  noteChat(text);
+  if (noteChat(text)) {
+    useChat.getState().push("", "du schweinebein", false);
+    useChat.getState().setOpen(true);
+  }
 }

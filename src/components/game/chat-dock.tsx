@@ -63,10 +63,14 @@ export function ChatDock() {
             ) : (
               lines.map((line) => (
                 <p key={line.id} className="text-sm leading-snug">
-                  <span className={cn("font-medium", line.self ? "text-primary" : "text-fg")}>
-                    {line.name}
-                  </span>
-                  <span className="text-muted"> · </span>
+                  {line.name ? (
+                    <>
+                      <span className={cn("font-medium", line.self ? "text-primary" : "text-fg")}>
+                        {line.name}
+                      </span>
+                      <span className="text-muted"> · </span>
+                    </>
+                  ) : null}
                   <span className="text-fg">
                     {line.text.replace(/\s+/g, "").toLowerCase() === "schweinebein" ? (
                       <EmoteMark id="schweinebein" className="size-6 align-text-bottom" />
