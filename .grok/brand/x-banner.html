@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    @font-face {
+      font-family: "Cormorant Garamond";
+      font-style: normal;
+      font-weight: 500;
+      src: url("../fonts/cormorant-latin-ext.woff2") format("woff2");
+      unicode-range: U+0100-02BA, U+1E00-1EFF;
+    }
+    @font-face {
+      font-family: "Cormorant Garamond";
+      font-style: normal;
+      font-weight: 500;
+      src: url("../fonts/cormorant-latin.woff2") format("woff2");
+    }
+    @font-face {
+      font-family: "Cormorant Garamond";
+      font-style: italic;
+      font-weight: 500;
+      src: url("../fonts/cormorant-italic-latin-ext.woff2") format("woff2");
+      unicode-range: U+0100-02BA, U+1E00-1EFF;
+    }
+    @font-face {
+      font-family: "Cormorant Garamond";
+      font-style: italic;
+      font-weight: 500;
+      src: url("../fonts/cormorant-italic-latin.woff2") format("woff2");
+    }
+    @font-face {
+      font-family: "Outfit";
+      font-style: normal;
+      font-weight: 400;
+      src: url("../fonts/outfit-latin-ext.woff2") format("woff2");
+      unicode-range: U+0100-02BA, U+1E00-1EFF;
+    }
+    @font-face {
+      font-family: "Outfit";
+      font-style: normal;
+      font-weight: 400;
+      src: url("../fonts/outfit-latin.woff2") format("woff2");
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 1200px;
+      height: 264px;
+      overflow: hidden;
+      background: #0c0b0a;
+    }
+    .stage {
+      position: relative;
+      width: 1200px;
+      height: 264px;
+      background:
+        radial-gradient(ellipse 48% 90% at 20% 38%, rgba(236, 230, 217, 0.11) 0%, transparent 58%),
+        radial-gradient(ellipse 38% 80% at 82% 50%, rgba(154, 147, 136, 0.13) 0%, transparent 55%),
+        #0c0b0a;
+      color: #ece6d9;
+    }
+    .lockup {
+      position: absolute;
+      left: 52px;
+      top: 28px;
+      width: 540px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      z-index: 6;
+    }
+    .eyebrow {
+      font-family: "Outfit", sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.42em;
+      text-transform: uppercase;
+      color: #9a9388;
+      margin-bottom: 8px;
+    }
+    .title {
+      font-family: "Cormorant Garamond", "Liberation Serif", serif;
+      font-weight: 500;
+      font-size: 64px;
+      line-height: 0.88;
+      letter-spacing: 0.16em;
+      color: #ece6d9;
+      padding-left: 0.04em;
+    }
+    .tagline {
+      font-family: "Cormorant Garamond", serif;
+      font-style: italic;
+      font-size: 18px;
+      letter-spacing: 0.03em;
+      color: #ece6d9;
+      margin-top: 8px;
+    }
+    .vinyl {
+      position: absolute;
+      width: 292px;
+      height: 292px;
+      right: 36px;
+      top: -14px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 50%,
+          #0c0b0a 0 7px,
+          #efe8d8 8px 50px,
+          #d9d1c2 50px 52px,
+          #1a1612 53px 56px,
+          transparent 57px),
+        radial-gradient(ellipse 46% 34% at 34% 30%, rgba(236, 230, 217, 0.16), transparent 58%),
+        repeating-radial-gradient(
+          circle at 50% 50%,
+          #14110f 0px,
+          #1c1815 1.5px,
+          #0e0c0b 3px
+        );
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+      z-index: 2;
+    }
+    .sleeve {
+      position: absolute;
+      width: 236px;
+      height: 236px;
+      right: 178px;
+      top: 14px;
+      background: linear-gradient(165deg, #f4efe4 0%, #efe8d8 50%, #e4dccb 100%);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.48);
+      z-index: 1;
+    }
+    .sleeve-inner {
+      position: absolute;
+      inset: 13px;
+      border: 1px solid rgba(154, 147, 136, 0.42);
+    }
+    .grain {
+      position: absolute;
+      inset: 0;
+      z-index: 9;
+      pointer-events: none;
+      opacity: 0.07;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="sleeve"><div class="sleeve-inner"></div></div>
+    <div class="vinyl"></div>
+    <div class="lockup">
+      <div class="eyebrow">Ein Musikspiel</div>
+      <div class="title">JAHRGANG</div>
+      <div class="tagline">Platziere den Hit auf der Zeitlinie</div>
+    </div>
+    <div class="grain"></div>
+  </div>
+</body>
+</html>

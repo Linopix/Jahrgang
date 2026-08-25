@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    @font-face {
+      font-family: "Cormorant Garamond";
+      font-style: normal;
+      font-weight: 500;
+      src: url("../fonts/cormorant-latin-ext.woff2") format("woff2");
+      unicode-range: U+0100-02BA, U+1E00-1EFF;
+    }
+    @font-face {
+      font-family: "Cormorant Garamond";
+      font-style: normal;
+      font-weight: 500;
+      src: url("../fonts/cormorant-latin.woff2") format("woff2");
+    }
+    @font-face {
+      font-family: "Cormorant Garamond";
+      font-style: italic;
+      font-weight: 500;
+      src: url("../fonts/cormorant-italic-latin-ext.woff2") format("woff2");
+      unicode-range: U+0100-02BA, U+1E00-1EFF;
+    }
+    @font-face {
+      font-family: "Cormorant Garamond";
+      font-style: italic;
+      font-weight: 500;
+      src: url("../fonts/cormorant-italic-latin.woff2") format("woff2");
+    }
+    @font-face {
+      font-family: "Outfit";
+      font-style: normal;
+      font-weight: 400;
+      src: url("../fonts/outfit-latin-ext.woff2") format("woff2");
+      unicode-range: U+0100-02BA, U+1E00-1EFF;
+    }
+    @font-face {
+      font-family: "Outfit";
+      font-style: normal;
+      font-weight: 400;
+      src: url("../fonts/outfit-latin.woff2") format("woff2");
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 1200px;
+      height: 630px;
+      overflow: hidden;
+      background: #0c0b0a;
+    }
+    .stage {
+      position: relative;
+      width: 1200px;
+      height: 630px;
+      background:
+        radial-gradient(ellipse 62% 72% at 38% 44%, rgba(236, 230, 217, 0.11) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 50% at 86% 58%, rgba(154, 147, 136, 0.14) 0%, transparent 55%),
+        #0c0b0a;
+      color: #ece6d9;
+    }
+    .frame {
+      position: absolute;
+      inset: 36px;
+      border: 1px solid rgba(236, 230, 217, 0.13);
+      pointer-events: none;
+      z-index: 8;
+    }
+    .vinyl {
+      position: absolute;
+      width: 440px;
+      height: 440px;
+      right: -36px;
+      top: 96px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 50%,
+          #0c0b0a 0 10px,
+          #efe8d8 11px 76px,
+          #d9d1c2 76px 78px,
+          #1a1612 79px 83px,
+          transparent 84px),
+        radial-gradient(ellipse 46% 34% at 34% 30%, rgba(236, 230, 217, 0.18), transparent 58%),
+        repeating-radial-gradient(
+          circle at 50% 50%,
+          #14110f 0px,
+          #1c1815 1.7px,
+          #0e0c0b 3.4px
+        );
+      box-shadow:
+        0 22px 56px rgba(0, 0, 0, 0.58),
+        inset 0 0 0 1px rgba(236, 230, 217, 0.05);
+      z-index: 2;
+    }
+    .vinyl-label-ring {
+      position: absolute;
+      inset: 88px;
+      border-radius: 50%;
+      border: 1px solid rgba(154, 147, 136, 0.55);
+      pointer-events: none;
+    }
+    .sleeve {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      right: 8px;
+      top: 166px;
+      background: linear-gradient(165deg, #f4efe4 0%, #efe8d8 48%, #e4dccb 100%);
+      box-shadow: 0 24px 58px rgba(0, 0, 0, 0.5);
+      z-index: 1;
+    }
+    .sleeve-inner {
+      position: absolute;
+      inset: 16px;
+      border: 1px solid rgba(154, 147, 136, 0.42);
+    }
+    .lockup {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 6;
+      padding-bottom: 18px;
+    }
+    .lockup::before {
+      content: "";
+      position: absolute;
+      left: 160px;
+      right: 160px;
+      top: 150px;
+      bottom: 170px;
+      background: radial-gradient(ellipse at center, rgba(12, 11, 10, 0.55) 0%, transparent 72%);
+      z-index: -1;
+      pointer-events: none;
+    }
+    .eyebrow {
+      font-family: "Outfit", sans-serif;
+      font-weight: 400;
+      font-size: 13px;
+      letter-spacing: 0.46em;
+      text-transform: uppercase;
+      color: #9a9388;
+      margin-bottom: 20px;
+    }
+    .title {
+      font-family: "Cormorant Garamond", "Liberation Serif", serif;
+      font-weight: 500;
+      font-size: 104px;
+      line-height: 0.9;
+      letter-spacing: 0.16em;
+      color: #ece6d9;
+      padding-left: 0.16em;
+      text-shadow:
+        0 0 28px rgba(12, 11, 10, 0.55),
+        0 2px 18px rgba(12, 11, 10, 0.7);
+    }
+    .rule {
+      width: 152px;
+      height: 1px;
+      background: #9a9388;
+      margin: 20px 0 16px;
+      opacity: 0.9;
+    }
+    .tagline {
+      font-family: "Cormorant Garamond", serif;
+      font-style: italic;
+      font-weight: 500;
+      font-size: 26px;
+      letter-spacing: 0.04em;
+      color: #ece6d9;
+      text-shadow: 0 2px 16px rgba(12, 11, 10, 0.7);
+    }
+    .years {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 56px;
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      font-family: "Outfit", sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.3em;
+      color: #9a9388;
+      z-index: 6;
+    }
+    .grain {
+      position: absolute;
+      inset: 0;
+      z-index: 9;
+      pointer-events: none;
+      opacity: 0.07;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="sleeve"><div class="sleeve-inner"></div></div>
+    <div class="vinyl"><div class="vinyl-label-ring"></div></div>
+    <div class="lockup">
+      <div class="eyebrow">Ein Musikspiel</div>
+      <div class="title">JAHRGANG</div>
+      <div class="rule"></div>
+      <div class="tagline">Platziere den Hit auf der Zeitlinie</div>
+    </div>
+    <div class="years">
+      <span>1954</span><span>1972</span><span>1989</span><span>2006</span><span>2024</span>
+    </div>
+    <div class="frame"></div>
+    <div class="grain"></div>
+  </div>
+</body>
+</html>
