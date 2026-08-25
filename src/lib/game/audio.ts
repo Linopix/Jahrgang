@@ -528,9 +528,9 @@ const EMOJI_FILES: Record<string, string> = {
   "😱": "/sfx/shock.mp3",
   "👏": "/sfx/clap.mp3",
   "💯": "/sfx/ding.mp3",
-  "💀": "/sfx/skull.mp3",
-  "❤️": "/sfx/heart.mp3",
-  "🎵": "/sfx/note.mp3",
+  "💀": "/sfx/skull.mp3?v=2",
+  "❤️": "/sfx/heart.mp3?v=2",
+  "🎵": "/sfx/note.mp3?v=2",
 };
 
 const sampleCache = new Map<string, HTMLAudioElement>();
