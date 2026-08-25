@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { peekPlaylist } from "@/lib/game/playlist";
-import { sfxHover, sfxTick } from "@/lib/game/audio";
+import { sfxHover, sfxSlide, sfxTick } from "@/lib/game/audio";
 import {
   ERA_BLURBS,
   ERA_LABELS,
@@ -224,6 +224,7 @@ function DualYearSlider({
           aria-label="Von Jahr"
           onChange={(event) => {
             const next = Number(event.target.value);
+            sfxSlide(next);
             onChange(Math.min(next, end), end);
           }}
         />
@@ -235,6 +236,7 @@ function DualYearSlider({
           aria-label="Bis Jahr"
           onChange={(event) => {
             const next = Number(event.target.value);
+            sfxSlide(next);
             onChange(start, Math.max(next, start));
           }}
         />

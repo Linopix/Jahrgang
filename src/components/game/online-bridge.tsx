@@ -7,6 +7,7 @@ import { useGame } from "@/lib/game/store";
 import { useOnline, type OnlineMember } from "@/lib/game/online-store";
 import { requestStartOnline } from "@/lib/game/online-actions";
 import { DEFAULT_NEXT_ROUND, DEFAULT_ROOM_CONFIG, DEFAULT_TOKENS, DEFAULT_VARIANT, isNextRoundPolicy, isPlayVariant, isTokenCount } from "@/lib/game/types";
+import { receiveReaction } from "@/lib/game/reactions";
 import type { PeerInfo } from "@/lib/multiplayer";
 
 const JOIN_TIMEOUT_MS = 14000;
@@ -280,6 +281,13 @@ function handleMessage(
     online.leaveRoom();
     online.openEntry();
     clearRoomFromUrl();
+    return;
+  }
+
+  if (msg.t === "react") {
+    if (from === ctx.selfId) return;
+    const member = online.members.find((row) => row.id === from);
+    receiveReaction(msg.emoji, member?.name ?? "");
     return;
   }
 

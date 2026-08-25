@@ -280,8 +280,33 @@ export function sfxTick() {
   tone({ freq: 980 * jitter(0.04), duration: 0.035, type: "triangle", gain: 0.028, filter: 2400 });
 }
 
+let lastSlideAt = 0;
+
+export function sfxSlide(year?: number) {
+  const now = performance.now();
+  if (now - lastSlideAt < 55) return;
+  lastSlideAt = now;
+  const t =
+    typeof year === "number" ? Math.min(1, Math.max(0, (year - YEAR_MIN_SLIDE) / YEAR_SPAN_SLIDE)) : 0.4;
+  tone({
+    freq: 360 + t * 540,
+    duration: 0.03,
+    type: "sine",
+    gain: 0.022,
+    filter: 2200,
+  });
+}
+
+const YEAR_MIN_SLIDE = 1960;
+const YEAR_SPAN_SLIDE = 66;
+
 export function sfxHover() {
   tone({ freq: 720 * jitter(0.03), duration: 0.025, type: "sine", gain: 0.012, filter: 1800 });
+}
+
+export function sfxPop() {
+  tone({ freq: 880, duration: 0.05, type: "sine", gain: 0.03, filter: 2400 });
+  tone({ freq: 1240, duration: 0.07, type: "triangle", when: 0.02, gain: 0.018, filter: 2800 });
 }
 
 export function sfxPlace() {

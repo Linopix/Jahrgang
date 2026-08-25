@@ -139,6 +139,47 @@
   --shadow-lift: 0 0 0 1px rgb(246 235 228 / 0.1), 0 18px 40px -24px rgb(0 0 0 / 0.7);
 }
 
+[data-theme="glass"] {
+  color-scheme: dark;
+  --color-bg: #0a1220;
+  --color-surface: rgb(214 232 255 / 0.14);
+  --color-raised: rgb(224 240 255 / 0.2);
+  --color-fg: #eef6ff;
+  --color-muted: #9db4cc;
+  --color-subtle: #6d849c;
+  --color-primary: #d6ebff;
+  --color-primary-fg: #0a1220;
+  --color-border: rgb(210 230 255 / 0.3);
+  --color-card: #e8f0f8;
+  --color-card-fg: #152033;
+  --color-card-muted: #5c7088;
+  --color-success: #8ec4b0;
+  --color-danger: #e08a7a;
+  --color-groove: #081018;
+  --groove-spot: rgb(140 190 255 / 0.24);
+  --groove-ring: rgb(180 220 255 / 0.045);
+  --vinyl-mid: #243044;
+  --vinyl-dark: #0a1018;
+  --vinyl-groove: #152033;
+  --shadow-border: 0 0 0 1px rgb(210 230 255 / 0.24);
+  --shadow-lift: 0 0 0 1px rgb(210 230 255 / 0.3), 0 20px 50px -22px rgb(8 16 32 / 0.75);
+}
+
+[data-theme="glass"] .bg-surface,
+[data-theme="glass"] .bg-raised,
+[data-theme="glass"] .dialog-panel {
+  backdrop-filter: blur(22px) saturate(1.45);
+  -webkit-backdrop-filter: blur(22px) saturate(1.45);
+}
+
+[data-theme="glass"] .groove-bg {
+  background-image:
+    radial-gradient(920px 540px at 8% -10%, rgb(110 180 255 / 0.38), transparent 56%),
+    radial-gradient(740px 480px at 108% 4%, rgb(168 128 255 / 0.24), transparent 54%),
+    radial-gradient(640px 400px at 48% 118%, rgb(70 210 230 / 0.18), transparent 52%),
+    radial-gradient(circle at 50% -10%, var(--groove-spot), transparent 42%);
+}
+
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
@@ -221,6 +262,25 @@
 
 .vinyl-disc.is-slow {
   animation-duration: 8s;
+}
+
+@keyframes react-rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0.55);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.12);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -96px) scale(1);
+  }
+}
+
+.react-burst {
+  animation: react-rise 1.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .vinyl-label {
@@ -473,7 +533,8 @@
   .pop-in,
   .pulse-soft,
   .dialog-overlay,
-  .dialog-panel {
+  .dialog-panel,
+  .react-burst {
     animation: none;
     transition: none;
   }
