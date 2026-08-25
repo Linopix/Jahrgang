@@ -3,12 +3,16 @@ let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let sfxBus: GainNode | null = null;
 let lobbyGain: GainNode | null = null;
-let lobbyReady = false;
+let lobbyTimer: number | null = null;
+let lobbyStep = 0;
 let volume = 0.85;
 let previewMuted = false;
 let uiMuted = false;
 let lobbyWanted = true;
 const uiListeners = new Set<() => void>();
+
+const LOBBY_NOTES = [220, 261.63, 329.63, 392, 440, 523.25];
+const LOBBY_STEPS = [0, 2, 4, 3, 1, 4, 2, 0, 3, 5, 4, 2];
 
 function notifyUi() {
   uiListeners.forEach((fn) => fn());
@@ -49,72 +53,66 @@ function applyPreviewVolume() {
 function applyUiVolume() {
   if (!ctx) return;
   const sfx = uiMuted ? 0 : 0.7;
-  const lobby = uiMuted || !lobbyWanted ? 0 : 0.045;
+  const lobby = uiMuted || !lobbyWanted ? 0 : 1;
   if (sfxBus) sfxBus.gain.setTargetAtTime(sfx, ctx.currentTime, 0.04);
-  if (lobbyGain) lobbyGain.gain.setTargetAtTime(lobby, ctx.currentTime, 0.08);
+  if (lobbyGain) lobbyGain.gain.setTargetAtTime(lobby, ctx.currentTime, 0.12);
+  if (lobbyWanted && !uiMuted) startLobby();
+  else stopLobby();
 }
 
-function ensureLobby() {
-  const audioCtx = ensureCtx();
-  if (!lobbyGain) return;
-  if (lobbyReady) {
-    applyUiVolume();
-    return;
-  }
-  lobbyReady = true;
+function playLobbyNote() {
+  if (!ctx || !lobbyGain) return;
+  const freq = LOBBY_NOTES[LOBBY_STEPS[lobbyStep % LOBBY_STEPS.length]];
+  lobbyStep += 1;
+  const now = ctx.currentTime;
+  const filter = ctx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 1400;
+  filter.Q.value = 0.4;
 
-  const mix = audioCtx.createGain();
-  mix.gain.value = 1;
-  mix.connect(lobbyGain);
-
-  const pad = (freq: number, type: OscillatorType, detune: number, level: number) => {
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    const filter = audioCtx.createBiquadFilter();
-    osc.type = type;
-    osc.frequency.value = freq;
-    osc.detune.value = detune;
-    g.gain.value = level;
-    filter.type = "lowpass";
-    filter.frequency.value = 720;
-    filter.Q.value = 0.5;
+  const voice = (offset: number, ratio: number, level: number, seconds: number) => {
+    if (!ctx || !lobbyGain) return;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq * ratio;
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(level, now + 0.55);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + seconds);
     osc.connect(g);
     g.connect(filter);
-    filter.connect(mix);
-    osc.start();
+    osc.start(now + offset);
+    osc.stop(now + seconds + 0.05);
+    osc.onended = () => {
+      osc.disconnect();
+      g.disconnect();
+      if (ratio === 1) filter.disconnect();
+    };
   };
 
-  pad(110, "sine", 0, 0.22);
-  pad(164.81, "sine", 5, 0.16);
-  pad(220, "triangle", -3, 0.07);
+  filter.connect(lobbyGain);
+  voice(0, 1, 0.045, 4.2);
+  voice(0.04, 2, 0.012, 3.4);
+}
 
-  const length = Math.floor(audioCtx.sampleRate * 3);
-  const buffer = audioCtx.createBuffer(1, length, audioCtx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
-  const noise = audioCtx.createBufferSource();
-  noise.buffer = buffer;
-  noise.loop = true;
-  const band = audioCtx.createBiquadFilter();
-  band.type = "bandpass";
-  band.frequency.value = 1400;
-  band.Q.value = 0.5;
-  const ng = audioCtx.createGain();
-  ng.gain.value = 0.028;
-  noise.connect(band);
-  band.connect(ng);
-  ng.connect(mix);
-  noise.start();
+function startLobby() {
+  if (lobbyTimer !== null) return;
+  ensureCtx();
+  const tick = () => {
+    if (!lobbyWanted || uiMuted) {
+      stopLobby();
+      return;
+    }
+    playLobbyNote();
+    lobbyTimer = window.setTimeout(tick, 3200 + Math.random() * 1600);
+  };
+  lobbyTimer = window.setTimeout(tick, 400);
+}
 
-  const lfo = audioCtx.createOscillator();
-  const lfoGain = audioCtx.createGain();
-  lfo.type = "sine";
-  lfo.frequency.value = 0.08;
-  lfoGain.gain.value = 180;
-  lfo.connect(lfoGain);
-  lfo.start();
-
-  applyUiVolume();
+function stopLobby() {
+  if (lobbyTimer === null) return;
+  window.clearTimeout(lobbyTimer);
+  lobbyTimer = null;
 }
 
 export function unlockAudio() {
@@ -123,7 +121,7 @@ export function unlockAudio() {
   if (audioCtx.state === "suspended") {
     void audioCtx.resume();
   }
-  if (lobbyWanted) ensureLobby();
+  applyUiVolume();
 }
 
 export function setMasterVolume(next: number) {
@@ -179,9 +177,6 @@ export function subscribeUiAudio(fn: () => void) {
 
 export function setLobbyWanted(next: boolean) {
   lobbyWanted = next;
-  if (next) {
-    ensureLobby();
-  }
   applyUiVolume();
 }
 

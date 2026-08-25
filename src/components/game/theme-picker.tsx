@@ -104,7 +104,8 @@ export function ThemePicker() {
             {uiMuted ? "Atmosphäre aus" : "Atmosphäre an"}
           </button>
           <p className="mt-2 text-[0.7rem] leading-snug text-subtle">
-            Lobbyton und Effekt-Töne. Die Songvorschau hat eine eigene Stummschaltung.
+            Leise Töne im Menü und Effekt-Töne. Die Songvorschau hat eine eigene
+            Stummschaltung.
           </p>
         </div>
       ) : null}
