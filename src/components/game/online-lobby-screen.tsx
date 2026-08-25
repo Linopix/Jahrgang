@@ -23,6 +23,7 @@ export function OnlineLobbyScreen() {
   const mixFrom = useOnline((s) => s.mixFrom);
   const mixTo = useOnline((s) => s.mixTo);
   const mixGenre = useOnline((s) => s.mixGenre);
+  const custom = useOnline((s) => s.custom);
   const error = useOnline((s) => s.error);
   const hostId = useOnline((s) => s.hostId);
   const pending = useOnline((s) => s.pending);
@@ -41,6 +42,7 @@ export function OnlineLobbyScreen() {
     mixFrom,
     mixTo,
     mixGenre,
+    custom,
   });
 
   useEffect(() => {

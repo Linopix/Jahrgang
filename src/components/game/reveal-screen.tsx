@@ -27,6 +27,7 @@ export function RevealScreen() {
   const currentPlayerIndex = useGame((s) => s.currentPlayerIndex);
   const mode = useGame((s) => s.mode);
   const variant = useGame((s) => s.variant);
+  const custom = useGame((s) => s.custom);
   const pending = useOnline((s) => s.pending);
   const online = isOnlinePlay();
   const myTurn = canControlTurn();
@@ -39,7 +40,7 @@ export function RevealScreen() {
       ? player?.name
       : players[(currentPlayerIndex + 1) % players.length]?.name;
   const canAdvance = !online || myTurn || host;
-  const kind = guessKind(variant);
+  const kind = guessKind(variant, custom);
   const quizMax = kind === "both" ? 2 : kind === "none" ? 0 : 1;
   const quizHits =
     (kind === "title" || kind === "both" ? Number(lastResult.titleCorrect) : 0) +

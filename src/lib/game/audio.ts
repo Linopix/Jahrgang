@@ -324,8 +324,8 @@ export function setLobbyWanted(next: boolean) {
   applyUiVolume();
 }
 
-export function previewRate(variant: string, seed: string) {
-  if (variant !== "wild") return 1;
+export function previewRate(warp: boolean, seed: string) {
+  if (!warp) return 1;
   let hash = 2166136261;
   for (let i = 0; i < seed.length; i++) {
     hash ^= seed.charCodeAt(i);

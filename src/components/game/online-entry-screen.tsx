@@ -15,6 +15,8 @@ export function OnlineEntryScreen() {
   const joinRoom = useOnline((s) => s.joinRoom);
   const leaveRoom = useOnline((s) => s.leaveRoom);
 
+  const named = selfName.trim().length > 0;
+
   return (
     <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 py-8 lg:max-w-5xl lg:justify-center lg:px-8">
       <button
@@ -60,6 +62,7 @@ export function OnlineEntryScreen() {
       <Button
         size="lg"
         className="mt-6 w-full"
+        disabled={!named}
         onClick={() => {
           unlockAudio();
           createRoom();
@@ -95,7 +98,7 @@ export function OnlineEntryScreen() {
         size="lg"
         variant="secondary"
         className="mt-4 w-full"
-        disabled={inviteCode.length < 4}
+        disabled={!named || inviteCode.length < 4}
         onClick={() => {
           unlockAudio();
           joinRoom();

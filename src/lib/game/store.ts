@@ -18,6 +18,7 @@ import {
   unlockAudio,
 } from "./audio";
 import {
+  DEFAULT_CUSTOM,
   DEFAULT_MIX_FROM,
   DEFAULT_MIX_TO,
   DEFAULT_TARGET,
@@ -25,11 +26,10 @@ import {
   DEFAULT_VARIANT,
   SOLO_LIVES,
   emptyStats,
-  guessKind,
-  openPlay,
-  reversesTimeline,
-  freePlace,
+  parseCustom,
+  rulesFor,
   type CatalogSong,
+  type CustomRules,
   type EraId,
   type GameMode,
   type GameSnapshot,
@@ -57,6 +57,7 @@ type GameStore = {
   era: EraId;
   target: number;
   variant: PlayVariant;
+  custom: CustomRules;
   players: Player[];
   currentPlayerIndex: number;
   deck: ResolvedSong[];
@@ -88,9 +89,9 @@ type GameStore = {
   resetBoard: () => void;
 };
 
-function cuePreview(song: ResolvedSong | null, variant: PlayVariant) {
+function cuePreview(song: ResolvedSong | null, variant: PlayVariant, custom?: CustomRules) {
   if (!song) return;
-  void playPreview(song.previewUrl, previewRate(variant, song.id));
+  void playPreview(song.previewUrl, previewRate(rulesFor(variant, custom).warp, song.id));
 }
 
 function makePlayers(
@@ -130,8 +131,8 @@ function hydratePlayers(players: Player[]): Player[] {
   }));
 }
 
-function isOver(players: Player[], target: number, mode: GameMode, variant: PlayVariant) {
-  if (openPlay(variant)) return false;
+function isOver(players: Player[], target: number, mode: GameMode, variant: PlayVariant, custom?: CustomRules) {
+  if (rulesFor(variant, custom).open) return false;
   if (winner(players, target)) return true;
   if (mode === "solo" && (players[0]?.misses ?? 0) >= SOLO_LIVES) return true;
   return false;
@@ -159,6 +160,7 @@ export const useGame = create<GameStore>((set, get) => ({
   era: "all",
   target: DEFAULT_TARGET,
   variant: DEFAULT_VARIANT,
+  custom: DEFAULT_CUSTOM,
   players: [],
   currentPlayerIndex: 0,
   deck: [],
@@ -228,6 +230,7 @@ export const useGame = create<GameStore>((set, get) => ({
       era: s.era,
       target: s.target,
       variant: s.variant,
+      custom: s.custom,
       players: s.players,
       currentPlayerIndex: s.currentPlayerIndex,
       deck: s.deck,
@@ -250,6 +253,7 @@ export const useGame = create<GameStore>((set, get) => ({
       era: snap.era,
       target: snap.target,
       variant: snap.variant ?? DEFAULT_VARIANT,
+      custom: parseCustom(snap.custom),
       players: hydratePlayers(snap.players),
       currentPlayerIndex: snap.currentPlayerIndex,
       deck: snap.deck,
@@ -266,7 +270,7 @@ export const useGame = create<GameStore>((set, get) => ({
       loadError: null,
     });
     if (snap.phase === "listen" && snap.current && songChanged) {
-      cuePreview(snap.current, snap.variant ?? DEFAULT_VARIANT);
+      cuePreview(snap.current, snap.variant ?? DEFAULT_VARIANT, parseCustom(snap.custom));
     }
     if (snap.phase === "reveal" && prev.phase !== "reveal") {
       pausePreview();
@@ -285,6 +289,7 @@ export const useGame = create<GameStore>((set, get) => ({
   startGame: async (config) => {
     unlockAudio();
     const variant = config.variant ?? DEFAULT_VARIANT;
+    const custom = parseCustom(config.custom);
     const tokens = config.tokens ?? DEFAULT_TOKENS;
     set({
       phase: "loading",
@@ -292,6 +297,7 @@ export const useGame = create<GameStore>((set, get) => ({
       era: config.era,
       target: config.target,
       variant,
+      custom,
       lastSetup: config,
       loadProgress: { done: 0, total: POOL_SIZE },
       loadError: null,
@@ -306,11 +312,10 @@ export const useGame = create<GameStore>((set, get) => ({
         id: config.ids?.[i] ?? `p-${i}`,
         name,
       }));
+      const rules = rulesFor(variant, custom);
       const needed = Math.min(
         POOL_SIZE,
-        openPlay(variant)
-          ? POOL_SIZE
-          : playerCount + Math.max(config.target + 4, 10),
+        rules.open ? POOL_SIZE : playerCount + Math.max(config.target + 4, 10),
       );
       let imported: PlaylistTrack[] = [];
       if (config.era === "playlist" && !config.playlistUrl) {
@@ -405,7 +410,7 @@ export const useGame = create<GameStore>((set, get) => ({
         phase: "listen",
         loadProgress: { done: resolved.length, total: resolved.length },
       });
-      cuePreview(current, variant);
+      cuePreview(current, variant, custom);
       return true;
     } catch {
       set({
@@ -427,18 +432,19 @@ export const useGame = create<GameStore>((set, get) => ({
   },
 
   confirmPlacement: (guess) => {
-    const { phase, current, selectedSlot, players, currentPlayerIndex, variant } = get();
+    const { phase, current, selectedSlot, players, currentPlayerIndex, variant, custom } = get();
     if (phase !== "listen" || !current || selectedSlot === null) return;
     const player = players[currentPlayerIndex];
     if (!player) return;
     pausePreview();
+    const rules = rulesFor(variant, custom);
     const correct =
-      freePlace(variant) ||
-      canPlace(player.timeline, selectedSlot, current.year, reversesTimeline(variant));
+      rules.free ||
+      canPlace(player.timeline, selectedSlot, current.year, rules.reverse);
     const scored =
-      guessKind(variant) === "none"
+      rules.guess === "none"
         ? null
-        : scoreForVariant(guess?.title ?? "", guess?.artist ?? "", current, variant);
+        : scoreForVariant(guess?.title ?? "", guess?.artist ?? "", current, variant, custom);
     const nextPlayers = players.map((row, i) => {
       if (i !== currentPlayerIndex) return row;
       const quiz = row.quiz + (scored?.quiz ?? 0);
@@ -449,7 +455,7 @@ export const useGame = create<GameStore>((set, get) => ({
     });
     if (correct) sfxCorrect();
     else sfxWrong();
-    const kind = guessKind(variant);
+    const kind = rules.guess;
     const asked = kind === "both" ? 2 : kind === "none" ? 0 : 1;
     const patch = {
       heard: 1,
@@ -478,10 +484,10 @@ export const useGame = create<GameStore>((set, get) => ({
   },
 
   nextTurn: (opts) => {
-    const { phase, players, currentPlayerIndex, deck, mode, target, lastResult, series, variant } = get();
+    const { phase, players, currentPlayerIndex, deck, mode, target, lastResult, series, variant, custom } = get();
     if (phase !== "reveal") return;
     stopPreview();
-    if (isOver(players, target, mode, variant) || deck.length === 0) {
+    if (isOver(players, target, mode, variant, custom) || deck.length === 0) {
       if (lastResult?.correct && winner(players, target)) sfxWin();
       set({
         phase: "winner",
@@ -501,7 +507,7 @@ export const useGame = create<GameStore>((set, get) => ({
       decadeHint: null,
       phase: "listen",
     });
-    if (current) cuePreview(current, get().variant);
+    if (current) cuePreview(current, get().variant, get().custom);
   },
 
   useDecade: () => {
@@ -543,13 +549,13 @@ export const useGame = create<GameStore>((set, get) => ({
       stats: bumpStats(get().stats, skipPatch),
       roundStats: bumpStats(get().roundStats, skipPatch),
     });
-    cuePreview(next, get().variant);
+    cuePreview(next, get().variant, get().custom);
   },
 
   replay: () => {
-    const { current, phase, variant } = get();
+    const { current, phase, variant, custom } = get();
     if (!current || phase !== "listen") return;
-    cuePreview(current, variant);
+    cuePreview(current, variant, custom);
   },
 }));
 

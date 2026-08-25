@@ -1,4 +1,5 @@
-import type { PlayVariant } from "./types";
+import type { CustomRules, PlayVariant } from "./types";
+import { guessKind } from "./types";
 
 function stripMarks(input: string) {
   return input.normalize("NFD").replace(/\p{M}/gu, "");
@@ -102,17 +103,19 @@ export function scoreForVariant(
   artistGuess: string,
   song: { title: string; artist: string },
   variant: PlayVariant,
+  custom?: CustomRules,
 ) {
   const full = scoreGuesses(titleGuess, artistGuess, song);
-  if (variant === "original" || variant === "wild" || variant === "custom") return full;
-  if (variant === "star") {
+  const kind = guessKind(variant, custom);
+  if (kind === "both") return full;
+  if (kind === "artist") {
     return {
       titleCorrect: false,
       artistCorrect: full.artistCorrect,
       quiz: full.artistCorrect ? 1 : 0,
     };
   }
-  if (variant === "hook") {
+  if (kind === "title") {
     return {
       titleCorrect: full.titleCorrect,
       artistCorrect: false,

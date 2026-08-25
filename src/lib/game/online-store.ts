@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import {
+  DEFAULT_CUSTOM,
   DEFAULT_MIX_FROM,
   DEFAULT_MIX_TO,
   DEFAULT_NEXT_ROUND,
@@ -12,6 +13,8 @@ import {
   isNextRoundPolicy,
   isPlayVariant,
   isTokenCount,
+  parseCustom,
+  type CustomRules,
   type EraId,
   type GenreId,
   type NextRoundPolicy,
@@ -68,6 +71,7 @@ type OnlineStore = {
   mixFrom: number;
   mixTo: number;
   mixGenre: GenreId;
+  custom: CustomRules;
   error: string | null;
   pending: boolean;
   inviteCode: string;
@@ -104,6 +108,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   mixFrom: DEFAULT_MIX_FROM,
   mixTo: DEFAULT_MIX_TO,
   mixGenre: "all",
+  custom: DEFAULT_CUSTOM,
   error: null,
   pending: false,
   inviteCode: "",
@@ -132,7 +137,11 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   setInviteCode: (code) => set({ inviteCode: normalizeRoomCode(code) }),
 
   createRoom: () => {
-    const name = get().selfName.trim() || readStoredName() || "Host";
+    const name = get().selfName.trim() || readStoredName();
+    if (!name) {
+      set({ error: "Bitte zuerst einen Namen eintragen." });
+      return;
+    }
     writeStoredName(name);
     set({
       status: "connecting",
@@ -153,7 +162,11 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       set({ error: "Bitte einen vierstelligen Code oder den Einladungslink eingeben." });
       return;
     }
-    const name = get().selfName.trim() || readStoredName() || "Gast";
+    const name = get().selfName.trim() || readStoredName();
+    if (!name) {
+      set({ error: "Bitte zuerst einen Namen eintragen." });
+      return;
+    }
     writeStoredName(name);
     set({
       status: "connecting",
@@ -208,6 +221,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       mixFrom: typeof config.mixFrom === "number" ? config.mixFrom : DEFAULT_MIX_FROM,
       mixTo: typeof config.mixTo === "number" ? config.mixTo : DEFAULT_MIX_TO,
       mixGenre: isGenreId(config.mixGenre) ? config.mixGenre : "all",
+      custom: parseCustom(config.custom),
     }),
   setError: (error) => set({ error, pending: false }),
   setPending: (pending) => set({ pending }),
@@ -228,6 +242,7 @@ export function roomConfigFrom(
     | "mixFrom"
     | "mixTo"
     | "mixGenre"
+    | "custom"
   >,
 ): RoomConfig {
   return {
@@ -241,6 +256,7 @@ export function roomConfigFrom(
     mixFrom: state.mixFrom,
     mixTo: state.mixTo,
     mixGenre: state.mixGenre,
+    custom: parseCustom(state.custom),
   };
 }
 

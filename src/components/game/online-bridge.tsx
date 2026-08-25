@@ -6,7 +6,7 @@ import { bindNet } from "@/lib/game/net";
 import { useGame } from "@/lib/game/store";
 import { useOnline, type OnlineMember } from "@/lib/game/online-store";
 import { requestStartOnline } from "@/lib/game/online-actions";
-import { DEFAULT_NEXT_ROUND, DEFAULT_ROOM_CONFIG, DEFAULT_TOKENS, DEFAULT_VARIANT, isNextRoundPolicy, isPlayVariant, isTokenCount } from "@/lib/game/types";
+import { DEFAULT_NEXT_ROUND, DEFAULT_ROOM_CONFIG, DEFAULT_TOKENS, DEFAULT_VARIANT, isNextRoundPolicy, isPlayVariant, isTokenCount, parseCustom } from "@/lib/game/types";
 import { receiveReaction } from "@/lib/game/reactions";
 import type { PeerInfo } from "@/lib/multiplayer";
 
@@ -42,6 +42,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   const mixFrom = useOnline((s) => s.mixFrom);
   const mixTo = useOnline((s) => s.mixTo);
   const mixGenre = useOnline((s) => s.mixGenre);
+  const custom = useOnline((s) => s.custom);
   const status = useOnline((s) => s.status);
   const sendRef = useRef(p2p.send);
   sendRef.current = p2p.send;
@@ -123,9 +124,10 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       mixFrom,
       mixTo,
       mixGenre,
+      custom,
     };
     p2p.send(msg);
-  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, members]);
+  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, members]);
 
   useEffect(() => {
     return p2p.onMessage((from, data, channel) => {
@@ -203,6 +205,7 @@ function handleMessage(
       mixFrom: msg.mixFrom ?? DEFAULT_ROOM_CONFIG.mixFrom,
       mixTo: msg.mixTo ?? DEFAULT_ROOM_CONFIG.mixTo,
       mixGenre: msg.mixGenre ?? "all",
+      custom: parseCustom(msg.custom),
     });
     useOnline.setState({ hostId: msg.hostId });
     if (online.status === "connecting" || online.status === "entry") {
@@ -223,6 +226,7 @@ function handleMessage(
       mixFrom: msg.mixFrom ?? DEFAULT_ROOM_CONFIG.mixFrom,
       mixTo: msg.mixTo ?? DEFAULT_ROOM_CONFIG.mixTo,
       mixGenre: msg.mixGenre ?? "all",
+      custom: parseCustom(msg.custom),
     });
     return;
   }

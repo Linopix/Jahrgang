@@ -143,6 +143,7 @@ export async function requestStartOnline() {
     mixFrom: online.mixFrom,
     mixTo: online.mixTo,
     mixGenre: online.mixGenre,
+    custom: online.custom,
   });
   if (!ok) {
     const error = useGame.getState().loadError ?? "Start fehlgeschlagen.";

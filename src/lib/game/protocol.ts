@@ -1,4 +1,5 @@
 import type {
+  CustomRules,
   EraId,
   GameSnapshot,
   GenreId,
@@ -23,6 +24,7 @@ export type RoomConfigWire = {
   mixFrom?: number;
   mixTo?: number;
   mixGenre?: GenreId;
+  custom?: CustomRules;
 };
 
 export type OnlineMessage =

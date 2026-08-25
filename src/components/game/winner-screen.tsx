@@ -111,6 +111,7 @@ export function WinnerScreen() {
   const target = useGame((s) => s.target);
   const mode = useGame((s) => s.mode);
   const variant = useGame((s) => s.variant);
+  const custom = useGame((s) => s.custom);
   const series = useGame((s) => s.series);
   const stats = useGame((s) => s.stats);
   const roundStats = useGame((s) => s.roundStats);
@@ -121,9 +122,10 @@ export function WinnerScreen() {
   const nextRound = useOnline((s) => s.nextRound);
   const pending = useOnline((s) => s.pending);
   const mayStart = !online || canStartNextRound();
-  const original = guessKind(variant) !== "none";
+  const original = guessKind(variant, custom) !== "none";
   const ranked = rankPlayers(players);
   const champ = ranked[0];
+  const open = openPlay(variant, custom);
   const soloFailed =
     mode === "solo" && (champ?.misses ?? 0) >= SOLO_LIVES && (champ?.timeline.length ?? 0) < target;
   const [view, setView] = useState<"podium" | "board">("podium");
@@ -162,7 +164,7 @@ export function WinnerScreen() {
         </p>
         <h1 className="mt-2 text-center font-display text-4xl font-medium text-fg sm:text-5xl">{title}</h1>
         <div className="mt-12 w-full">
-          <Podium ranked={ranked} target={target} open={openPlay(variant)} />
+          <Podium ranked={ranked} target={target} open={open} />
         </div>
         <p className="mt-10 text-sm text-muted">Tippen für die Zahlen.</p>
       </main>
@@ -180,7 +182,7 @@ export function WinnerScreen() {
         <p className="mt-3 max-w-md text-sm text-muted">
           {soloFailed
             ? `${champ?.timeline.length ?? 0} von ${target} Karten.`
-            : openPlay(variant)
+            : open
               ? `${champ?.timeline.length ?? 0} Titel, ohne Zeitlinie-Regel.`
               : `${champ?.timeline.length ?? 0} Titel in der richtigen Reihenfolge.`}
           {original && champ ? ` ${champ.quiz} Treffer beim Raten.` : ""}
@@ -204,7 +206,7 @@ export function WinnerScreen() {
             >
               <span className="font-medium">{player.name}</span>
               <span className="tabular-nums opacity-70">
-                {openPlay(variant) ? player.timeline.length : `${player.timeline.length}/${target}`}
+                {open ? player.timeline.length : `${player.timeline.length}/${target}`}
                 {original ? ` · ${player.quiz}` : ""}
               </span>
             </li>

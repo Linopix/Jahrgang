@@ -39,6 +39,28 @@ export type GameMode = "party" | "solo";
 
 export type PlayVariant = "timeline" | "blind" | "original" | "star" | "hook" | "wild" | "custom";
 
+export type GuessKind = "none" | "both" | "artist" | "title";
+
+export type LineRule = "chrono" | "reverse" | "free";
+
+export type CustomRules = {
+  guess: GuessKind;
+  cover: boolean;
+  line: LineRule;
+  hideYear: boolean;
+  warp: boolean;
+  open: boolean;
+};
+
+export const DEFAULT_CUSTOM: CustomRules = {
+  guess: "both",
+  cover: false,
+  line: "free",
+  hideYear: false,
+  warp: false,
+  open: true,
+};
+
 export type TokenCount = 0 | 1 | 2;
 
 export type NextRoundPolicy = "host" | "all";
@@ -94,6 +116,7 @@ export interface SetupConfig {
   mixFrom?: number;
   mixTo?: number;
   mixGenre?: GenreId;
+  custom?: CustomRules;
 }
 
 export interface SeriesStanding {
@@ -154,6 +177,7 @@ export interface GameSnapshot {
   series: SeriesStanding[];
   stats: SessionStats;
   roundStats: SessionStats;
+  custom?: CustomRules;
 }
 
 export interface RoomConfig {
@@ -167,6 +191,7 @@ export interface RoomConfig {
   mixFrom: number;
   mixTo: number;
   mixGenre: GenreId;
+  custom: CustomRules;
 }
 
 export const ERA_IDS: EraId[] = [
@@ -290,30 +315,74 @@ export const VARIANT_BLURBS: Record<PlayVariant, string> = {
   star: "Nur den Interpreten raten, dann einordnen. Das Cover bleibt verdeckt.",
   hook: "Nur den Titel raten, dann einordnen. Das Cover bleibt verdeckt.",
   wild: "Kenner, Cover zu, Jahre weg, links ist später — und die Platte läuft zu schnell oder zu langsam.",
-  custom: "Keine Zeitlinie-Regel, Cover offen. Raten bleibt. Ihr spielt, bis der Stapel leer ist.",
+  custom: "Regeln selbst setzen: Raten, Cover, Linie, Tempo, Ziel.",
 };
 
-export function hidesCover(variant: PlayVariant) {
-  return variant !== "timeline" && variant !== "custom";
+export type ResolvedRules = {
+  guess: GuessKind;
+  hideCover: boolean;
+  reverse: boolean;
+  free: boolean;
+  hideYear: boolean;
+  warp: boolean;
+  open: boolean;
+};
+
+export function parseCustom(raw: unknown): CustomRules {
+  if (!raw || typeof raw !== "object") return { ...DEFAULT_CUSTOM };
+  const row = raw as Partial<CustomRules>;
+  return {
+    guess: row.guess === "none" || row.guess === "artist" || row.guess === "title" || row.guess === "both" ? row.guess : DEFAULT_CUSTOM.guess,
+    cover: typeof row.cover === "boolean" ? row.cover : DEFAULT_CUSTOM.cover,
+    line: row.line === "chrono" || row.line === "reverse" || row.line === "free" ? row.line : DEFAULT_CUSTOM.line,
+    hideYear: typeof row.hideYear === "boolean" ? row.hideYear : DEFAULT_CUSTOM.hideYear,
+    warp: typeof row.warp === "boolean" ? row.warp : DEFAULT_CUSTOM.warp,
+    open: typeof row.open === "boolean" ? row.open : DEFAULT_CUSTOM.open,
+  };
 }
 
-export function guessKind(variant: PlayVariant): "none" | "both" | "artist" | "title" {
-  if (variant === "original" || variant === "wild" || variant === "custom") return "both";
-  if (variant === "star") return "artist";
-  if (variant === "hook") return "title";
-  return "none";
+export function rulesFor(variant: PlayVariant, custom?: CustomRules): ResolvedRules {
+  if (variant === "custom") {
+    const c = parseCustom(custom);
+    return {
+      guess: c.guess,
+      hideCover: c.cover,
+      reverse: c.line === "reverse",
+      free: c.line === "free",
+      hideYear: c.hideYear,
+      warp: c.warp,
+      open: c.open,
+    };
+  }
+  return {
+    guess: variant === "original" || variant === "wild" ? "both" : variant === "star" ? "artist" : variant === "hook" ? "title" : "none",
+    hideCover: variant !== "timeline",
+    reverse: variant === "wild",
+    free: false,
+    hideYear: variant === "wild",
+    warp: variant === "wild",
+    open: false,
+  };
 }
 
-export function reversesTimeline(variant: PlayVariant) {
-  return variant === "wild";
+export function hidesCover(variant: PlayVariant, custom?: CustomRules) {
+  return rulesFor(variant, custom).hideCover;
 }
 
-export function freePlace(variant: PlayVariant) {
-  return variant === "custom";
+export function guessKind(variant: PlayVariant, custom?: CustomRules): GuessKind {
+  return rulesFor(variant, custom).guess;
 }
 
-export function openPlay(variant: PlayVariant) {
-  return variant === "custom";
+export function reversesTimeline(variant: PlayVariant, custom?: CustomRules) {
+  return rulesFor(variant, custom).reverse;
+}
+
+export function freePlace(variant: PlayVariant, custom?: CustomRules) {
+  return rulesFor(variant, custom).free;
+}
+
+export function openPlay(variant: PlayVariant, custom?: CustomRules) {
+  return rulesFor(variant, custom).open;
 }
 
 export const GENRE_IDS: GenreId[] = [
@@ -391,6 +460,7 @@ export const DEFAULT_ROOM_CONFIG: RoomConfig = {
   mixFrom: DEFAULT_MIX_FROM,
   mixTo: DEFAULT_MIX_TO,
   mixGenre: "all",
+  custom: DEFAULT_CUSTOM,
 };
 
 export function isPlayVariant(value: unknown): value is PlayVariant {

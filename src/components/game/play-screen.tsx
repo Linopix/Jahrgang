@@ -16,7 +16,7 @@ import { canControlTurn, isOnlinePlay, requestDecade, requestLeave, requestPlace
 import { currentPlayer, useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { catalogArtists, catalogTitles } from "@/lib/game/catalog";
-import { guessKind, hidesCover, openPlay, reversesTimeline, VARIANT_LABELS } from "@/lib/game/types";
+import { rulesFor, VARIANT_LABELS } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
 
 function SwapIcon({
@@ -58,6 +58,7 @@ export function PlayScreen() {
   const target = useGame((s) => s.target);
   const mode = useGame((s) => s.mode);
   const variant = useGame((s) => s.variant);
+  const custom = useGame((s) => s.custom);
   const deckLength = useGame((s) => s.deck.length);
   const selectSlot = useGame((s) => s.selectSlot);
   const replay = useGame((s) => s.replay);
@@ -67,8 +68,9 @@ export function PlayScreen() {
   const selfId = useOnline((s) => s.selfId);
   const online = isOnlinePlay();
   const myTurn = canControlTurn();
-  const original = guessKind(variant) !== "none";
-  const kind = guessKind(variant);
+  const rules = rulesFor(variant, custom);
+  const original = rules.guess !== "none";
+  const kind = rules.guess;
   const titles = useMemo(() => {
     const extra = [
       ...players.flatMap((row) => row.timeline.map((song) => song.title)),
@@ -176,7 +178,7 @@ export function PlayScreen() {
                   {online && row.id === selfId ? " · du" : ""}
                 </span>
                 <span className="text-xs tabular-nums opacity-70">
-                  {openPlay(variant) ? row.timeline.length : `${row.timeline.length}/${target}`}
+                  {rules.open ? row.timeline.length : `${row.timeline.length}/${target}`}
                   {original ? ` · ${row.quiz}` : ""}
                 </span>
               </li>
@@ -187,9 +189,9 @@ export function PlayScreen() {
         <p className="mt-3 text-sm text-muted">
           Karten{" "}
           <span className="tabular-nums text-fg">
-            {openPlay(variant) ? player.timeline.length : `${player.timeline.length}/${target}`}
+            {rules.open ? player.timeline.length : `${player.timeline.length}/${target}`}
           </span>
-          {openPlay(variant) ? null : (
+          {rules.open ? null : (
             <>
               <span className="mx-2 text-subtle">·</span>
               Fehler <span className="tabular-nums text-fg">{player.misses}/3</span>
@@ -214,27 +216,29 @@ export function PlayScreen() {
           {online && !myTurn
             ? `${player.name} ist am Zug.`
             : kind === "both"
-              ? reversesTimeline(variant)
+              ? rules.reverse
                 ? "Titel und Interpret raten. Die Platte läuft verkehrt. Links später, rechts früher."
-                : openPlay(variant)
+                : rules.free
                   ? "Titel und Interpret raten, dann irgendwo hinlegen. Die Reihenfolge ist frei."
                   : "Titel und Interpret eintragen, dann auf der Zeitlinie einordnen."
               : kind === "artist"
                 ? "Nur den Interpreten raten, dann einordnen."
                 : kind === "title"
                   ? "Nur den Titel raten, dann einordnen."
-                  : reversesTimeline(variant)
+                  : rules.reverse
                     ? "Hören und einordnen. Links später, rechts früher. Die Jahre bleiben versteckt."
-                    : hidesCover(variant)
+                    : rules.hideCover
                     ? "Hören und einordnen. Das Cover bleibt verdeckt."
+                    : rules.free
+                    ? "Hören und irgendwo hinlegen. Keine Zeitlinie-Regel."
                     : "Titel hören und auf der Zeitlinie einordnen. Links früher, rechts später."}
         </p>
 
         <div className="mt-4">
           <Vinyl
             spinning={playing}
-            reverse={reversesTimeline(variant)}
-            artworkUrl={hidesCover(variant) ? undefined : current.artworkUrl}
+            reverse={rules.reverse}
+            artworkUrl={rules.hideCover ? undefined : current.artworkUrl}
             size="md"
           />
         </div>
@@ -338,7 +342,7 @@ export function PlayScreen() {
             Zeitlinie von {player.name}
           </p>
           <p className="text-xs text-subtle">
-            {openPlay(variant) ? "frei" : reversesTimeline(variant) ? "spät → früh" : "früh → spät"}
+            {rules.free ? "frei" : rules.reverse ? "spät → früh" : "früh → spät"}
           </p>
         </div>
         <div className="lg:min-h-0 lg:flex-1 lg:overflow-x-auto lg:overflow-y-auto">
@@ -347,7 +351,7 @@ export function PlayScreen() {
           selectedSlot={myTurn ? selectedSlot : null}
           onSelectSlot={myTurn ? selectSlot : undefined}
           interactive={myTurn}
-          hideYear={reversesTimeline(variant)}
+          hideYear={rules.hideYear}
         />
         </div>
         <Button

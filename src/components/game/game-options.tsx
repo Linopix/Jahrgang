@@ -6,6 +6,7 @@ import { GenreArt, PackArt } from "@/components/game/pack-art";
 import { MenuSelect } from "@/components/game/menu-select";
 import { noteMixYears, notePack, noteVariant } from "@/lib/gags";
 import {
+  DEFAULT_CUSTOM,
   ERA_BLURBS,
   ERA_LABELS,
   GENRE_BLURBS,
@@ -20,7 +21,10 @@ import {
   VARIANT_LABELS,
   YEAR_MAX,
   YEAR_MIN,
+  type CustomRules,
   type EraId,
+  type GuessKind,
+  type LineRule,
   type NextRoundPolicy,
   type RoomConfig,
   type TokenCount,
@@ -331,7 +335,84 @@ function MixField({
   );
 }
 
+function CustomTune({
+  value,
+  onChange,
+}: {
+  value: CustomRules;
+  onChange: (next: CustomRules) => void;
+}) {
+  return (
+    <div className="mt-4 space-y-4 rounded-xl bg-raised p-4 shadow-border" data-custom-tune>
+      <div>
+        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Raten</p>
+        <Choice
+          items={["none", "artist", "title", "both"] as const}
+          value={value.guess}
+          onChange={(guess) => onChange({ ...value, guess: guess as GuessKind })}
+          label={(item) =>
+            item === "none" ? "Keins" : item === "artist" ? "Interpret" : item === "title" ? "Titel" : "Beides"
+          }
+          columns="grid-cols-2 sm:grid-cols-4"
+        />
+      </div>
+      <div>
+        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Cover</p>
+        <Choice
+          items={["sichtbar", "verdeckt"] as const}
+          value={value.cover ? "verdeckt" : "sichtbar"}
+          onChange={(cover) => onChange({ ...value, cover: cover === "verdeckt" })}
+          label={(item) => (item === "verdeckt" ? "Verdeckt" : "Sichtbar")}
+          columns="grid-cols-2"
+        />
+      </div>
+      <div>
+        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Zeitlinie</p>
+        <Choice
+          items={["chrono", "reverse", "free"] as const}
+          value={value.line}
+          onChange={(line) => onChange({ ...value, line: line as LineRule })}
+          label={(item) => (item === "chrono" ? "Früh → spät" : item === "reverse" ? "Spät → früh" : "Frei")}
+          columns="grid-cols-3"
+        />
+      </div>
+      <div>
+        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Jahre</p>
+        <Choice
+          items={["an", "aus"] as const}
+          value={value.hideYear ? "aus" : "an"}
+          onChange={(years) => onChange({ ...value, hideYear: years === "aus" })}
+          label={(item) => (item === "aus" ? "Versteckt" : "Sichtbar")}
+          columns="grid-cols-2"
+        />
+      </div>
+      <div>
+        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Tempo</p>
+        <Choice
+          items={["normal", "verzogen"] as const}
+          value={value.warp ? "verzogen" : "normal"}
+          onChange={(tempo) => onChange({ ...value, warp: tempo === "verzogen" })}
+          label={(item) => (item === "verzogen" ? "Verzogen" : "Normal")}
+          columns="grid-cols-2"
+        />
+      </div>
+      <div>
+        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Ziel</p>
+        <Choice
+          items={["stapel", "karten"] as const}
+          value={value.open ? "stapel" : "karten"}
+          onChange={(ziel) => onChange({ ...value, open: ziel === "stapel" })}
+          label={(item) => (item === "stapel" ? "Stapel leer" : "Karten-Ziel")}
+          columns="grid-cols-2"
+        />
+      </div>
+    </div>
+  );
+}
+
 export function GameOptions({ value, onChange, online }: GameOptionsProps) {
+  const custom = value.custom ?? DEFAULT_CUSTOM;
+  const showTarget = value.variant !== "custom" || !custom.open;
   return (
     <div>
       <div className="mt-8 grid gap-8 lg:mt-0 lg:grid-cols-2">
@@ -359,12 +440,15 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
             />
           </div>
           <p className="mt-2 text-sm text-muted">{VARIANT_BLURBS[value.variant]}</p>
+          {value.variant === "custom" ? (
+            <CustomTune value={custom} onChange={(next) => onChange({ custom: next })} />
+          ) : null}
         </section>
 
         <section>
           <h2 className="text-sm font-medium text-fg">Ziel und Joker</h2>
           <div className="mt-3 grid gap-5">
-            {value.variant === "custom" ? null : (
+            {showTarget ? (
               <SnapSlider
                 label="Karten"
                 value={value.target}
@@ -374,7 +458,7 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
                 display={`${value.target}`}
                 onChange={(target) => onChange({ target: target as 6 | 8 | 10 })}
               />
-            )}
+            ) : null}
             <SnapSlider
               label="Joker"
               value={value.tokens}
@@ -387,7 +471,9 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
           </div>
           <p className="mt-2 text-sm text-muted">
             {value.variant === "custom"
-              ? "Kein Ziel. Der Stapel läuft sich leer. Joker bleiben."
+              ? custom.open
+                ? "Kein Kartenziel. Der Stapel läuft sich leer."
+                : "Karten bis zum Sieg, Regeln wie eingestellt."
               : "Karten bis zum Sieg · Joker pro Person."}
           </p>
         </section>

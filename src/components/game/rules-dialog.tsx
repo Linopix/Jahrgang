@@ -11,12 +11,12 @@ const STEPS = [
   {
     n: "02",
     title: "Hören",
-    body: "Ein neuer Titel spielt ohne Angabe von Name oder Jahr. Zeitstrahl: nur legen, Cover sichtbar. Blind: Cover verdeckt. Kenner, Star und Titel: zusätzlich raten. Verrückter: raten, Cover zu, Jahre versteckt, links ist später. Custom: raten, Cover offen, legen ohne Zeitlinie-Regel, bis der Stapel leer ist.",
+    body: "Ein neuer Titel spielt ohne Angabe von Name oder Jahr. Zeitstrahl: nur legen, Cover sichtbar. Blind: Cover verdeckt. Kenner, Star und Titel: zusätzlich raten. Verrückter: raten, Cover zu, Jahre versteckt, links ist später. Custom: jede Regel einzeln — Raten, Cover, Linie, Tempo, Ziel.",
   },
   {
     n: "03",
     title: "Legen",
-    body: "Platz vor, zwischen oder hinter den Karten wählen. Entscheidend für die Karte ist, ob der Titel früher oder später erschien. Custom ignoriert das.",
+    body: "Platz vor, zwischen oder hinter den Karten wählen. Entscheidend für die Karte ist, ob der Titel früher oder später erschien. Custom kann die Reihenfolge freigeben.",
   },
   {
     n: "04",
@@ -26,7 +26,7 @@ const STEPS = [
   {
     n: "05",
     title: "Joker",
-    body: "Je nach Einstellung keine, eine oder zwei Hilfen: Jahrzehnt anzeigen oder den Titel überspringen. Wer zuerst das Ziel erreicht, gewinnt. Custom hat kein Ziel.",
+    body: "Je nach Einstellung keine, eine oder zwei Hilfen: Jahrzehnt anzeigen oder den Titel überspringen. Wer zuerst das Ziel erreicht, gewinnt. Custom kann ohne Ziel bis zum leeren Stapel spielen.",
   },
   {
     n: "06",
