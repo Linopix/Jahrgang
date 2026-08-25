@@ -23,7 +23,9 @@ import {
   DEFAULT_TOKENS,
   DEFAULT_VARIANT,
   SOLO_LIVES,
+  emptyStats,
   guessKind,
+  reversesTimeline,
   type CatalogSong,
   type EraId,
   type GameMode,
@@ -34,6 +36,7 @@ import {
   type Player,
   type ResolvedSong,
   type SeriesStanding,
+  type SessionStats,
   type SetupConfig,
   type TokenCount,
 } from "./types";
@@ -62,6 +65,8 @@ type GameStore = {
   loadError: string | null;
   lastSetup: SetupConfig | null;
   series: SeriesStanding[];
+  stats: SessionStats;
+  roundStats: SessionStats;
   rulesOpen: boolean;
   volume: number;
   muted: boolean;
@@ -93,6 +98,19 @@ function makePlayers(
     misses: 0,
     quiz: 0,
   }));
+}
+
+function bumpStats(stats: SessionStats, patch: Partial<Omit<SessionStats, "startedAt">>): SessionStats {
+  return {
+    startedAt: stats.startedAt,
+    heard: stats.heard + (patch.heard ?? 0),
+    placedOk: stats.placedOk + (patch.placedOk ?? 0),
+    placedBad: stats.placedBad + (patch.placedBad ?? 0),
+    quizHits: stats.quizHits + (patch.quizHits ?? 0),
+    quizAsked: stats.quizAsked + (patch.quizAsked ?? 0),
+    skips: stats.skips + (patch.skips ?? 0),
+    hints: stats.hints + (patch.hints ?? 0),
+  };
 }
 
 function hydratePlayers(players: Player[]): Player[] {
@@ -143,6 +161,8 @@ export const useGame = create<GameStore>((set, get) => ({
   loadError: null,
   lastSetup: null,
   series: [],
+  stats: emptyStats(0),
+  roundStats: emptyStats(0),
   rulesOpen: false,
   volume: 0.85,
   muted: false,
@@ -170,6 +190,8 @@ export const useGame = create<GameStore>((set, get) => ({
       decadeHint: null,
       loadError: null,
       series: [],
+      stats: emptyStats(0),
+      roundStats: emptyStats(0),
     });
   },
 
@@ -204,6 +226,8 @@ export const useGame = create<GameStore>((set, get) => ({
       lastResult: s.lastResult,
       decadeHint: s.decadeHint,
       series: s.series,
+      stats: s.stats,
+      roundStats: s.roundStats,
     };
   },
 
@@ -224,6 +248,8 @@ export const useGame = create<GameStore>((set, get) => ({
       lastResult: snap.lastResult,
       decadeHint: snap.decadeHint,
       series: snap.series ?? prev.series,
+      stats: snap.stats ?? prev.stats,
+      roundStats: snap.roundStats ?? prev.roundStats,
       selectedSlot:
         prev.phase === snap.phase && prev.current?.id === snap.current?.id
           ? prev.selectedSlot
@@ -352,6 +378,8 @@ export const useGame = create<GameStore>((set, get) => ({
       const deck = resolved.slice(playerCount);
       const players = makePlayers(seats, starters, tokens);
       const current = deck[0] ?? null;
+      const now = Date.now();
+      const keepSession = get().series.some((row) => row.wins > 0 || row.points > 0);
       set({
         players,
         deck: deck.slice(1),
@@ -361,6 +389,8 @@ export const useGame = create<GameStore>((set, get) => ({
         lastResult: null,
         decadeHint: null,
         series: mergeSeries(get().series, seats),
+        roundStats: emptyStats(now),
+        stats: keepSession ? get().stats : emptyStats(now),
         phase: "listen",
         loadProgress: { done: resolved.length, total: resolved.length },
       });
@@ -391,7 +421,7 @@ export const useGame = create<GameStore>((set, get) => ({
     const player = players[currentPlayerIndex];
     if (!player) return;
     pausePreview();
-    const correct = canPlace(player.timeline, selectedSlot, current.year);
+    const correct = canPlace(player.timeline, selectedSlot, current.year, reversesTimeline(variant));
     const scored =
       guessKind(variant) === "none"
         ? null
@@ -407,6 +437,14 @@ export const useGame = create<GameStore>((set, get) => ({
     if (correct) sfxCorrect();
     else sfxWrong();
     const kind = guessKind(variant);
+    const asked = kind === "both" ? 2 : kind === "none" ? 0 : 1;
+    const patch = {
+      heard: 1,
+      placedOk: correct ? 1 : 0,
+      placedBad: correct ? 0 : 1,
+      quizHits: scored?.quiz ?? 0,
+      quizAsked: asked,
+    };
     set({
       players: nextPlayers,
       lastResult: {
@@ -421,6 +459,8 @@ export const useGame = create<GameStore>((set, get) => ({
       phase: "reveal",
       selectedSlot: null,
       decadeHint: null,
+      stats: bumpStats(get().stats, patch),
+      roundStats: bumpStats(get().roundStats, patch),
     });
   },
 
@@ -462,6 +502,8 @@ export const useGame = create<GameStore>((set, get) => ({
       players: players.map((row, i) =>
         i === currentPlayerIndex ? { ...row, tokens: row.tokens - 1 } : row,
       ),
+      stats: bumpStats(get().stats, { hints: 1 }),
+      roundStats: bumpStats(get().roundStats, { hints: 1 }),
     });
   },
 
@@ -476,6 +518,7 @@ export const useGame = create<GameStore>((set, get) => ({
     if (!next) return;
     sfxSkip();
     const rest = deck.slice(1);
+    const skipPatch = { heard: 1, skips: 1 };
     set({
       players: players.map((row, i) =>
         i === currentPlayerIndex ? { ...row, tokens: row.tokens - 1 } : row,
@@ -484,6 +527,8 @@ export const useGame = create<GameStore>((set, get) => ({
       deck: [...rest, leftover],
       selectedSlot: null,
       decadeHint: null,
+      stats: bumpStats(get().stats, skipPatch),
+      roundStats: bumpStats(get().roundStats, skipPatch),
     });
     void playPreview(next.previewUrl);
   },

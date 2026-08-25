@@ -21,7 +21,7 @@ export type GenreId = "all" | "pop" | "rock" | "rap" | "dance" | "german";
 
 export type GameMode = "party" | "solo";
 
-export type PlayVariant = "timeline" | "blind" | "original" | "star" | "hook";
+export type PlayVariant = "timeline" | "blind" | "original" | "star" | "hook" | "wild";
 
 export type TokenCount = 0 | 1 | 2;
 
@@ -87,6 +87,32 @@ export interface SeriesStanding {
   points: number;
 }
 
+export interface SessionStats {
+  startedAt: number;
+  heard: number;
+  placedOk: number;
+  placedBad: number;
+  quizHits: number;
+  quizAsked: number;
+  skips: number;
+  hints: number;
+}
+
+export const EMPTY_STATS: SessionStats = {
+  startedAt: 0,
+  heard: 0,
+  placedOk: 0,
+  placedBad: 0,
+  quizHits: 0,
+  quizAsked: 0,
+  skips: 0,
+  hints: 0,
+};
+
+export function emptyStats(startedAt = Date.now()): SessionStats {
+  return { ...EMPTY_STATS, startedAt };
+}
+
 export interface LastResult {
   correct: boolean;
   song: ResolvedSong;
@@ -110,6 +136,8 @@ export interface GameSnapshot {
   lastResult: LastResult | null;
   decadeHint: string | null;
   series: SeriesStanding[];
+  stats: SessionStats;
+  roundStats: SessionStats;
 }
 
 export interface RoomConfig {
@@ -204,7 +232,7 @@ export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [
   },
 ];
 
-export const VARIANT_IDS: PlayVariant[] = ["timeline", "blind", "original", "star", "hook"];
+export const VARIANT_IDS: PlayVariant[] = ["timeline", "blind", "original", "star", "hook", "wild"];
 
 export const VARIANT_LABELS: Record<PlayVariant, string> = {
   timeline: "Zeitstrahl",
@@ -212,6 +240,7 @@ export const VARIANT_LABELS: Record<PlayVariant, string> = {
   original: "Kenner",
   star: "Star",
   hook: "Titel",
+  wild: "Verrückter",
 };
 
 export const VARIANT_BLURBS: Record<PlayVariant, string> = {
@@ -220,6 +249,7 @@ export const VARIANT_BLURBS: Record<PlayVariant, string> = {
   original: "Interpret und Titel raten, danach einordnen. Das Cover bleibt verdeckt.",
   star: "Nur den Interpreten raten, dann einordnen. Das Cover bleibt verdeckt.",
   hook: "Nur den Titel raten, dann einordnen. Das Cover bleibt verdeckt.",
+  wild: "Kenner, Cover zu, Jahre auf der Leiste versteckt, und links ist später.",
 };
 
 export function hidesCover(variant: PlayVariant) {
@@ -227,10 +257,14 @@ export function hidesCover(variant: PlayVariant) {
 }
 
 export function guessKind(variant: PlayVariant): "none" | "both" | "artist" | "title" {
-  if (variant === "original") return "both";
+  if (variant === "original" || variant === "wild") return "both";
   if (variant === "star") return "artist";
   if (variant === "hook") return "title";
   return "none";
+}
+
+export function reversesTimeline(variant: PlayVariant) {
+  return variant === "wild";
 }
 
 export const GENRE_LABELS: Record<GenreId, string> = {

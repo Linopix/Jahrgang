@@ -25,7 +25,7 @@ import {
 } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
 
-const VARIANTS: PlayVariant[] = ["timeline", "blind", "original", "star", "hook"];
+const VARIANTS: PlayVariant[] = ["timeline", "blind", "original", "star", "hook", "wild"];
 const GENRES: GenreId[] = ["all", "pop", "rock", "rap", "dance", "german"];
 
 type GameOptionsProps = {
@@ -258,6 +258,11 @@ function MixField({
 }) {
   return (
     <div className="mt-3 space-y-4 rounded-xl bg-raised p-4 shadow-border" data-mix-field>
+      <div className="pack-sleeve is-open">
+        <div className="pack-sleeve-inner">
+          <GenreArt id={value.mixGenre} className="pack-cover mx-auto mb-3" />
+        </div>
+      </div>
       <DualYearSlider
         from={value.mixFrom}
         to={value.mixTo}
@@ -305,7 +310,7 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
               value={value.variant}
               onChange={(variant) => onChange({ variant })}
               label={(item) => VARIANT_LABELS[item]}
-              columns="grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
+              columns="grid-cols-2 sm:grid-cols-3"
             />
           </div>
           <p className="mt-2 text-sm text-muted">{VARIANT_BLURBS[value.variant]}</p>
@@ -377,12 +382,17 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
                     }}
                     className={cn(
                       CHIP,
+                      "overflow-hidden",
                       value.era === id
-                        ? "pack-selected justify-start bg-primary px-2 text-primary-fg"
+                        ? "pack-selected h-auto flex-col items-stretch py-2 text-primary-fg bg-primary"
                         : "bg-raised text-fg shadow-border hover:bg-surface",
                     )}
                   >
-                    {value.era === id ? <PackArt id={id} /> : null}
+                    <span className={cn("pack-sleeve", value.era === id && "is-open")}>
+                      <span className="pack-sleeve-inner flex justify-center">
+                        <PackArt id={id} className="pack-cover" />
+                      </span>
+                    </span>
                     <span className="truncate">{ERA_LABELS[id]}</span>
                   </button>
                 ))}

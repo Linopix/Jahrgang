@@ -5,10 +5,11 @@ type SongCardProps = {
   song: Pick<ResolvedSong, "title" | "artist" | "year" | "artworkUrl">;
   hidden?: boolean;
   compact?: boolean;
+  hideYear?: boolean;
   className?: string;
 };
 
-export function SongCard({ song, hidden, compact, className }: SongCardProps) {
+export function SongCard({ song, hidden, compact, hideYear, className }: SongCardProps) {
   return (
     <article
       className={cn(
@@ -32,17 +33,29 @@ export function SongCard({ song, hidden, compact, className }: SongCardProps) {
         </>
       ) : (
         <>
-          <p className="font-display text-[0.65rem] font-medium tracking-[0.22em] text-card-muted uppercase">
-            Jahr
-          </p>
-          <p
-            className={cn(
-              "font-display font-medium tabular-nums leading-none tracking-tight text-card-fg",
-              compact ? "text-3xl" : "text-4xl",
-            )}
-          >
-            {song.year}
-          </p>
+          {hideYear ? (
+            <p className="font-display text-[0.65rem] font-medium tracking-[0.22em] text-card-muted uppercase">
+              ???
+            </p>
+          ) : (
+            <p className="font-display text-[0.65rem] font-medium tracking-[0.22em] text-card-muted uppercase">
+              Jahr
+            </p>
+          )}
+          {hideYear ? (
+            <p className={cn("font-display font-medium leading-none text-card-muted", compact ? "text-3xl" : "text-4xl")}>
+              —
+            </p>
+          ) : (
+            <p
+              className={cn(
+                "font-display font-medium tabular-nums leading-none tracking-tight text-card-fg",
+                compact ? "text-3xl" : "text-4xl",
+              )}
+            >
+              {song.year}
+            </p>
+          )}
           <div className="min-w-0">
             <p className={cn("truncate font-medium text-card-fg", compact ? "text-xs" : "text-sm")}>
               {song.title}

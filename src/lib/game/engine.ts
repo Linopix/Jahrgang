@@ -17,10 +17,16 @@ export function canPlace(
   timeline: { year: number }[],
   index: number,
   year: number,
+  reverse = false,
 ): boolean {
   if (index < 0 || index > timeline.length) return false;
   const left = timeline[index - 1];
   const right = timeline[index];
+  if (reverse) {
+    if (left && year > left.year) return false;
+    if (right && year < right.year) return false;
+    return true;
+  }
   if (left && year < left.year) return false;
   if (right && year > right.year) return false;
   return true;

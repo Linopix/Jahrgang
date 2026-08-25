@@ -44,7 +44,11 @@ function Sleeve({
   className?: string;
 }) {
   return (
-    <svg viewBox="0 0 40 40" className={cn("size-7 shrink-0 rounded-[3px] shadow-border pack-art-in", className)} aria-hidden="true">
+    <svg
+      viewBox="0 0 40 40"
+      className={cn("shrink-0 rounded-sm shadow-border", className ?? "size-7 pack-art-in")}
+      aria-hidden="true"
+    >
       <rect width="40" height="40" fill={a} />
       <rect x="3" y="3" width="34" height="34" fill={b} opacity="0.92" />
       <circle cx="20" cy="20" r="11" fill={a} />

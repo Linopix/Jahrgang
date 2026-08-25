@@ -99,10 +99,10 @@ export function scoreForVariant(
   titleGuess: string,
   artistGuess: string,
   song: { title: string; artist: string },
-  variant: "timeline" | "blind" | "original" | "star" | "hook",
+  variant: "timeline" | "blind" | "original" | "star" | "hook" | "wild",
 ) {
   const full = scoreGuesses(titleGuess, artistGuess, song);
-  if (variant === "original") return full;
+  if (variant === "original" || variant === "wild") return full;
   if (variant === "star") {
     return {
       titleCorrect: false,

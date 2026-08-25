@@ -8,6 +8,7 @@ type TimelineProps = {
   selectedSlot: number | null;
   onSelectSlot?: (index: number) => void;
   interactive?: boolean;
+  hideYear?: boolean;
 };
 
 export function Timeline({
@@ -15,6 +16,7 @@ export function Timeline({
   selectedSlot,
   onSelectSlot,
   interactive = true,
+  hideYear = false,
 }: TimelineProps) {
   const slots = songs.length + 1;
 
@@ -42,7 +44,7 @@ export function Timeline({
                   <Plus className="size-4" strokeWidth={1.75} />
                 </button>
               ) : null}
-              {song ? <SongCard song={song} compact /> : null}
+              {song ? <SongCard song={song} compact hideYear={hideYear} /> : null}
             </li>
           );
         })}

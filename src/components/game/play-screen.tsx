@@ -16,7 +16,7 @@ import { canControlTurn, isOnlinePlay, requestDecade, requestLeave, requestPlace
 import { currentPlayer, useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { catalogArtists, catalogTitles } from "@/lib/game/catalog";
-import { guessKind, hidesCover, VARIANT_LABELS } from "@/lib/game/types";
+import { guessKind, hidesCover, reversesTimeline, VARIANT_LABELS } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
 
 function SwapIcon({
@@ -205,12 +205,16 @@ export function PlayScreen() {
           {online && !myTurn
             ? `${player.name} ist am Zug.`
             : kind === "both"
-              ? "Titel und Interpret eintragen, dann auf der Zeitlinie einordnen."
+              ? reversesTimeline(variant)
+                ? "Titel und Interpret raten, dann einordnen. Links später, rechts früher."
+                : "Titel und Interpret eintragen, dann auf der Zeitlinie einordnen."
               : kind === "artist"
                 ? "Nur den Interpreten raten, dann einordnen."
                 : kind === "title"
                   ? "Nur den Titel raten, dann einordnen."
-                  : hidesCover(variant)
+                  : reversesTimeline(variant)
+                    ? "Hören und einordnen. Links später, rechts früher. Die Jahre bleiben versteckt."
+                    : hidesCover(variant)
                     ? "Hören und einordnen. Das Cover bleibt verdeckt."
                     : "Titel hören und auf der Zeitlinie einordnen. Links früher, rechts später."}
         </p>
@@ -321,7 +325,9 @@ export function PlayScreen() {
           <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">
             Zeitlinie von {player.name}
           </p>
-          <p className="text-xs text-subtle">früh → spät</p>
+          <p className="text-xs text-subtle">
+            {reversesTimeline(variant) ? "spät → früh" : "früh → spät"}
+          </p>
         </div>
         <div className="lg:min-h-0 lg:flex-1 lg:overflow-x-auto lg:overflow-y-auto">
         <Timeline
@@ -329,6 +335,7 @@ export function PlayScreen() {
           selectedSlot={myTurn ? selectedSlot : null}
           onSelectSlot={myTurn ? selectSlot : undefined}
           interactive={myTurn}
+          hideYear={reversesTimeline(variant)}
         />
         </div>
         <Button

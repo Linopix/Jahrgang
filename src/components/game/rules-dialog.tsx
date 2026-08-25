@@ -11,7 +11,7 @@ const STEPS = [
   {
     n: "02",
     title: "Hören",
-    body: "Ein neuer Titel spielt ohne Angabe von Name oder Jahr. Zeitstrahl: nur legen, Cover sichtbar. Blind: Cover verdeckt. Kenner, Star und Titel: zusätzlich raten.",
+    body: "Ein neuer Titel spielt ohne Angabe von Name oder Jahr. Zeitstrahl: nur legen, Cover sichtbar. Blind: Cover verdeckt. Kenner, Star und Titel: zusätzlich raten. Verrückter: raten, Cover zu, Jahre versteckt, links ist später.",
   },
   {
     n: "03",
@@ -52,7 +52,7 @@ export function RulesDialog({ open, onOpenChange }: RulesDialogProps) {
                 So wird gespielt
               </Dialog.Title>
               <Dialog.Description className="mt-1 text-sm text-muted">
-                Zeitstrahl, Blind, Kenner, Star oder Titel.
+                Zeitstrahl, Blind, Kenner, Star, Titel oder Verrückter.
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>
