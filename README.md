@@ -1,94 +1,52 @@
 # Jahrgang
 
-Musik-Zeitspiel. Titel hören, nach Erscheinungsjahr auf der Zeitlinie einordnen. Wer die Karten in der richtigen Reihenfolge hat, gewinnt.
+**[Spielen](https://jahrgang.vercel.app)**
 
-## Modi
+Ein Titel läuft. Name und Jahr bleiben verdeckt. Du ordnest ihn auf deiner Zeitlinie ein: links früher, rechts später. Wer zuerst alle Karten richtig liegen hat, gewinnt.
 
-| Modus | Ablauf |
-| --- | --- |
-| **Online-Abend** | Gemeinsames Spiel über Raumcode. Jede Person auf dem eigenen Gerät. |
-| **Ein Bildschirm** | Hot-Seat am selben Gerät, bis zu acht Personen. |
-| **Solo** | Eine Zeitlinie, drei Fehlversuche. |
+Keine Anmeldung. Kein Spotify. Läuft im Browser auf Handy und Rechner.
 
-## Spielablauf
+![Jahrgang](public/og.jpg)
 
-1. Jede Person startet mit einer offenen Karte. Links ist früher, rechts später.
-2. Ein neuer Titel spielt ohne Angabe von Name oder Jahr.
-3. Platz auf der eigenen Zeitlinie wählen und ablegen.
-4. Richtige Lage: die Karte bleibt. Falsche Lage: sie wird zurückgelegt.
-5. Joker: Jahrzehnt anzeigen oder überspringen. Ziel sind 6, 8 oder 10 Karten.
+## So wird gespielt
 
-Audio-Vorschauen kommen von iTunes. Ohne Netzverbindung startet keine Runde.
+Jede Person beginnt mit einer offenen Karte.
 
-## Online-Spiel
+Dann kommt ein neuer Titel. Du hörst ihn und wählst den Platz auf deiner Zeitlinie. Sitzt die Lage, bleibt die Karte. Liegt sie falsch, geht sie zurück.
 
-1. Host öffnet die veröffentlichte Website und wählt **Online-Abend**.
-2. Namen eingeben und **Raum öffnen**.
-3. Vierstelligen Code oder Einladungslink an die Mitspieler geben.
-4. Mitspieler treten bei (Name, **Beitreten**).
-5. Host legt Repertoire und Ziel fest und startet.
+Zwei Joker: das Jahrzehnt anzeigen oder den Titel überspringen.
 
-Nur wer am Zug ist, legt. Alle anderen hören denselben Titel auf ihrem Gerät. Maximal acht Personen, keine Konten.
+Ziel sind 6, 8 oder 10 Karten in der richtigen Reihenfolge. Repertoire wählbar, zum Beispiel 80er, 90er oder Deutsch.
 
-Zwei Browserfenster auf demselben Rechner eignen sich zum Testen. Für Mitspieler im Netz ist die öffentliche URL nötig.
+## Mit anderen spielen
 
-## Veröffentlichung
+1. Eine Person öffnet [jahrgang.vercel.app](https://jahrgang.vercel.app) und wählt **Online-Abend**.
+2. Namen eingeben, **Raum öffnen**.
+3. Den Code oder den Link an die Runde schicken.
+4. Die anderen treten bei.
+5. Der Host startet.
 
-Jahrgang wird über [Vercel](https://vercel.com) bereitgestellt. Für Online-Räume wird [Neon](https://neon.tech) als Postgres genutzt (nur Verbindungsaufnahme, keine Spielerkonten). Beides im kostenlosen Tarif.
+Nur wer am Zug ist, legt. Alle hören denselben Titel auf ihrem Gerät. Bis zu acht Personen.
 
-### 1. Projekt auf Vercel
+## Ein Bildschirm oder Solo
 
-1. Unter [vercel.com/signup](https://vercel.com/signup) mit GitHub anmelden (Hobby).
-2. **Add New → Project**, Repo `Linopix/Jahrgang` importieren.
-3. Falls das private Repo fehlt: GitHub-App-Rechte anpassen und Zugriff auf *Jahrgang* erlauben.
-4. Framework: **TanStack Start**. Build-Command: `npm run build`.
-5. **Deploy**.
+**Ein Bildschirm:** ein Gerät, reihum. Gut für denselben Tisch.
 
-Die erzeugte Adresse hat die Form `https://….vercel.app`. Solo und Ein-Bildschirm funktionieren damit. Online-Abend benötigt den nächsten Schritt.
+**Solo:** eine Zeitlinie, drei Fehlversuche.
 
-### 2. Datenbank verbinden
+## Hinweise
 
-1. In Vercel: [Marketplace → Neon](https://vercel.com/marketplace/neon) → **Install**.
-2. Neues Neon-Konto, Tarif **Free**.
-3. Datenbank mit dem Vercel-Projekt verbinden, Umgebung **Production**.
-4. `DATABASE_URL` wird gesetzt. Keine weiteren Schlüssel nötig.
-5. Letztes Deployment **Redeploy**, damit die Tabellen angelegt werden.
+Die Vorschauen kommen von iTunes. Ohne Internet startet keine Runde.
 
-Die Production-URL ist die öffentliche Spieladresse. Pushes auf `main` lösen ein neues Deployment aus.
+Wenn jemand den Raum nicht findet: dieselbe Website öffnen, nicht eine lokale Datei. Code ohne Null und Eins vorlesen (die Zeichen gibt es im Code nicht).
 
-### Störungen
+## Entwicklung
 
-| Symptom | Ursache |
-| --- | --- |
-| Mitspieler finden den Raum nicht | Localhost statt Production-URL, oder Neon noch nicht verbunden |
-| Beitreten bleibt hängen | `DATABASE_URL` fehlt; Neon verbinden und Redeploy |
-| Vercel zeigt das Repo nicht | GitHub-App hat keinen Zugriff auf das private Repo |
-| Einzelne Verbindung scheitert | VPN oder restriktives NAT; anderes Netz versuchen |
-
-## Entwicklung unter Windows
-
-Voraussetzungen: [Git for Windows](https://git-scm.com/download/win), [Node.js 22 LTS](https://nodejs.org/). PowerShell danach neu öffnen.
-
-```powershell
-git --version
-node --version
-npm --version
-```
-
-`node` muss mit `v22` beginnen.
-
-```powershell
-cd $HOME\Documents
+```bash
 git clone https://github.com/Linopix/Jahrgang.git
 cd Jahrgang
 npm install
 npm run dev
 ```
 
-Die Entwicklungslaufzeit liegt unter [http://localhost:8080](http://localhost:8080). Beenden mit Strg+C.
-
-## Technik
-
-Züge laufen per WebRTC direkt zwischen den Browsern. Der Server vermittelt nur den Raumcode. Der Host prüft die Ablagen. Open Relay TURN dient als Fallback, wenn eine direkte Verbindung nicht zustande kommt.
-
-Stack: React 19, TanStack Start, Vite, Tailwind, Zustand. Node 22.
+Node 22. Die App läuft unter `http://localhost:8080`.
