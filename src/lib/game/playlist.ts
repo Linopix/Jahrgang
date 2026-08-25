@@ -247,7 +247,7 @@ export const peekPlaylist = createServerFn({ method: "POST" })
       if (loaded.tracks.length < 4) {
         return {
           ok: false,
-          error: "Zu wenige Titel. Mindestens vier werden gebraucht.",
+          error: "Zu wenige Titel. Mindestens vier.",
         };
       }
       return {
@@ -263,12 +263,12 @@ export const peekPlaylist = createServerFn({ method: "POST" })
       if (code === "unsupported") {
         return {
           ok: false,
-          error: "Öffentlichen Spotify- oder Deezer-Link einfügen, oder vier Zeilen Interpret – Titel.",
+          error: "Öffentlicher Link oder Liste Interpret – Titel.",
         };
       }
       return {
         ok: false,
-        error: "Playlist nicht lesbar. Sie muss öffentlich sein.",
+        error: "Playlist nicht lesbar.",
       };
     }
   });

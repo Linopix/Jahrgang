@@ -2,15 +2,15 @@
 
 **[Spielen](https://jahrgang.vercel.app)**
 
-Ein Titel läuft. Name und Jahr bleiben verdeckt. Du ordnest ihn auf deiner Zeitlinie ein: links früher, rechts später. Wer zuerst alle Karten richtig liegen hat, gewinnt.
+Ein Titel läuft. Name und Jahr bleiben zu. Du legst ihn auf die Zeitlinie: links früher, rechts später. Wer zuerst voll hat, gewinnt.
 
-Keine Anmeldung. Läuft im Browser auf Handy und Rechner.
+Konto ist optional. Läuft im Browser.
 
 ![Jahrgang Start](docs/shots/home.jpg)
 
 ## Handy
 
-Die Auswahl klappt als Blatt von unten auf. Spiel, Stil und Genre liegen als ganze Liste da, nicht als winzige Chips.
+Die Menüs sind Listen, kein Chip-Salat.
 
 ![Start auf dem Handy](docs/shots/home-mobile.jpg)
 
@@ -26,7 +26,7 @@ Die Auswahl klappt als Blatt von unten auf. Spiel, Stil und Genre liegen als gan
 
 ## Rechner
 
-Auf dem großen Schirm stehen Namen links, Repertoire rechts. Jedes Pack hat ein kleines Cover am Knopf. Modi haben Name und Kurztext.
+Namen links, Repertoire rechts.
 
 ![Partyabend](docs/shots/setup.jpg)
 

@@ -17,12 +17,12 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Jahrgang: Titel hören und nach Erscheinungsjahr auf der Zeitlinie einordnen.",
+          "Hören, legen, Jahr treffen.",
       },
       { property: "og:title", content: APP_NAME },
       {
         property: "og:description",
-        content: "Musik-Zeitspiel. Raumcode teilen, mitspielen.",
+        content: "Hören, legen, Jahr treffen.",
       },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "/og.jpg" },
@@ -33,7 +33,7 @@ export const Route = createRootRoute({
       { name: "twitter:title", content: APP_NAME },
       {
         name: "twitter:description",
-        content: "Musik-Zeitspiel. Raumcode teilen, mitspielen.",
+        content: "Hören, legen, Jahr treffen.",
       },
       { name: "twitter:image", content: "/og.jpg" },
       { name: "theme-color", content: "#0c0b0a" },

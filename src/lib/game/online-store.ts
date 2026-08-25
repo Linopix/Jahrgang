@@ -145,7 +145,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   createRoom: () => {
     const name = get().selfName.trim() || readStoredName();
     if (!name) {
-      set({ error: "Bitte zuerst einen Namen eintragen." });
+      set({ error: "Name fehlt." });
       return;
     }
     writeStoredName(name);
@@ -166,12 +166,12 @@ export const useOnline = create<OnlineStore>((set, get) => ({
     const raw = code ?? get().inviteCode;
     const roomCode = normalizeRoomCode(raw);
     if (roomCode.length < 4) {
-      set({ error: "Bitte einen vierstelligen Code oder den Einladungslink eingeben." });
+      set({ error: "Code oder Link, vier Zeichen." });
       return;
     }
     const name = get().selfName.trim() || readStoredName();
     if (!name) {
-      set({ error: "Bitte zuerst einen Namen eintragen." });
+      set({ error: "Name fehlt." });
       return;
     }
     writeStoredName(name);

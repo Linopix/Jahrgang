@@ -52,7 +52,7 @@ function BoardPage() {
       </a>
       <h1 className="mt-6 font-display text-4xl font-medium text-fg">Rangliste</h1>
       <p className="mt-3 text-sm text-muted">
-        Heute und Woche nach Berliner Zeit. Mit Konto zählt der Abend über Geräte.
+        Heute, Woche, Gesamt. Mit Konto zählt es überall.
       </p>
       <p className="mt-3 text-xs">
         <a href="/konto" className="text-subtle hover:text-fg">
@@ -80,7 +80,7 @@ function BoardPage() {
 
       <section className="mt-4">
         {board.length === 0 ? (
-          <p className="mt-4 text-sm text-muted">Noch niemand in diesem Zeitraum.</p>
+          <p className="mt-4 text-sm text-muted">Leer.</p>
         ) : (
           <ol className="mt-3 space-y-2">
             {board.map((row) => (
@@ -105,7 +105,7 @@ function BoardPage() {
       <section className="mt-10">
         <h2 className="text-sm font-medium text-fg">Dieses Gerät</h2>
         {local.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">Noch keine Runde hier.</p>
+          <p className="mt-3 text-sm text-muted">Noch nichts.</p>
         ) : (
           <ol className="mt-3 space-y-2">
             {local.map((row, i) => (

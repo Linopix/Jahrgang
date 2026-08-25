@@ -12,7 +12,7 @@ export function OnlineConnectingScreen() {
       <p className="mt-8 font-mono text-3xl tracking-[0.28em] text-fg">{roomCode}</p>
       <h1 className="mt-4 font-display text-3xl font-medium text-fg">Verbinden</h1>
       <p className="mt-2 max-w-sm text-sm text-muted">
-        Verbindung zum Host wird hergestellt.
+        Zum Host…
       </p>
       <Button variant="ghost" className="mt-8" onClick={() => requestLeave()}>
         Abbrechen

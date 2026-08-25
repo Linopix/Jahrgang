@@ -50,8 +50,7 @@ function KontoPage() {
       </a>
       <h1 className="mt-6 font-display text-4xl font-medium text-fg">Konto</h1>
       <p className="mt-3 text-sm text-muted">
-        Nur Name und Geheimwort. Kein E-Mail. Damit die Rangliste über Geräte zählt.
-        Merken — zurücksetzen gibt es nicht.
+        Name und Geheimwort. Wort weg: neues Konto.
       </p>
 
       {loading ? (

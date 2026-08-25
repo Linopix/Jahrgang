@@ -6,32 +6,32 @@ const STEPS = [
   {
     n: "01",
     title: "Start",
-    body: "Jede Person erhält eine offene Karte als Beginn der Zeitlinie. Links steht früher, rechts später.",
+    body: "Jeder bekommt eine offene Karte. Links früher, rechts später.",
   },
   {
     n: "02",
     title: "Hören",
-    body: "Ein neuer Titel spielt ohne Angabe von Name oder Jahr. Zeitstrahl: nur legen, Cover sichtbar. Blind: Cover verdeckt. Kenner, Star und Titel: zusätzlich raten. Verrückter: raten, Cover zu, Jahre versteckt, links ist später. Custom: jede Regel einzeln — Raten, Cover, Linie, Tempo, Ziel.",
+    body: "Neuer Titel, ohne Name und Jahr. Je nach Modus Cover an oder zu, manchmal noch raten.",
   },
   {
     n: "03",
     title: "Legen",
-    body: "Platz vor, zwischen oder hinter den Karten wählen. Entscheidend für die Karte ist, ob der Titel früher oder später erschien. Custom kann die Reihenfolge freigeben. Beenden schließt den Abend vorzeitig und zeigt Podest und Zahlen.",
+    body: "Vor, zwischen oder hinter die Karten. Sitzt das Jahr, bleibt sie. Beenden bricht ab und zeigt den Stand.",
   },
   {
     n: "04",
     title: "Aufdecken",
-    body: "Stimmt die Lage, bleibt die Karte. Liegt sie falsch, wird sie zurückgelegt. Bei Kenner, Star und Titel gibt es extra Treffer für richtige Tipps. Gleiches Jahr darf direkt daneben stehen.",
+    body: "Falsch: Karte weg. Raten bringt extra Punkte. Gleiches Jahr darf daneben.",
   },
   {
     n: "05",
     title: "Joker",
-    body: "Je nach Einstellung keine, eine oder zwei Hilfen: Jahrzehnt anzeigen oder den Titel überspringen. Wer zuerst das Ziel erreicht, gewinnt. Custom kann ohne Ziel bis zum leeren Stapel spielen.",
+    body: "Jahrzehnt zeigen oder überspringen. Wer zuerst voll ist, gewinnt.",
   },
   {
     n: "06",
     title: "Online",
-    body: "Der Host teilt einen vierstelligen Code. Falscher Name oder falsche Person: der Host wirft raus, Beitritt mit neuem Namen geht. Weiter spielen hält den Raum und zählt Siege auf dem Abend-Board. Repertoire, wer starten darf, Emoji und Chat stellt der Host in der Lobby ein.",
+    body: "Host teilt den Code. Falscher Name: rauswerfen. Nächste Runde, Chat und Emoji stellt der Host ein.",
   },
 ];
 
@@ -52,7 +52,7 @@ export function RulesDialog({ open, onOpenChange }: RulesDialogProps) {
                 So wird gespielt
               </Dialog.Title>
               <Dialog.Description className="mt-1 text-sm text-muted">
-                Zeitstrahl, Blind, Kenner, Star, Titel, Verrückter oder Custom.
+                Zeitstrahl, Blind, Kenner und der Rest.
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>

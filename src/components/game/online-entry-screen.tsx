@@ -33,8 +33,7 @@ export function OnlineEntryScreen() {
         <p className="text-xs font-medium tracking-[0.24em] text-muted uppercase">Mehrspieler</p>
         <h1 className="mt-2 font-display text-4xl font-medium text-fg">Online-Abend</h1>
         <p className="mt-3 max-w-md text-sm text-muted">
-          Ein Host öffnet den Raum. Mitspieler treten mit Code oder Einladungslink bei, jedes Gerät
-          für sich.
+          Host macht den Raum auf. Die anderen mit Code rein.
         </p>
       </header>
 

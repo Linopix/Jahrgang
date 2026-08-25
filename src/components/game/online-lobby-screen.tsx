@@ -90,7 +90,7 @@ export function OnlineLobbyScreen() {
           ? isHost
             ? "Raum wird geöffnet…"
             : `Verbinde mit ${roomCode}…`
-          : "Code oder Link teilen. Der Host startet, sobald alle verbunden sind."}
+          : "Code teilen. Host startet."}
       </p>
 
       <div className="lg:mt-8 lg:grid lg:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)] lg:items-start lg:gap-12">
@@ -202,7 +202,7 @@ export function OnlineLobbyScreen() {
         </div>
       ) : (
         <p className="mt-8 rounded-md bg-raised px-4 py-3 text-sm text-muted shadow-border">
-          {roomConfigSummary(config)}. Der Host startet die Runde.
+          {roomConfigSummary(config)}
         </p>
       )}
       </div>

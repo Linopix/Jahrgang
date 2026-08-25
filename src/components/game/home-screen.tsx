@@ -34,7 +34,7 @@ export function HomeScreen() {
           Jahrgang
         </h1>
         <p className="mt-4 max-w-md text-pretty text-base text-muted sm:text-lg">
-          Einen Hit hören und auf die Zeitlinie legen. Am Tisch, online oder allein.
+          Hören, legen, Jahr treffen.
         </p>
       </header>
 

@@ -228,21 +228,21 @@ export function PlayScreen() {
             ? `${player.name} ist am Zug.`
             : kind === "both"
               ? rules.reverse
-                ? "Titel und Interpret raten. Die Platte läuft verkehrt. Links später, rechts früher."
+                ? "Raten. Links später."
                 : rules.free
-                  ? "Titel und Interpret raten, dann irgendwo hinlegen. Die Reihenfolge ist frei."
-                  : "Titel und Interpret eintragen, dann auf der Zeitlinie einordnen."
+                  ? "Raten, dann irgendwo hin."
+                  : "Raten, dann legen."
               : kind === "artist"
-                ? "Nur den Interpreten raten, dann einordnen."
+                ? "Interpret, dann legen."
                 : kind === "title"
-                  ? "Nur den Titel raten, dann einordnen."
+                  ? "Titel, dann legen."
                   : rules.reverse
-                    ? "Hören und einordnen. Links später, rechts früher. Die Jahre bleiben versteckt."
+                    ? "Legen. Links später."
                     : rules.hideCover
-                    ? "Hören und einordnen. Das Cover bleibt verdeckt."
+                    ? "Legen. Cover zu."
                     : rules.free
-                    ? "Hören und irgendwo hinlegen. Keine Zeitlinie-Regel."
-                    : "Titel hören und auf der Zeitlinie einordnen. Links früher, rechts später."}
+                    ? "Irgendwo hinlegen."
+                    : "Hören und legen."}
         </p>
 
         <div className="mt-4">
