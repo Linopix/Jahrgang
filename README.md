@@ -4,7 +4,7 @@
 
 Ein Titel läuft. Name und Jahr bleiben zu. Du legst ihn auf die Zeitlinie: links früher, rechts später. Wer zuerst voll hat, gewinnt.
 
-Konto ist optional. Läuft im Browser.
+Läuft im Browser.
 
 ![Jahrgang Start](docs/shots/home.jpg)
 

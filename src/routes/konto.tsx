@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { ACCOUNT_LIVE } from "@/lib/account/flags";
 import { useAccount } from "@/lib/account/client";
 import type { AccountStats } from "@/lib/account/types";
 
@@ -8,7 +9,24 @@ export const Route = createFileRoute("/konto")({
   component: KontoPage,
 });
 
+function Off({ title }: { title: string }) {
+  return (
+    <main className="screen-in mx-auto min-h-dvh w-full max-w-lg px-5 py-10 lg:px-8">
+      <a href="/" className="text-sm text-muted transition-colors hover:text-fg">
+        Zurück
+      </a>
+      <h1 className="mt-6 font-display text-4xl font-medium text-fg">{title}</h1>
+      <p className="mt-3 text-sm text-muted">Gerade aus.</p>
+    </main>
+  );
+}
+
 function KontoPage() {
+  if (!ACCOUNT_LIVE) return <Off title="Konto" />;
+  return <KontoLive />;
+}
+
+function KontoLive() {
   const user = useAccount((s) => s.user);
   const loading = useAccount((s) => s.loading);
   const error = useAccount((s) => s.error);

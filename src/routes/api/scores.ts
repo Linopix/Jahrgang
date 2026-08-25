@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ACCOUNT_LIVE } from "@/lib/account/flags";
 import { accountStats, listBoards, readAccount, saveBoard } from "@/lib/account/server";
 
 export const Route = createFileRoute("/api/scores")({
   server: {
     handlers: {
       GET: async ({ request }) => {
+        if (!ACCOUNT_LIVE) return Response.json({ day: [], week: [], all: [], me: null, off: true });
         try {
           const boards = await listBoards(20);
           const me = readAccount(request);
@@ -15,6 +17,7 @@ export const Route = createFileRoute("/api/scores")({
         }
       },
       POST: async ({ request }) => {
+        if (!ACCOUNT_LIVE) return Response.json({ error: "aus" }, { status: 503 });
         const account = readAccount(request);
         if (!account) return Response.json({ error: "konto" }, { status: 401 });
         let body: {

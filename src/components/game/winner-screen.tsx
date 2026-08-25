@@ -22,6 +22,7 @@ import {
   type SessionStats,
 } from "@/lib/game/types";
 import { recordLocalScore } from "@/lib/game/local-scores";
+import { ACCOUNT_LIVE } from "@/lib/account/flags";
 import { submitBoard, useAccount } from "@/lib/account/client";
 import { cn } from "@/lib/utils";
 
@@ -151,7 +152,7 @@ export function WinnerScreen() {
       heard: stats.heard,
       variant,
     });
-    if (account) {
+    if (ACCOUNT_LIVE && account) {
       void submitBoard({
         wins: mine.wins,
         points: mine.points,

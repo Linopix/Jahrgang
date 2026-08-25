@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { localBoard } from "@/lib/game/local-scores";
+import { ACCOUNT_LIVE } from "@/lib/account/flags";
 import { useAccount } from "@/lib/account/client";
 import { cn } from "@/lib/utils";
 import type { AccountStats, BoardRange, BoardRow } from "@/lib/account/types";
@@ -23,6 +24,21 @@ export const Route = createFileRoute("/rangliste")({
 });
 
 function BoardPage() {
+  if (!ACCOUNT_LIVE) {
+    return (
+      <main className="screen-in mx-auto min-h-dvh w-full max-w-2xl px-5 py-10 lg:px-8">
+        <a href="/" className="text-sm text-muted transition-colors hover:text-fg">
+          Zurück
+        </a>
+        <h1 className="mt-6 font-display text-4xl font-medium text-fg">Rangliste</h1>
+        <p className="mt-3 text-sm text-muted">Gerade aus.</p>
+      </main>
+    );
+  }
+  return <BoardLive />;
+}
+
+function BoardLive() {
   const user = useAccount((s) => s.user);
   const hydrate = useAccount((s) => s.hydrate);
   const [range, setRange] = useState<BoardRange>("week");

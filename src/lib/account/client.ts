@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { ACCOUNT_LIVE } from "./flags";
 
 export type AccountUser = { id: string; name: string };
 
@@ -21,9 +22,13 @@ async function parse(res: Response) {
 
 export const useAccount = create<AccountStore>((set) => ({
   user: null,
-  loading: true,
+  loading: !ACCOUNT_LIVE,
   error: null,
   hydrate: async () => {
+    if (!ACCOUNT_LIVE) {
+      set({ user: null, loading: false, error: null });
+      return;
+    }
     try {
       const res = await fetch("/api/account", { credentials: "include" });
       const body = await parse(res);
@@ -33,6 +38,10 @@ export const useAccount = create<AccountStore>((set) => ({
     }
   },
   submit: async (op, name, secret) => {
+    if (!ACCOUNT_LIVE) {
+      set({ error: "Konto ist aus." });
+      return false;
+    }
     set({ error: null });
     const res = await fetch("/api/account", {
       method: "POST",
@@ -66,6 +75,7 @@ export function submitBoard(row: {
   placedOk: number;
   variant: string;
 }) {
+  if (!ACCOUNT_LIVE) return Promise.resolve();
   return fetch("/api/scores", {
     method: "POST",
     credentials: "include",

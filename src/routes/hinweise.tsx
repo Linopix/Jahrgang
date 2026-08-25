@@ -41,13 +41,6 @@ function HinweisePage() {
       </section>
 
       <section className="mt-10 space-y-3">
-        <h2 className="font-display text-2xl font-medium text-fg">Konto</h2>
-        <p className="text-sm leading-relaxed text-muted">
-          Optional. Name und Geheimwort. Wort weg: neues Konto.
-        </p>
-      </section>
-
-      <section className="mt-10 space-y-3">
         <h2 className="font-display text-2xl font-medium text-fg">Discord</h2>
         <p className="text-sm leading-relaxed text-muted">
           Voice in Discord, Spiel im Browser.

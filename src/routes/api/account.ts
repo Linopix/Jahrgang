@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ACCOUNT_LIVE } from "@/lib/account/flags";
 import {
   clearSessionCookie,
   loginAccount,
@@ -12,9 +13,11 @@ export const Route = createFileRoute("/api/account")({
   server: {
     handlers: {
       GET: async ({ request }) => {
+        if (!ACCOUNT_LIVE) return Response.json({ user: null, off: true });
         return Response.json({ user: readAccount(request) });
       },
       POST: async ({ request }) => {
+        if (!ACCOUNT_LIVE) return Response.json({ error: "aus" }, { status: 503 });
         let body: { op?: string; name?: string; secret?: string };
         try {
           body = (await request.json()) as typeof body;
