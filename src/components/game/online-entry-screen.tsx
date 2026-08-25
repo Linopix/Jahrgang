@@ -4,7 +4,6 @@ import { Vinyl } from "./vinyl";
 import { unlockAudio } from "@/lib/game/audio";
 import { useOnline } from "@/lib/game/online-store";
 import { notePlayerName, noteRoomCode } from "@/lib/gags";
-import { DiscordBar } from "./discord-bar";
 
 export function OnlineEntryScreen() {
   const selfName = useOnline((s) => s.selfName);
@@ -41,10 +40,6 @@ export function OnlineEntryScreen() {
 
       <div className="flex justify-center py-8 lg:hidden">
         <Vinyl size="sm" spinning />
-      </div>
-
-      <div className="mt-6">
-        <DiscordBar />
       </div>
 
       <label className="mt-6 block">

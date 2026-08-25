@@ -6,7 +6,6 @@ import { useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { unlockAudio } from "@/lib/game/audio";
 import { noteTitleClick, useGags } from "@/lib/gags";
-import { DiscordBar } from "./discord-bar";
 import { EggTally } from "./gag-layer";
 import { cn } from "@/lib/utils";
 
@@ -91,14 +90,15 @@ export function HomeScreen() {
           Hinweise
         </Link>
         <span>·</span>
+        <Link to="/rangliste" className="hover:text-fg">
+          Rangliste
+        </Link>
+        <span>·</span>
         <a href="mailto:jahrgang.game@icloud.com" className="hover:text-fg">
           Kontakt
         </a>
         <EggTally />
       </p>
-      <div className="mt-3 lg:justify-start">
-        <DiscordBar />
-      </div>
     </main>
   );
 }
