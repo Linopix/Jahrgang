@@ -3,29 +3,31 @@ import { Button } from "@/components/ui/button";
 import { peekPlaylist } from "@/lib/game/playlist";
 import { sfxHover, sfxSlide, sfxTick } from "@/lib/game/audio";
 import { GenreArt, PackArt } from "@/components/game/pack-art";
+import { MenuSelect } from "@/components/game/menu-select";
 import { noteMixYears } from "@/lib/gags";
 import {
   ERA_BLURBS,
   ERA_LABELS,
+  GENRE_BLURBS,
+  GENRE_IDS,
   GENRE_LABELS,
   NEXT_ROUND_BLURB,
   NEXT_ROUND_LABELS,
   NEXT_ROUND_OPTIONS,
   PACK_GROUPS,
   VARIANT_BLURBS,
+  VARIANT_IDS,
   VARIANT_LABELS,
   YEAR_MAX,
   YEAR_MIN,
-  type GenreId,
+  type EraId,
   type NextRoundPolicy,
-  type PlayVariant,
   type RoomConfig,
   type TokenCount,
 } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
 
-const VARIANTS: PlayVariant[] = ["timeline", "blind", "original", "star", "hook", "wild"];
-const GENRES: GenreId[] = ["all", "pop", "rock", "rap", "dance", "german"];
+const STIL_IDS: EraId[] = ["pop", "rock", "rap", "dance", "german"];
 
 type GameOptionsProps = {
   value: RoomConfig;
@@ -304,17 +306,22 @@ function MixField({
       />
       <div>
         <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Genre</p>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {GENRES.map((id) => (
-            <SleeveChip
-              key={id}
-              selected={value.mixGenre === id}
-              label={GENRE_LABELS[id]}
-              genreId={id}
-              art={<GenreArt id={id} className="pack-cover" />}
-              onSelect={() => onChange({ era: "mix", mixGenre: id })}
-            />
-          ))}
+        <MenuSelect
+          ariaLabel="Genre"
+          name="genre"
+          value={value.mixGenre}
+          onChange={(mixGenre) => onChange({ era: "mix", mixGenre })}
+          items={GENRE_IDS.map((id) => ({
+            id,
+            label: GENRE_LABELS[id],
+            blurb: GENRE_BLURBS[id],
+            art: <GenreArt id={id} className="size-10" />,
+          }))}
+        />
+        <div className="pack-sleeve is-open mt-3">
+          <div className="pack-sleeve-inner flex justify-center">
+            <GenreArt id={value.mixGenre} className="pack-cover" />
+          </div>
         </div>
       </div>
     </div>
@@ -328,12 +335,21 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
         <section>
           <h2 className="text-sm font-medium text-fg">Spiel</h2>
           <div className="mt-3">
-            <Choice
-              items={VARIANTS}
+            <MenuSelect
+              ariaLabel="Spielmodus"
+              name="spiel"
               value={value.variant}
               onChange={(variant) => onChange({ variant })}
-              label={(item) => VARIANT_LABELS[item]}
-              columns="grid-cols-2 sm:grid-cols-3"
+              items={VARIANT_IDS.map((id, index) => ({
+                id,
+                label: VARIANT_LABELS[id],
+                blurb: VARIANT_BLURBS[id],
+                art: (
+                  <span className="flex size-10 shrink-0 items-center justify-center font-display text-sm tabular-nums text-muted group-data-[state=checked]:text-primary-fg">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                ),
+              }))}
             />
           </div>
           <p className="mt-2 text-sm text-muted">{VARIANT_BLURBS[value.variant]}</p>
@@ -390,18 +406,43 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
               <p className="text-xs font-medium tracking-[0.16em] text-muted uppercase">
                 {group.title}
               </p>
-              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {group.ids.map((id) => (
-                  <SleeveChip
-                    key={id}
-                    packId={id}
-                    selected={value.era === id}
-                    label={ERA_LABELS[id]}
-                    art={<PackArt id={id} className="pack-cover" />}
-                    onSelect={() => onChange({ era: id })}
+              {group.title === "Stil" ? (
+                <div className="mt-2">
+                  <MenuSelect
+                    ariaLabel="Stil"
+                    name="stil"
+                    placeholder="Stil wählen"
+                    value={STIL_IDS.includes(value.era) ? value.era : undefined}
+                    onChange={(era) => onChange({ era: era as EraId })}
+                    items={STIL_IDS.map((id) => ({
+                      id,
+                      label: ERA_LABELS[id],
+                      blurb: ERA_BLURBS[id],
+                      art: <PackArt id={id} className="size-10" />,
+                    }))}
                   />
-                ))}
-              </div>
+                  {STIL_IDS.includes(value.era) ? (
+                    <div className="pack-sleeve is-open mt-3">
+                      <div className="pack-sleeve-inner flex justify-center">
+                        <PackArt id={value.era} className="pack-cover" />
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {group.ids.map((id) => (
+                    <SleeveChip
+                      key={id}
+                      packId={id}
+                      selected={value.era === id}
+                      label={ERA_LABELS[id]}
+                      art={<PackArt id={id} className="pack-cover" />}
+                      onSelect={() => onChange({ era: id })}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>

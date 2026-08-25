@@ -267,6 +267,8 @@ export function reversesTimeline(variant: PlayVariant) {
   return variant === "wild";
 }
 
+export const GENRE_IDS: GenreId[] = ["all", "pop", "rock", "rap", "dance", "german"];
+
 export const GENRE_LABELS: Record<GenreId, string> = {
   all: "Alle",
   pop: "Pop",
@@ -274,6 +276,15 @@ export const GENRE_LABELS: Record<GenreId, string> = {
   rap: "Rap",
   dance: "Dance",
   german: "Deutsch",
+};
+
+export const GENRE_BLURBS: Record<GenreId, string> = {
+  all: "Kein Filter, der ganze Mix.",
+  pop: "Pop über die Jahrzehnte.",
+  rock: "Rock, Alternative, Metal.",
+  rap: "Hip-Hop und Rap.",
+  dance: "Dance, Disco, elektronische Hits.",
+  german: "Deutschsprachige Titel.",
 };
 
 export const NEXT_ROUND_OPTIONS = ["host", "all"] as const;
