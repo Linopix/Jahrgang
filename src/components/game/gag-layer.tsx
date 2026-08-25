@@ -98,6 +98,7 @@ export function GagLayer() {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+      if (event.repeat || event.ctrlKey || event.altKey || event.metaKey) return;
       noteKonamiKey(event.key);
     };
     window.addEventListener("keydown", onKey);
