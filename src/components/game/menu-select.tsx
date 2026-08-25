@@ -20,22 +20,6 @@ type MenuSelectProps<T extends string> = {
   name?: string;
 };
 
-function useNarrow() {
-  const [narrow, setNarrow] = useState(() =>
-    typeof window !== "undefined" ? window.matchMedia("(max-width: 639px)").matches : false,
-  );
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 639px)");
-    const apply = () => setNarrow(mq.matches);
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
-
-  return narrow;
-}
-
 const TRIGGER =
   "flex h-14 w-full items-center gap-3 rounded-md bg-raised px-3 text-left text-fg shadow-border outline-none transition-[background-color,transform,box-shadow] duration-150 ease-out hover:-translate-y-px hover:bg-surface focus-visible:ring-2 focus-visible:ring-primary/70 data-[state=open]:bg-surface data-[state=open]:ring-2 data-[state=open]:ring-primary/70";
 
@@ -58,7 +42,6 @@ export function MenuSelect<T extends string>({
   const [open, setOpen] = useState(false);
   const [box, setBox] = useState<PanelBox>({ left: 0, width: 320, maxHeight: 352 });
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const narrow = useNarrow();
   const current = items.find((item) => item.id === value);
 
   function place() {
@@ -66,12 +49,14 @@ export function MenuSelect<T extends string>({
     if (!el) return;
     const r = el.getBoundingClientRect();
     const gap = 8;
-    const below = window.innerHeight - r.bottom - gap - 12;
-    const above = r.top - gap - 12;
-    const openUp = below < 240 && above > below;
-    const maxHeight = Math.min(22 * 16, Math.max(openUp ? above : below, 160));
-    const width = Math.min(Math.max(r.width, 240), window.innerWidth - 24);
-    const left = Math.min(Math.max(12, r.left), window.innerWidth - width - 12);
+    const gutter = 12;
+    const reserve = window.innerWidth < 1024 ? 96 : 16;
+    const below = window.innerHeight - r.bottom - gap - reserve;
+    const above = r.top - gap - gutter;
+    const openUp = below < 180 && above > below;
+    const maxHeight = Math.min(28 * 16, Math.max(openUp ? above : below, 140));
+    const width = Math.min(Math.max(r.width, 200), window.innerWidth - gutter * 2);
+    const left = Math.min(Math.max(gutter, r.left), window.innerWidth - width - gutter);
     setBox(
       openUp
         ? { bottom: window.innerHeight - r.top + gap, left, width, maxHeight }
@@ -86,9 +71,12 @@ export function MenuSelect<T extends string>({
   }
 
   function openMenu() {
-    place();
-    setOpen(true);
-    sfxTick();
+    triggerRef.current?.scrollIntoView({ block: "center", behavior: "auto" });
+    window.requestAnimationFrame(() => {
+      place();
+      setOpen(true);
+      sfxTick();
+    });
   }
 
   useEffect(() => {
@@ -129,50 +117,6 @@ export function MenuSelect<T extends string>({
     </>
   );
 
-  const list = (
-    <>
-      {items.map((item) => {
-        const selected = item.id === value;
-        return (
-          <button
-            key={item.id}
-            type="button"
-            role="option"
-            aria-selected={selected}
-            onMouseEnter={() => {
-              if (!selected) sfxHover();
-            }}
-            onClick={() => {
-              onChange(item.id);
-              close();
-            }}
-            className={cn(
-              "flex min-h-14 w-full items-center gap-3 rounded-md px-3 py-2.5 text-left",
-              "transition-colors duration-150",
-              selected ? "bg-primary text-primary-fg" : "text-fg hover:bg-raised",
-            )}
-          >
-            {item.art ? <span className="shrink-0">{item.art}</span> : null}
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium">{item.label}</span>
-              {item.blurb ? (
-                <span
-                  className={cn(
-                    "mt-0.5 block text-xs leading-snug",
-                    selected ? "text-primary-fg/80" : "text-muted",
-                  )}
-                >
-                  {item.blurb}
-                </span>
-              ) : null}
-            </span>
-            {selected ? <Check className="size-4 shrink-0" strokeWidth={2} /> : null}
-          </button>
-        );
-      })}
-    </>
-  );
-
   return (
     <div>
       <button
@@ -201,54 +145,71 @@ export function MenuSelect<T extends string>({
                 role="listbox"
                 aria-label={ariaLabel}
                 data-menu-panel={name ?? ariaLabel}
-                className={cn(
-                  "absolute overflow-hidden rounded-xl bg-surface text-fg shadow-lift",
-                  narrow
-                    ? "menu-sheet inset-x-3 bottom-3 max-h-[min(80dvh,36rem)]"
-                    : "menu-panel",
-                )}
-                style={
-                  narrow
-                    ? undefined
-                    : {
-                        top: box.top,
-                        bottom: box.bottom,
-                        left: box.left,
-                        width: box.width,
-                        maxHeight: box.maxHeight,
-                      }
-                }
+                className="menu-panel absolute overflow-hidden rounded-xl bg-surface text-fg shadow-lift"
+                style={{
+                  top: box.top,
+                  bottom: box.bottom,
+                  left: box.left,
+                  width: box.width,
+                  maxHeight: box.maxHeight,
+                }}
               >
                 <div className="flex items-center justify-between gap-3 px-3 pt-2">
-                  {narrow ? (
-                    <div className="mx-auto h-1 w-10 rounded-full bg-border" />
-                  ) : (
-                    <p className="text-xs font-medium tracking-[0.16em] text-muted uppercase">
-                      {ariaLabel}
-                    </p>
-                  )}
+                  <p className="text-xs font-medium tracking-[0.16em] text-muted uppercase">
+                    {ariaLabel}
+                  </p>
                   <button
                     type="button"
                     aria-label="Menü schließen"
                     onClick={close}
-                    className="ml-auto flex size-9 shrink-0 items-center justify-center rounded-md text-muted hover:bg-raised hover:text-fg"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted hover:bg-raised hover:text-fg"
                   >
                     <X className="size-4" />
                   </button>
                 </div>
-                {narrow ? (
-                  <p className="px-3 pb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">
-                    {ariaLabel}
-                  </p>
-                ) : null}
                 <div
-                  className={cn(
-                    "overflow-y-auto p-1.5",
-                    narrow ? "max-h-[min(70dvh,32rem)] pb-[max(0.5rem,env(safe-area-inset-bottom))]" : "",
-                  )}
-                  style={narrow ? undefined : { maxHeight: Math.max(box.maxHeight - 48, 120) }}
+                  className="overflow-y-auto p-1.5"
+                  style={{ maxHeight: Math.max(box.maxHeight - 48, 120) }}
                 >
-                  {list}
+                  {items.map((item) => {
+                    const selected = item.id === value;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        role="option"
+                        aria-selected={selected}
+                        onMouseEnter={() => {
+                          if (!selected) sfxHover();
+                        }}
+                        onClick={() => {
+                          onChange(item.id);
+                          close();
+                        }}
+                        className={cn(
+                          "flex min-h-14 w-full items-center gap-3 rounded-md px-3 py-2.5 text-left",
+                          "transition-colors duration-150",
+                          selected ? "bg-primary text-primary-fg" : "text-fg hover:bg-raised",
+                        )}
+                      >
+                        {item.art ? <span className="shrink-0">{item.art}</span> : null}
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-medium">{item.label}</span>
+                          {item.blurb ? (
+                            <span
+                              className={cn(
+                                "mt-0.5 block text-xs leading-snug",
+                                selected ? "text-primary-fg/80" : "text-muted",
+                              )}
+                            >
+                              {item.blurb}
+                            </span>
+                          ) : null}
+                        </span>
+                        {selected ? <Check className="size-4 shrink-0" strokeWidth={2} /> : null}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>,
