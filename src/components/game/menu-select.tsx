@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import * as Select from "@radix-ui/react-select";
 import { Check, ChevronDown } from "lucide-react";
 import { sfxHover, sfxTick } from "@/lib/game/audio";
@@ -65,6 +66,16 @@ export function MenuSelect<T extends string>({
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  useEffect(() => {
+    if (!open || !narrow) return;
+    const html = document.documentElement;
+    const prev = html.style.overflow;
+    html.style.overflow = "hidden";
+    return () => {
+      html.style.overflow = prev;
+    };
+  }, [open, narrow]);
+
   const trigger = (
     <>
       {current?.art ? <span className="shrink-0">{current.art}</span> : null}
@@ -95,20 +106,21 @@ export function MenuSelect<T extends string>({
         >
           {trigger}
         </button>
-        {open ? (
-          <div className="fixed inset-0 z-50" role="presentation">
-            <button
-              type="button"
-              aria-label="Schließen"
-              className="dialog-overlay absolute inset-0 bg-bg/70"
-              onClick={() => toggle(false)}
-            />
-            <div
-              role="listbox"
-              aria-label={ariaLabel}
-              data-menu-panel={name ?? ariaLabel}
-              className="menu-sheet absolute inset-x-3 bottom-3 max-h-[min(80vh,36rem)] overflow-y-auto rounded-xl bg-surface p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-fg shadow-lift"
-            >
+        {open
+          ? createPortal(
+              <div className="fixed inset-0 z-50" role="presentation">
+                <button
+                  type="button"
+                  aria-label="Schließen"
+                  className="dialog-overlay absolute inset-0 bg-bg/70"
+                  onClick={() => toggle(false)}
+                />
+                <div
+                  role="listbox"
+                  aria-label={ariaLabel}
+                  data-menu-panel={name ?? ariaLabel}
+                  className="menu-sheet absolute inset-x-3 bottom-3 max-h-[min(80dvh,36rem)] overflow-y-auto rounded-xl bg-surface p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-fg shadow-lift"
+                >
               <div className="mx-auto mb-2 mt-1 h-1 w-10 rounded-full bg-border" />
               <p className="px-3 pb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">
                 {ariaLabel}
@@ -155,8 +167,10 @@ export function MenuSelect<T extends string>({
                 );
               })}
             </div>
-          </div>
-        ) : null}
+              </div>,
+              document.body,
+            )
+          : null}
       </div>
     );
   }
@@ -181,7 +195,9 @@ export function MenuSelect<T extends string>({
           side="bottom"
           align="start"
           sideOffset={8}
-          collisionPadding={12}
+          collisionPadding={16}
+          avoidCollisions
+          sticky="partial"
           className="menu-panel z-50 overflow-hidden rounded-lg bg-surface text-fg shadow-lift"
         >
           <Select.Viewport className="max-h-[min(22rem,70vh)] overflow-y-auto p-1.5">
