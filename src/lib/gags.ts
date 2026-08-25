@@ -366,7 +366,7 @@ export function noteChat(text: string) {
   if (key === "schweinebein") {
     onceGag(
       "schweinebein",
-      "Neues Emote: Schweinebein. Links bei den Reaktionen. Guten Appetit.",
+      "Neues Emote: Schweinebein. Links bei den Reaktionen.",
     );
   }
 }
