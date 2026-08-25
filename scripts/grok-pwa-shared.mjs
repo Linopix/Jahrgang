@@ -16,6 +16,8 @@ const SHARE_META_KEYS = new Set([
   "og:image",
   "og:image:width",
   "og:image:height",
+  "og:image:secure_url",
+  "og:image:type",
   "og:type",
   "og:url",
   "og:site_name",
@@ -271,7 +273,7 @@ export function snapshotOgIdentity(cwd = process.cwd()) {
   const disk = ogCardPublicPath(cwd);
   if (disk) {
     site.card = "custom";
-    site.image = disk;
+    if (!/^https?:\/\//i.test(String(site.image ?? ""))) site.image = disk;
   } else {
     // site.json `card=custom` without a file must not bake a 404 /og.jpg URL.
     if (siteHasCustomCard(site)) delete site.card;
@@ -356,20 +358,36 @@ export function grokOgHeadTags({
   if (publicHost) {
     const asset = resolveOgCardAsset(site, cwd);
     const custom = Boolean(asset);
-    let image = custom
-      ? `https://${publicHost}${asset.startsWith("/") ? asset : `/${asset}`}`
-      : `${ogServiceUrl()}/v1/card.png?host=${encodeURIComponent(publicHost)}&title=${encodeURIComponent(title)}`;
-    const color = !custom ? placeholderCardColor(site) : "";
+    const baked = String(site.image ?? "").trim();
+    let image = /^https?:\/\//i.test(baked)
+      ? baked
+      : custom
+        ? `https://${publicHost}${asset.startsWith("/") ? asset : `/${asset}`}`
+        : `${ogServiceUrl()}/v1/card.png?host=${encodeURIComponent(publicHost)}&title=${encodeURIComponent(title)}`;
+    const color = !custom && !/^https?:\/\//i.test(baked) ? placeholderCardColor(site) : "";
     if (color) image += `&color=${encodeURIComponent(color)}`;
     tags.push(`<meta property="og:image" content="${escapeHtml(image)}">`);
+    tags.push(`<meta property="og:image:secure_url" content="${escapeHtml(image)}">`);
     tags.push(`<meta property="og:image:width" content="1200">`);
     tags.push(`<meta property="og:image:height" content="630">`);
+    tags.push(`<meta property="og:image:type" content="image/jpeg">`);
     const banner = String(site.banner ?? "").trim();
     if (banner) {
-      const bannerUrl = `https://${publicHost}${banner.startsWith("/") ? banner : `/${banner}`}`;
+      const bannerUrl = /^https?:\/\//i.test(banner)
+        ? banner
+        : `https://${publicHost}${banner.startsWith("/") ? banner : `/${banner}`}`;
       tags.push(`<meta property="x:game:image" content="${escapeHtml(bannerUrl)}">`);
       tags.push(`<meta property="x:game:image:width" content="1200">`);
       tags.push(`<meta property="x:game:image:height" content="264">`);
+    }
+  } else {
+    const image = String(site.image ?? "").trim();
+    if (/^https?:\/\//i.test(image)) {
+      tags.push(`<meta property="og:image" content="${escapeHtml(image)}">`);
+      tags.push(`<meta property="og:image:secure_url" content="${escapeHtml(image)}">`);
+      tags.push(`<meta property="og:image:width" content="1200">`);
+      tags.push(`<meta property="og:image:height" content="630">`);
+      tags.push(`<meta property="og:image:type" content="image/jpeg">`);
     }
   }
   return tags;

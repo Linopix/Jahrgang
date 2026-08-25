@@ -5,6 +5,8 @@ import { ThemePicker } from "@/components/game/theme-picker";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "Jahrgang";
+const SITE = "https://jahrgang.vercel.app";
+const OG_IMAGE = `${SITE}/og.jpg`;
 
 const THEME_BOOT = `(function(){try{var t=localStorage.getItem("jahrgang-theme");var u=[];try{u=JSON.parse(localStorage.getItem("jahrgang-theme-unlocks")||"[]")}catch(e){}var ok=t==="night"||t==="paper"||t==="ink"||t==="ember"||t==="glass"||t==="retro"||(t==="disco"&&u.indexOf("disco")>=0);if(ok)document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`;
 
@@ -25,7 +27,10 @@ export const Route = createRootRoute({
         content: "Hören, legen, Jahr treffen.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "/og.jpg" },
+      { property: "og:url", content: SITE },
+      { property: "og:site_name", content: APP_NAME },
+      { property: "og:image", content: OG_IMAGE },
+      { property: "og:image:secure_url", content: OG_IMAGE },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { property: "og:image:type", content: "image/jpeg" },
@@ -35,7 +40,7 @@ export const Route = createRootRoute({
         name: "twitter:description",
         content: "Hören, legen, Jahr treffen.",
       },
-      { name: "twitter:image", content: "/og.jpg" },
+      { name: "twitter:image", content: OG_IMAGE },
       { name: "theme-color", content: "#0c0b0a" },
     ],
     links: [
