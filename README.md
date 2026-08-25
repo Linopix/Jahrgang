@@ -90,4 +90,4 @@ Kleine Tippfehler beim Raten sind in Ordnung. „Beatles“ zählt für The Beat
 
 ## Hinweise
 
-Jahrgang ist ein eigenes Spiel, keine Lizenz von irgendwem, und verdient nichts. Fragen an [jahrgang.game@icloud.com](mailto:jahrgang.game@icloud.com).
+Jahrgang ist ein eigenes Spiel, keine Lizenz von irgendwem, und verdient nichts. Der Code steht unter MIT. Fragen an [jahrgang.game@icloud.com](mailto:jahrgang.game@icloud.com).

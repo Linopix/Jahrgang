@@ -1,6 +1,13 @@
 {
-  "name": "app-builder-workspace",
+  "name": "jahrgang",
   "private": true,
+  "description": "Musik-Zeitspiel. Einen Hit hören und auf die Zeitlinie legen.",
+  "license": "MIT",
+  "homepage": "https://jahrgang.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Linopix/Jahrgang.git"
+  },
   "sideEffects": false,
   "type": "module",
   "engines": {
