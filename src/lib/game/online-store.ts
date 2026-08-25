@@ -72,6 +72,8 @@ type OnlineStore = {
   mixTo: number;
   mixGenre: GenreId;
   custom: CustomRules;
+  emoji: boolean;
+  chat: boolean;
   error: string | null;
   pending: boolean;
   inviteCode: string;
@@ -109,6 +111,8 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   mixTo: DEFAULT_MIX_TO,
   mixGenre: "all",
   custom: DEFAULT_CUSTOM,
+  emoji: true,
+  chat: true,
   error: null,
   pending: false,
   inviteCode: "",
@@ -222,6 +226,8 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       mixTo: typeof config.mixTo === "number" ? config.mixTo : DEFAULT_MIX_TO,
       mixGenre: isGenreId(config.mixGenre) ? config.mixGenre : "all",
       custom: parseCustom(config.custom),
+      emoji: config.emoji !== false,
+      chat: config.chat !== false,
     }),
   setError: (error) => set({ error, pending: false }),
   setPending: (pending) => set({ pending }),
@@ -243,6 +249,8 @@ export function roomConfigFrom(
     | "mixTo"
     | "mixGenre"
     | "custom"
+    | "emoji"
+    | "chat"
   >,
 ): RoomConfig {
   return {
@@ -257,6 +265,8 @@ export function roomConfigFrom(
     mixTo: state.mixTo,
     mixGenre: state.mixGenre,
     custom: parseCustom(state.custom),
+    emoji: state.emoji !== false,
+    chat: state.chat !== false,
   };
 }
 

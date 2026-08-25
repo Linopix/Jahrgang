@@ -481,6 +481,35 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
         </section>
       ) : null}
 
+      {online ? (
+        <section className="mt-8">
+          <h2 className="text-sm font-medium text-fg">Emoji und Chat</h2>
+          <div className="mt-3 grid max-w-md gap-4 sm:grid-cols-2">
+            <div>
+              <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Emoji</p>
+              <Choice
+                items={["an", "aus"] as const}
+                value={value.emoji ? "an" : "aus"}
+                onChange={(next) => onChange({ emoji: next === "an" })}
+                label={(item) => (item === "an" ? "An" : "Aus")}
+                columns="grid-cols-2"
+              />
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Chat</p>
+              <Choice
+                items={["an", "aus"] as const}
+                value={value.chat ? "an" : "aus"}
+                onChange={(next) => onChange({ chat: next === "an" })}
+                label={(item) => (item === "an" ? "An" : "Aus")}
+                columns="grid-cols-2"
+              />
+            </div>
+          </div>
+          <p className="mt-2 text-sm text-muted">Beides einzeln. Nur der Host stellt das ein.</p>
+        </section>
+      ) : null}
+
       <section className="mt-8">
         <h2 className="text-sm font-medium text-fg">Repertoire</h2>
         <p className="mt-1 text-sm text-muted">{ERA_BLURBS[value.era]}</p>
@@ -542,11 +571,20 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
 export function roomConfigSummary(config: RoomConfig) {
   const joker = config.tokens === 0 ? "ohne Joker" : `${config.tokens} Joker`;
   const round = config.nextRound === "all" ? "alle starten neu" : "Host startet neu";
+  const social =
+    config.emoji === false && config.chat === false
+      ? "ohne Emoji und Chat"
+      : config.emoji === false
+        ? "ohne Emoji"
+        : config.chat === false
+          ? "ohne Chat"
+          : null;
+  const extra = social ? ` · ${social}` : "";
   if (config.era === "playlist" && config.playlistLabel) {
-    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · ${config.playlistLabel}`;
+    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · ${config.playlistLabel}${extra}`;
   }
   if (config.era === "mix") {
-    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · Mix ${config.mixFrom}–${config.mixTo} · ${GENRE_LABELS[config.mixGenre]}`;
+    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · Mix ${config.mixFrom}–${config.mixTo} · ${GENRE_LABELS[config.mixGenre]}${extra}`;
   }
-  return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · ${ERA_LABELS[config.era]}`;
+  return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · ${ERA_LABELS[config.era]}${extra}`;
 }

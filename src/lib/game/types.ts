@@ -192,6 +192,8 @@ export interface RoomConfig {
   mixTo: number;
   mixGenre: GenreId;
   custom: CustomRules;
+  emoji: boolean;
+  chat: boolean;
 }
 
 export const ERA_IDS: EraId[] = [
@@ -461,6 +463,8 @@ export const DEFAULT_ROOM_CONFIG: RoomConfig = {
   mixTo: DEFAULT_MIX_TO,
   mixGenre: "all",
   custom: DEFAULT_CUSTOM,
+  emoji: true,
+  chat: true,
 };
 
 export function isPlayVariant(value: unknown): value is PlayVariant {

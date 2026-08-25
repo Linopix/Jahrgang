@@ -25,6 +25,8 @@ export type RoomConfigWire = {
   mixTo?: number;
   mixGenre?: GenreId;
   custom?: CustomRules;
+  emoji?: boolean;
+  chat?: boolean;
 };
 
 export type OnlineMessage =
@@ -47,7 +49,8 @@ export type OnlineMessage =
   | { t: "again" }
   | { t: "back-lobby" }
   | { t: "host-left" }
-  | { t: "react"; emoji: string };
+  | { t: "react"; emoji: string }
+  | { t: "chat"; text: string };
 
 export function isOnlineMessage(data: unknown): data is OnlineMessage {
   if (!data || typeof data !== "object" || !("t" in data)) return false;
@@ -63,6 +66,7 @@ export function isOnlineMessage(data: unknown): data is OnlineMessage {
     t === "again" ||
     t === "back-lobby" ||
     t === "host-left" ||
-    t === "react"
+    t === "react" ||
+    t === "chat"
   );
 }

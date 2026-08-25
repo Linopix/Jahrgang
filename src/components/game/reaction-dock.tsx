@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 export function ReactionDock() {
   const status = useOnline((s) => s.status);
+  const enabled = useOnline((s) => s.emoji);
   const bursts = useReactions((s) => s.bursts);
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -28,7 +29,7 @@ export function ReactionDock() {
     };
   }, [open]);
 
-  if (!live) return null;
+  if (!live || !enabled) return null;
 
   return (
     <>

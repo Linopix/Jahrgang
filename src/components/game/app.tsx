@@ -7,6 +7,7 @@ import { OnlineConnectingScreen } from "./online-connecting-screen";
 import { OnlineEntryScreen } from "./online-entry-screen";
 import { OnlineLobbyScreen } from "./online-lobby-screen";
 import { PlayScreen } from "./play-screen";
+import { ChatDock } from "./chat-dock";
 import { ReactionDock } from "./reaction-dock";
 import { RevealScreen } from "./reveal-screen";
 import { RulesDialog } from "./rules-dialog";
@@ -64,6 +65,7 @@ export function GameApp() {
       {localPhase && phase === "winner" ? <WinnerScreen /> : null}
       {onlineStatus === "playing" && phase === "home" ? <LoadingScreen /> : null}
       <ReactionDock />
+      <ChatDock />
       <GagLayer />
       <RulesDialog open={rulesOpen} onOpenChange={setRulesOpen} />
     </>

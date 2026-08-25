@@ -31,7 +31,7 @@ const STEPS = [
   {
     n: "06",
     title: "Online",
-    body: "Der Host teilt einen vierstelligen Code. Weiter spielen hält den Raum und zählt Siege auf dem Abend-Board. Repertoire und wer starten darf, stellt der Host in der Lobby ein.",
+    body: "Der Host teilt einen vierstelligen Code. Weiter spielen hält den Raum und zählt Siege auf dem Abend-Board. Repertoire, wer starten darf, Emoji und Chat stellt der Host in der Lobby ein.",
   },
 ];
 

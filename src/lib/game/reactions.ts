@@ -41,6 +41,7 @@ export const useReactions = create<ReactionStore>((set) => ({
 }));
 
 export function receiveReaction(emoji: unknown, name: string) {
+  if (!useOnline.getState().emoji) return;
   if (!isReactionEmoji(emoji)) return;
   useReactions.getState().push(emoji, name);
   sfxPop();
@@ -48,7 +49,7 @@ export function receiveReaction(emoji: unknown, name: string) {
 
 export function sendReaction(emoji: ReactionEmoji) {
   const online = useOnline.getState();
-  if (online.status === "off" || online.status === "entry") return;
+  if (!online.emoji || online.status === "off" || online.status === "entry") return;
   const now = Date.now();
   if (now - lastSentAt < 700) return;
   lastSentAt = now;

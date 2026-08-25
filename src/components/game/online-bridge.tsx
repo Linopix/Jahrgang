@@ -8,6 +8,7 @@ import { useOnline, type OnlineMember } from "@/lib/game/online-store";
 import { requestStartOnline } from "@/lib/game/online-actions";
 import { DEFAULT_NEXT_ROUND, DEFAULT_ROOM_CONFIG, DEFAULT_TOKENS, DEFAULT_VARIANT, isNextRoundPolicy, isPlayVariant, isTokenCount, parseCustom } from "@/lib/game/types";
 import { receiveReaction } from "@/lib/game/reactions";
+import { receiveChat } from "@/lib/game/chat";
 import type { PeerInfo } from "@/lib/multiplayer";
 
 const JOIN_TIMEOUT_MS = 14000;
@@ -43,6 +44,8 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   const mixTo = useOnline((s) => s.mixTo);
   const mixGenre = useOnline((s) => s.mixGenre);
   const custom = useOnline((s) => s.custom);
+  const emoji = useOnline((s) => s.emoji);
+  const chat = useOnline((s) => s.chat);
   const status = useOnline((s) => s.status);
   const sendRef = useRef(p2p.send);
   sendRef.current = p2p.send;
@@ -125,9 +128,11 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       mixTo,
       mixGenre,
       custom,
+      emoji,
+      chat,
     };
     p2p.send(msg);
-  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, members]);
+  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, emoji, chat, members]);
 
   useEffect(() => {
     return p2p.onMessage((from, data, channel) => {
@@ -206,6 +211,8 @@ function handleMessage(
       mixTo: msg.mixTo ?? DEFAULT_ROOM_CONFIG.mixTo,
       mixGenre: msg.mixGenre ?? "all",
       custom: parseCustom(msg.custom),
+      emoji: msg.emoji !== false,
+      chat: msg.chat !== false,
     });
     useOnline.setState({ hostId: msg.hostId });
     if (online.status === "connecting" || online.status === "entry") {
@@ -227,6 +234,8 @@ function handleMessage(
       mixTo: msg.mixTo ?? DEFAULT_ROOM_CONFIG.mixTo,
       mixGenre: msg.mixGenre ?? "all",
       custom: parseCustom(msg.custom),
+      emoji: msg.emoji !== false,
+      chat: msg.chat !== false,
     });
     return;
   }
@@ -292,6 +301,13 @@ function handleMessage(
     if (from === ctx.selfId) return;
     const member = online.members.find((row) => row.id === from);
     receiveReaction(msg.emoji, member?.name ?? "");
+    return;
+  }
+
+  if (msg.t === "chat") {
+    if (from === ctx.selfId) return;
+    const member = online.members.find((row) => row.id === from);
+    receiveChat(msg.text, member?.name ?? "Gast");
     return;
   }
 

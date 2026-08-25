@@ -24,6 +24,8 @@ export function OnlineLobbyScreen() {
   const mixTo = useOnline((s) => s.mixTo);
   const mixGenre = useOnline((s) => s.mixGenre);
   const custom = useOnline((s) => s.custom);
+  const emoji = useOnline((s) => s.emoji);
+  const chat = useOnline((s) => s.chat);
   const error = useOnline((s) => s.error);
   const hostId = useOnline((s) => s.hostId);
   const pending = useOnline((s) => s.pending);
@@ -43,6 +45,8 @@ export function OnlineLobbyScreen() {
     mixTo,
     mixGenre,
     custom,
+    emoji,
+    chat,
   });
 
   useEffect(() => {
