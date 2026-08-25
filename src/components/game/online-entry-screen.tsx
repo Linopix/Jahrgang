@@ -4,6 +4,7 @@ import { Vinyl } from "./vinyl";
 import { unlockAudio } from "@/lib/game/audio";
 import { useOnline } from "@/lib/game/online-store";
 import { notePlayerName, noteRoomCode } from "@/lib/gags";
+import { DiscordBar } from "./discord-bar";
 
 export function OnlineEntryScreen() {
   const selfName = useOnline((s) => s.selfName);
@@ -42,7 +43,11 @@ export function OnlineEntryScreen() {
         <Vinyl size="sm" spinning />
       </div>
 
-      <label className="block">
+      <div className="mt-6">
+        <DiscordBar />
+      </div>
+
+      <label className="mt-6 block">
         <span className="text-sm font-medium text-fg">Dein Name</span>
         <input
           value={selfName}

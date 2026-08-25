@@ -16,6 +16,10 @@ import { WinnerScreen } from "./winner-screen";
 import { setLobbyWanted, unlockAudio } from "@/lib/game/audio";
 import { useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
+import { useDiscord } from "@/lib/discord/client";
+import { setDiscordPresence } from "@/lib/discord/presence";
+import { VARIANT_LABELS } from "@/lib/game/types";
+import { shareUrl } from "@/lib/game/room-code";
 
 export function GameApp() {
   const phase = useGame((s) => s.phase);
@@ -23,6 +27,53 @@ export function GameApp() {
   const setRulesOpen = useGame((s) => s.setRulesOpen);
   const onlineStatus = useOnline((s) => s.status);
   const onlineRole = useOnline((s) => s.role);
+  const roomCode = useOnline((s) => s.roomCode);
+  const members = useOnline((s) => s.members);
+  const hydrateDiscord = useDiscord((s) => s.hydrate);
+  const discordUser = useDiscord((s) => s.user);
+  const variant = useGame((s) => s.variant);
+
+  useEffect(() => {
+    void hydrateDiscord();
+  }, [hydrateDiscord]);
+
+  useEffect(() => {
+    if (discordUser && !useOnline.getState().selfName.trim()) {
+      useOnline.getState().setSelfName(discordUser.username);
+    }
+  }, [discordUser]);
+
+  useEffect(() => {
+    const size = Math.max(1, members.filter((m) => m.connectionState !== "failed").length);
+    if (onlineStatus === "lobby" || onlineStatus === "connecting") {
+      void setDiscordPresence({
+        details: "Lobby",
+        state: roomCode ? `Raum ${roomCode}` : "Raum öffnen",
+        size,
+        max: 8,
+        join: roomCode ? shareUrl(roomCode) : undefined,
+      });
+      return;
+    }
+    if (onlineStatus === "playing" || phase === "listen" || phase === "reveal") {
+      void setDiscordPresence({
+        details: VARIANT_LABELS[variant] ?? "Jahrgang",
+        state: roomCode ? `Raum ${roomCode}` : "Am Spielen",
+        size,
+        max: 8,
+        join: roomCode ? shareUrl(roomCode) : undefined,
+      });
+      return;
+    }
+    if (phase === "winner") {
+      void setDiscordPresence({
+        details: "Abend vorbei",
+        state: "Rangliste",
+        size,
+        max: 8,
+      });
+    }
+  }, [onlineStatus, phase, roomCode, members, variant]);
 
   const playing =
     (onlineStatus === "off" || onlineStatus === "playing") &&

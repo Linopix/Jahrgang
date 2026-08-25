@@ -108,6 +108,22 @@ export function OnlineLobbyScreen() {
             {copied === "link" ? "Link kopiert" : "Link kopieren"}
           </Button>
         </div>
+        <Button
+          variant="secondary"
+          className="mt-2 w-full"
+          onClick={async () => {
+            const text = `Jahrgang · Raum ${roomCode}\n${link}`;
+            try {
+              await navigator.clipboard.writeText(text);
+              setCopied("link");
+              window.setTimeout(() => setCopied(null), 1600);
+            } catch {
+              // ignore
+            }
+          }}
+        >
+          Für Discord kopieren
+        </Button>
       </section>
 
       {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}

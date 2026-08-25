@@ -21,6 +21,8 @@ import {
   type Player,
   type SessionStats,
 } from "@/lib/game/types";
+import { recordLocalScore } from "@/lib/game/local-scores";
+import { useDiscord } from "@/lib/discord/client";
 import { cn } from "@/lib/utils";
 
 function formatDuration(ms: number) {
@@ -121,6 +123,8 @@ export function WinnerScreen() {
   const isHost = useOnline((s) => s.role) === "host";
   const nextRound = useOnline((s) => s.nextRound);
   const pending = useOnline((s) => s.pending);
+  const selfId = useOnline((s) => s.selfId);
+  const discordUser = useDiscord((s) => s.user);
   const mayStart = !online || canStartNextRound();
   const original = guessKind(variant, custom) !== "none";
   const ranked = rankPlayers(players);
@@ -133,6 +137,33 @@ export function WinnerScreen() {
   useEffect(() => {
     const timer = window.setTimeout(() => setView("board"), 3400);
     return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const mine =
+      series.find((row) => row.id === selfId) ??
+      (champ ? { id: champ.id, name: champ.name, wins: 1, points: champ.timeline.length + champ.quiz } : null);
+    if (!mine) return;
+    recordLocalScore({
+      name: discordUser?.username || mine.name,
+      wins: mine.wins,
+      points: mine.points,
+      heard: stats.heard,
+      variant,
+    });
+    if (!discordUser) return;
+    void fetch("/api/scores", {
+      method: "POST",
+      credentials: "include",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        wins: mine.wins,
+        points: mine.points,
+        heard: stats.heard,
+        placedOk: stats.placedOk,
+        variant,
+      }),
+    }).catch(() => {});
   }, []);
 
   const title = soloFailed

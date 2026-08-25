@@ -56,7 +56,22 @@ function HinweisePage() {
       </section>
 
       <section className="mt-10 space-y-3">
-        <h2 className="font-display text-2xl font-medium text-fg">Kontakt</h2>
+        <h2 className="font-display text-2xl font-medium text-fg">Discord</h2>
+        <p className="text-sm leading-relaxed text-muted">
+          Ein Status im Discord-Profil (Rich Presence) geht aus dem normalen
+          Browser nicht. Discord lässt das nur in einer Discord-Activity oder
+          einer nativen App zu. Jahrgang setzt Presence, wenn es in Discord
+          eingebettet läuft.
+        </p>
+        <p className="text-sm leading-relaxed text-muted">
+          Optional: Discord-Konto verbinden für die Rangliste. Dafür braucht der
+          Betrieb eine Discord-Application mit Redirect auf
+          /api/discord/callback und die Variablen DISCORD_CLIENT_ID sowie
+          DISCORD_CLIENT_SECRET. Ohne das bleibt der Stand auf dem Gerät.
+        </p>
+      </section>
+
+      <section className="mt-10 space-y-3">
         <p className="text-sm leading-relaxed text-muted">
           Rechtliche Hinweise, Abmahnungen und Fragen an{" "}
           <a

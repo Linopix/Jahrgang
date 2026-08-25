@@ -6,6 +6,7 @@ import { useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { unlockAudio } from "@/lib/game/audio";
 import { noteTitleClick, useGags } from "@/lib/gags";
+import { DiscordBar } from "./discord-bar";
 import { EggTally } from "./gag-layer";
 import { cn } from "@/lib/utils";
 
@@ -95,6 +96,9 @@ export function HomeScreen() {
         </a>
         <EggTally />
       </p>
+      <div className="mt-3 lg:justify-start">
+        <DiscordBar />
+      </div>
     </main>
   );
 }

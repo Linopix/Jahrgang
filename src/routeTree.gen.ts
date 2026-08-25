@@ -11,7 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as HinweiseRouteImport } from './routes/hinweise'
+import { Route as RanglisteRouteImport } from './routes/rangliste'
 import { Route as ApiRtcRouteImport } from './routes/api/rtc'
+import { Route as ApiScoresRouteImport } from './routes/api/scores'
+import { Route as ApiDiscordCallbackRouteImport } from './routes/api/discord/callback'
+import { Route as ApiDiscordLogoutRouteImport } from './routes/api/discord/logout'
+import { Route as ApiDiscordMeRouteImport } from './routes/api/discord/me'
+import { Route as ApiDiscordStartRouteImport } from './routes/api/discord/start'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -23,40 +29,122 @@ const HinweiseRoute = HinweiseRouteImport.update({
   path: '/hinweise',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RanglisteRoute = RanglisteRouteImport.update({
+  id: '/rangliste',
+  path: '/rangliste',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiRtcRoute = ApiRtcRouteImport.update({
   id: '/api/rtc',
   path: '/api/rtc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiScoresRoute = ApiScoresRouteImport.update({
+  id: '/api/scores',
+  path: '/api/scores',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDiscordCallbackRoute = ApiDiscordCallbackRouteImport.update({
+  id: '/api/discord/callback',
+  path: '/api/discord/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDiscordLogoutRoute = ApiDiscordLogoutRouteImport.update({
+  id: '/api/discord/logout',
+  path: '/api/discord/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDiscordMeRoute = ApiDiscordMeRouteImport.update({
+  id: '/api/discord/me',
+  path: '/api/discord/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDiscordStartRoute = ApiDiscordStartRouteImport.update({
+  id: '/api/discord/start',
+  path: '/api/discord/start',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/hinweise': typeof HinweiseRoute
+  '/rangliste': typeof RanglisteRoute
   '/api/rtc': typeof ApiRtcRoute
+  '/api/scores': typeof ApiScoresRoute
+  '/api/discord/callback': typeof ApiDiscordCallbackRoute
+  '/api/discord/logout': typeof ApiDiscordLogoutRoute
+  '/api/discord/me': typeof ApiDiscordMeRoute
+  '/api/discord/start': typeof ApiDiscordStartRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/hinweise': typeof HinweiseRoute
+  '/rangliste': typeof RanglisteRoute
   '/api/rtc': typeof ApiRtcRoute
+  '/api/scores': typeof ApiScoresRoute
+  '/api/discord/callback': typeof ApiDiscordCallbackRoute
+  '/api/discord/logout': typeof ApiDiscordLogoutRoute
+  '/api/discord/me': typeof ApiDiscordMeRoute
+  '/api/discord/start': typeof ApiDiscordStartRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/hinweise': typeof HinweiseRoute
+  '/rangliste': typeof RanglisteRoute
   '/api/rtc': typeof ApiRtcRoute
+  '/api/scores': typeof ApiScoresRoute
+  '/api/discord/callback': typeof ApiDiscordCallbackRoute
+  '/api/discord/logout': typeof ApiDiscordLogoutRoute
+  '/api/discord/me': typeof ApiDiscordMeRoute
+  '/api/discord/start': typeof ApiDiscordStartRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/hinweise' | '/api/rtc'
+  fullPaths:
+    | '/'
+    | '/hinweise'
+    | '/rangliste'
+    | '/api/rtc'
+    | '/api/scores'
+    | '/api/discord/callback'
+    | '/api/discord/logout'
+    | '/api/discord/me'
+    | '/api/discord/start'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/hinweise' | '/api/rtc'
-  id: '__root__' | '/' | '/hinweise' | '/api/rtc'
+  to:
+    | '/'
+    | '/hinweise'
+    | '/rangliste'
+    | '/api/rtc'
+    | '/api/scores'
+    | '/api/discord/callback'
+    | '/api/discord/logout'
+    | '/api/discord/me'
+    | '/api/discord/start'
+  id:
+    | '__root__'
+    | '/'
+    | '/hinweise'
+    | '/rangliste'
+    | '/api/rtc'
+    | '/api/scores'
+    | '/api/discord/callback'
+    | '/api/discord/logout'
+    | '/api/discord/me'
+    | '/api/discord/start'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HinweiseRoute: typeof HinweiseRoute
+  RanglisteRoute: typeof RanglisteRoute
   ApiRtcRoute: typeof ApiRtcRoute
+  ApiScoresRoute: typeof ApiScoresRoute
+  ApiDiscordCallbackRoute: typeof ApiDiscordCallbackRoute
+  ApiDiscordLogoutRoute: typeof ApiDiscordLogoutRoute
+  ApiDiscordMeRoute: typeof ApiDiscordMeRoute
+  ApiDiscordStartRoute: typeof ApiDiscordStartRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -75,11 +163,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HinweiseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rangliste': {
+      id: '/rangliste'
+      path: '/rangliste'
+      fullPath: '/rangliste'
+      preLoaderRoute: typeof RanglisteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/rtc': {
       id: '/api/rtc'
       path: '/api/rtc'
       fullPath: '/api/rtc'
       preLoaderRoute: typeof ApiRtcRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/scores': {
+      id: '/api/scores'
+      path: '/api/scores'
+      fullPath: '/api/scores'
+      preLoaderRoute: typeof ApiScoresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/discord/callback': {
+      id: '/api/discord/callback'
+      path: '/api/discord/callback'
+      fullPath: '/api/discord/callback'
+      preLoaderRoute: typeof ApiDiscordCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/discord/logout': {
+      id: '/api/discord/logout'
+      path: '/api/discord/logout'
+      fullPath: '/api/discord/logout'
+      preLoaderRoute: typeof ApiDiscordLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/discord/me': {
+      id: '/api/discord/me'
+      path: '/api/discord/me'
+      fullPath: '/api/discord/me'
+      preLoaderRoute: typeof ApiDiscordMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/discord/start': {
+      id: '/api/discord/start'
+      path: '/api/discord/start'
+      fullPath: '/api/discord/start'
+      preLoaderRoute: typeof ApiDiscordStartRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -88,7 +218,13 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HinweiseRoute: HinweiseRoute,
+  RanglisteRoute: RanglisteRoute,
   ApiRtcRoute: ApiRtcRoute,
+  ApiScoresRoute: ApiScoresRoute,
+  ApiDiscordCallbackRoute: ApiDiscordCallbackRoute,
+  ApiDiscordLogoutRoute: ApiDiscordLogoutRoute,
+  ApiDiscordMeRoute: ApiDiscordMeRoute,
+  ApiDiscordStartRoute: ApiDiscordStartRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

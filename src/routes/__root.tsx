@@ -19,6 +19,12 @@ export const Route = createRootRoute({
         content:
           "Jahrgang: Titel hören und nach Erscheinungsjahr auf der Zeitlinie einordnen.",
       },
+      { property: "og:title", content: APP_NAME },
+      {
+        property: "og:description",
+        content: "Musik-Zeitspiel. Raumcode teilen, mitspielen.",
+      },
+      { property: "og:type", content: "website" },
       { name: "theme-color", content: "#0c0b0a" },
     ],
     links: [
