@@ -7,6 +7,7 @@ import { resolvePreviews } from "./preview";
 import {
   pausePreview,
   playPreview,
+  previewRate,
   sfxCorrect,
   sfxHint,
   sfxPlace,
@@ -84,6 +85,11 @@ type GameStore = {
   applySnapshot: (snap: GameSnapshot) => void;
   resetBoard: () => void;
 };
+
+function cuePreview(song: ResolvedSong | null, variant: PlayVariant) {
+  if (!song) return;
+  void playPreview(song.previewUrl, previewRate(variant, song.id));
+}
 
 function makePlayers(
   seats: { id: string; name: string }[],
@@ -257,7 +263,7 @@ export const useGame = create<GameStore>((set, get) => ({
       loadError: null,
     });
     if (snap.phase === "listen" && snap.current && songChanged) {
-      void playPreview(snap.current.previewUrl);
+      cuePreview(snap.current, snap.variant ?? DEFAULT_VARIANT);
     }
     if (snap.phase === "reveal" && prev.phase !== "reveal") {
       pausePreview();
@@ -394,7 +400,7 @@ export const useGame = create<GameStore>((set, get) => ({
         phase: "listen",
         loadProgress: { done: resolved.length, total: resolved.length },
       });
-      if (current) void playPreview(current.previewUrl);
+      cuePreview(current, variant);
       return true;
     } catch {
       set({
@@ -488,7 +494,7 @@ export const useGame = create<GameStore>((set, get) => ({
       decadeHint: null,
       phase: "listen",
     });
-    if (current) void playPreview(current.previewUrl);
+    if (current) cuePreview(current, get().variant);
   },
 
   useDecade: () => {
@@ -530,13 +536,13 @@ export const useGame = create<GameStore>((set, get) => ({
       stats: bumpStats(get().stats, skipPatch),
       roundStats: bumpStats(get().roundStats, skipPatch),
     });
-    void playPreview(next.previewUrl);
+    cuePreview(next, get().variant);
   },
 
   replay: () => {
-    const { current, phase } = get();
+    const { current, phase, variant } = get();
     if (!current || phase !== "listen") return;
-    void playPreview(current.previewUrl);
+    cuePreview(current, variant);
   },
 }));
 

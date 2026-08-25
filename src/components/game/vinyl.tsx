@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 type VinylProps = {
   spinning?: boolean;
   slow?: boolean;
+  reverse?: boolean;
   size?: "sm" | "md" | "lg";
   label?: string;
   artworkUrl?: string;
@@ -18,6 +19,7 @@ const sizes = {
 export function Vinyl({
   spinning,
   slow,
+  reverse,
   size = "md",
   label = "JAHRGANG",
   artworkUrl,
@@ -29,6 +31,7 @@ export function Vinyl({
           "vinyl-disc size-full rounded-full",
           spinning && "is-playing",
           slow && "is-slow",
+          reverse && "is-reverse",
         )}
       >
         <div className="vinyl-label">

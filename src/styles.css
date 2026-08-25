@@ -308,6 +308,11 @@
   animation-direction: alternate;
 }
 
+.vinyl-disc.is-reverse {
+  animation-direction: reverse;
+  animation-duration: 2.6s;
+}
+
 @keyframes pack-pop {
   from {
     opacity: 0;
@@ -340,19 +345,19 @@
 
 .pack-cover {
   display: block;
-  width: 5.5rem;
-  height: 5.5rem;
+  width: 10.5rem;
+  height: 10.5rem;
   margin-inline: auto;
-  margin-bottom: 0.4rem;
-  transform: translateX(-52%);
+  margin-bottom: 0.55rem;
+  transform: translateX(-62%) rotate(-9deg);
   opacity: 0;
   transition:
-    transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 460ms cubic-bezier(0.2, 0.8, 0.2, 1),
     opacity 280ms ease-out;
 }
 
 .pack-sleeve.is-open .pack-cover {
-  transform: translateX(0);
+  transform: translateX(0) rotate(0deg);
   opacity: 1;
 }
 
@@ -372,6 +377,43 @@
 
 .podium-name {
   animation: pack-pop 400ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.podium-burst {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.podium-burst i {
+  position: absolute;
+  top: -12%;
+  display: block;
+  width: 0.35rem;
+  height: 1.1rem;
+  border-radius: 1px;
+  background: var(--color-primary);
+  animation: podium-fall 1.5s ease-in both;
+}
+
+.podium-burst i:nth-child(odd) {
+  background: var(--color-success);
+}
+
+.podium-burst i:nth-child(3n) {
+  background: var(--color-danger);
+}
+
+@keyframes podium-fall {
+  from {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(110vh) rotate(220deg);
+    opacity: 0.15;
+  }
 }
 
 @keyframes pack-glow {
@@ -687,6 +729,7 @@
   .pack-sleeve,
   .podium-bar,
   .podium-name,
+  .podium-burst i,
   .disco-flash,
   .title-scramble,
   [data-theme="retro"] body::after {

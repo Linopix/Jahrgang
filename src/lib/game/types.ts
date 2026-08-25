@@ -249,7 +249,7 @@ export const VARIANT_BLURBS: Record<PlayVariant, string> = {
   original: "Interpret und Titel raten, danach einordnen. Das Cover bleibt verdeckt.",
   star: "Nur den Interpreten raten, dann einordnen. Das Cover bleibt verdeckt.",
   hook: "Nur den Titel raten, dann einordnen. Das Cover bleibt verdeckt.",
-  wild: "Kenner, Cover zu, Jahre auf der Leiste versteckt, und links ist später.",
+  wild: "Kenner, Cover zu, Jahre weg, links ist später — und die Platte läuft zu schnell oder zu langsam.",
 };
 
 export function hidesCover(variant: PlayVariant) {

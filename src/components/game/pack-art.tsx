@@ -45,21 +45,26 @@ function Sleeve({
 }) {
   return (
     <svg
-      viewBox="0 0 40 40"
+      viewBox="0 0 80 80"
       className={cn("shrink-0 rounded-sm shadow-border", className ?? "size-7 pack-art-in")}
       aria-hidden="true"
     >
-      <rect width="40" height="40" fill={a} />
-      <rect x="3" y="3" width="34" height="34" fill={b} opacity="0.92" />
-      <circle cx="20" cy="20" r="11" fill={a} />
-      <circle cx="20" cy="20" r="9.2" fill={c} />
-      <circle cx="20" cy="20" r="2.2" fill={a} />
+      <rect width="80" height="80" fill={a} />
+      <rect x="0" y="0" width="6" height="80" fill={c} opacity="0.7" />
+      <rect x="8" y="8" width="64" height="64" fill={b} />
+      <circle cx="40" cy="38" r="24" fill={a} />
+      <circle cx="40" cy="38" r="21.5" fill={c} opacity="0.92" />
+      <circle cx="40" cy="38" r="18" fill="none" stroke={a} strokeWidth="0.7" opacity="0.4" />
+      <circle cx="40" cy="38" r="14" fill="none" stroke={a} strokeWidth="0.7" opacity="0.35" />
+      <circle cx="40" cy="38" r="9" fill="none" stroke={a} strokeWidth="0.7" opacity="0.3" />
+      <circle cx="40" cy="38" r="5.5" fill={a} />
+      <circle cx="40" cy="38" r="2" fill={b} />
       <text
-        x="20"
-        y="36"
+        x="40"
+        y="73"
         textAnchor="middle"
         fill={a}
-        fontSize="5.5"
+        fontSize="9"
         fontFamily="ui-sans-serif, system-ui, sans-serif"
         fontWeight="700"
       >

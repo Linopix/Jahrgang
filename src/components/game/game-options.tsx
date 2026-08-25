@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { peekPlaylist } from "@/lib/game/playlist";
 import { sfxHover, sfxSlide, sfxTick } from "@/lib/game/audio";
@@ -36,6 +35,49 @@ type GameOptionsProps = {
 
 const CHIP =
   "flex h-12 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium transition-[background-color,color,transform,box-shadow] duration-150 ease-out hover:-translate-y-px active:scale-[0.96]";
+
+function SleeveChip({
+  selected,
+  label,
+  art,
+  packId,
+  genreId,
+  onSelect,
+}: {
+  selected: boolean;
+  label: string;
+  art: ReactNode;
+  packId?: string;
+  genreId?: string;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-pack={packId}
+      data-genre={genreId}
+      onMouseEnter={() => {
+        if (!selected) sfxHover();
+      }}
+      onClick={() => {
+        if (!selected) sfxTick();
+        onSelect();
+      }}
+      className={cn(
+        CHIP,
+        "overflow-hidden",
+        selected
+          ? "pack-selected col-span-2 h-auto min-h-12 flex-col items-stretch py-3 text-primary-fg bg-primary"
+          : "bg-raised text-fg shadow-border hover:bg-surface",
+      )}
+    >
+      <span className={cn("pack-sleeve", selected && "is-open")}>
+        <span className="pack-sleeve-inner flex justify-center">{art}</span>
+      </span>
+      <span className="truncate">{label}</span>
+    </button>
+  );
+}
 
 function Choice<T extends string | number>({
   items,
@@ -144,9 +186,6 @@ function PlaylistField({
     </div>
   );
 }
-
-const SELECT =
-  "h-12 w-full appearance-none rounded-md bg-surface px-4 pr-10 text-sm text-fg shadow-border outline-none transition-[box-shadow] focus:ring-2 focus:ring-primary/70";
 
 function SnapSlider({
   label,
@@ -258,42 +297,26 @@ function MixField({
 }) {
   return (
     <div className="mt-3 space-y-4 rounded-xl bg-raised p-4 shadow-border" data-mix-field>
-      <div className="pack-sleeve is-open">
-        <div className="pack-sleeve-inner">
-          <GenreArt id={value.mixGenre} className="pack-cover mx-auto mb-3" />
-        </div>
-      </div>
       <DualYearSlider
         from={value.mixFrom}
         to={value.mixTo}
         onChange={(mixFrom, mixTo) => onChange({ era: "mix", mixFrom, mixTo })}
       />
-      <label className="block">
-        <span className="mb-2 block text-xs font-medium tracking-[0.16em] text-muted uppercase">
-          Genre
-        </span>
-        <span className="relative flex items-center">
-          <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2">
-            <GenreArt id={value.mixGenre} />
-          </span>
-          <select
-            value={value.mixGenre}
-            aria-label="Genre"
-            onChange={(event) => {
-              sfxTick();
-              onChange({ era: "mix", mixGenre: event.target.value as GenreId });
-            }}
-            className={cn(SELECT, "pl-12")}
-          >
-            {GENRES.map((id) => (
-              <option key={id} value={id}>
-                {GENRE_LABELS[id]}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted" />
-        </span>
-      </label>
+      <div>
+        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Genre</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {GENRES.map((id) => (
+            <SleeveChip
+              key={id}
+              selected={value.mixGenre === id}
+              label={GENRE_LABELS[id]}
+              genreId={id}
+              art={<GenreArt id={id} className="pack-cover" />}
+              onSelect={() => onChange({ era: "mix", mixGenre: id })}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -369,32 +392,14 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
               </p>
               <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {group.ids.map((id) => (
-                  <button
+                  <SleeveChip
                     key={id}
-                    type="button"
-                    data-pack={id}
-                    onMouseEnter={() => {
-                      if (id !== value.era) sfxHover();
-                    }}
-                    onClick={() => {
-                      if (id !== value.era) sfxTick();
-                      onChange({ era: id });
-                    }}
-                    className={cn(
-                      CHIP,
-                      "overflow-hidden",
-                      value.era === id
-                        ? "pack-selected h-auto flex-col items-stretch py-2 text-primary-fg bg-primary"
-                        : "bg-raised text-fg shadow-border hover:bg-surface",
-                    )}
-                  >
-                    <span className={cn("pack-sleeve", value.era === id && "is-open")}>
-                      <span className="pack-sleeve-inner flex justify-center">
-                        <PackArt id={id} className="pack-cover" />
-                      </span>
-                    </span>
-                    <span className="truncate">{ERA_LABELS[id]}</span>
-                  </button>
+                    packId={id}
+                    selected={value.era === id}
+                    label={ERA_LABELS[id]}
+                    art={<PackArt id={id} className="pack-cover" />}
+                    onSelect={() => onChange({ era: id })}
+                  />
                 ))}
               </div>
             </div>

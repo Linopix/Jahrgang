@@ -4,7 +4,7 @@
 
 Ein Titel läuft. Name und Jahr bleiben verdeckt. Du ordnest ihn auf deiner Zeitlinie ein: links früher, rechts später. Wer zuerst alle Karten richtig liegen hat, gewinnt.
 
-Zwei Varianten: **Zeitstrahl** nur nach Jahr, **Kenner** mit Interpret und Titel. Keine Anmeldung. Läuft im Browser auf Handy und Rechner.
+Zwei Varianten: **Zeitstrahl** nur nach Jahr, **Kenner** mit Interpret und Titel. Dazu Blind, Star, Titel und **Verrückter** (Zeitlinie rückwärts, Jahre weg, Platte zu schnell oder zu langsam). Keine Anmeldung. Läuft im Browser auf Handy und Rechner.
 
 ![Jahrgang](public/og.jpg)
 

@@ -206,7 +206,7 @@ export function PlayScreen() {
             ? `${player.name} ist am Zug.`
             : kind === "both"
               ? reversesTimeline(variant)
-                ? "Titel und Interpret raten, dann einordnen. Links später, rechts früher."
+                ? "Titel und Interpret raten. Die Platte läuft verkehrt. Links später, rechts früher."
                 : "Titel und Interpret eintragen, dann auf der Zeitlinie einordnen."
               : kind === "artist"
                 ? "Nur den Interpreten raten, dann einordnen."
@@ -222,6 +222,7 @@ export function PlayScreen() {
         <div className="mt-4">
           <Vinyl
             spinning={playing}
+            reverse={reversesTimeline(variant)}
             artworkUrl={hidesCover(variant) ? undefined : current.artworkUrl}
             size="md"
           />

@@ -11,7 +11,7 @@ const STEPS = [
   {
     n: "02",
     title: "Hören",
-    body: "Ein neuer Titel spielt ohne Angabe von Name oder Jahr. Zeitstrahl: nur legen, Cover sichtbar. Blind: Cover verdeckt. Kenner, Star und Titel: zusätzlich raten. Verrückter: raten, Cover zu, Jahre versteckt, links ist später.",
+    body: "Ein neuer Titel spielt ohne Angabe von Name oder Jahr. Zeitstrahl: nur legen, Cover sichtbar. Blind: Cover verdeckt. Kenner, Star und Titel: zusätzlich raten. Verrückter: raten, Cover zu, Jahre versteckt, links ist später, und die Vorschau läuft zu schnell oder zu langsam.",
   },
   {
     n: "03",

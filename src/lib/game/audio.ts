@@ -324,11 +324,33 @@ export function setLobbyWanted(next: boolean) {
   applyUiVolume();
 }
 
-export function playPreview(url: string) {
+export function previewRate(variant: string, seed: string) {
+  if (variant !== "wild") return 1;
+  let hash = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    hash ^= seed.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) % 2 === 0 ? 0.82 : 1.19;
+}
+
+function setPitchLock(el: HTMLAudioElement, lock: boolean) {
+  el.preservesPitch = lock;
+  const extra = el as HTMLAudioElement & {
+    mozPreservesPitch?: boolean;
+    webkitPreservesPitch?: boolean;
+  };
+  extra.mozPreservesPitch = lock;
+  extra.webkitPreservesPitch = lock;
+}
+
+export function playPreview(url: string, rate = 1) {
   const el = ensureMusic();
   if (el.src !== url) {
     el.src = url;
   }
+  el.playbackRate = rate;
+  setPitchLock(el, rate === 1);
   el.currentTime = 0;
   return el.play();
 }
