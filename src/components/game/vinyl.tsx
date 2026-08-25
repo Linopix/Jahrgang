@@ -1,3 +1,4 @@
+import { sfxScratch } from "@/lib/game/audio";
 import { noteVinylClick, noteVinylLabel } from "@/lib/gags";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +26,13 @@ export function Vinyl({
   artworkUrl,
 }: VinylProps) {
   return (
-    <div className={cn("relative", sizes[size])} onClick={noteVinylClick}>
+    <div
+      className={cn("relative", sizes[size])}
+      onClick={() => {
+        sfxScratch();
+        noteVinylClick();
+      }}
+    >
       <div
         className={cn(
           "vinyl-disc size-full rounded-full",

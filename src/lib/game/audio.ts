@@ -545,20 +545,27 @@ function sampleFor(src: string) {
   return el;
 }
 
+const VINYL_SCRATCH = "/sfx/vinyl-scratch.mp3";
+const VINYL_START = "/sfx/vinyl-start.mp3";
+
 function preloadEmojiSfx() {
   for (const src of Object.values(EMOJI_FILES)) sampleFor(src);
+  sampleFor(VINYL_SCRATCH);
+  sampleFor(VINYL_START);
 }
 
-function playSample(src: string, gain = 0.7) {
+function playSample(src: string, gain = 0.7, rate = 1) {
   if (uiMuted) return;
   unlockAudio();
   const el = sampleFor(src);
   el.pause();
   el.currentTime = 0;
   el.volume = Math.min(1, gain);
+  el.playbackRate = rate;
   void el.play().catch(() => {
     const extra = new Audio(src);
     extra.volume = Math.min(1, gain);
+    extra.playbackRate = rate;
     void extra.play().catch(() => {});
   });
 }
@@ -603,31 +610,11 @@ export async function playStoreClip(song: { title: string; artist: string; year:
 }
 
 export function sfxScratch() {
-  const audioCtx = ensureCtx();
-  if (!sfxBus) return;
-  const now = audioCtx.currentTime;
-  noiseHit(sfxBus, now, 0.28, 0.14, 400, 4200);
-  const bpLen = Math.floor(audioCtx.sampleRate * 0.26);
-  const buffer = audioCtx.createBuffer(1, bpLen, audioCtx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bpLen; i++) data[i] = Math.random() * 2 - 1;
-  const src = audioCtx.createBufferSource();
-  src.buffer = buffer;
-  const bp = audioCtx.createBiquadFilter();
-  bp.type = "bandpass";
-  bp.Q.value = 7;
-  bp.frequency.setValueAtTime(420, now);
-  bp.frequency.exponentialRampToValueAtTime(2600, now + 0.07);
-  bp.frequency.exponentialRampToValueAtTime(180, now + 0.24);
-  const g = audioCtx.createGain();
-  g.gain.setValueAtTime(0.16, now);
-  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
-  src.connect(bp);
-  bp.connect(g);
-  g.connect(sfxBus);
-  src.start(now);
-  src.stop(now + 0.28);
-  tone({ freq: 340, freqEnd: 68, duration: 0.22, type: "triangle", gain: 0.045, filter: 1400 });
+  playSample(VINYL_SCRATCH, 0.86, 1 + (Math.random() * 2 - 1) * 0.08);
+}
+
+export function sfxVinylStart() {
+  playSample(VINYL_START, 0.9);
 }
 
 export function sfxPlace() {

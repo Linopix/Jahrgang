@@ -12,6 +12,7 @@ import {
   sfxHint,
   sfxPlace,
   sfxSkip,
+  sfxVinylStart,
   sfxWin,
   sfxWrong,
   stopPreview,
@@ -291,6 +292,7 @@ export const useGame = create<GameStore>((set, get) => ({
 
   startGame: async (config) => {
     unlockAudio();
+    sfxVinylStart();
     const variant = config.variant ?? DEFAULT_VARIANT;
     const custom = parseCustom(config.custom);
     const tokens = config.tokens ?? DEFAULT_TOKENS;

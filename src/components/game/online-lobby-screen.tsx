@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { GameOptions, roomConfigSummary } from "./game-options";
 import { shareUrl } from "@/lib/game/room-code";
 import { requestConfig, requestKick, requestLeave, requestStartOnline } from "@/lib/game/online-actions";
-import { sfxScratch } from "@/lib/game/audio";
 import { roomConfigFrom, useOnline } from "@/lib/game/online-store";
 import { playerSeats } from "@/lib/tv/mode";
 import { TV_LIVE } from "@/lib/tv/flags";
@@ -200,7 +199,6 @@ export function OnlineLobbyScreen() {
               className="w-full lg:max-w-xs"
               disabled={!canStart}
               onClick={() => {
-                sfxScratch();
                 void requestStartOnline();
               }}
             >

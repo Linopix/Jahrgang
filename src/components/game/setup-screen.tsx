@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { GameOptions } from "./game-options";
 import { useGame } from "@/lib/game/store";
 import { DEFAULT_ROOM_CONFIG, type RoomConfig } from "@/lib/game/types";
-import { sfxScratch } from "@/lib/game/audio";
 import { notePlayerName } from "@/lib/gags";
 
 const PARTY_NAMES = ["Alex", "Sam", "Kim", "Jo", "Mo", "Lee", "Nik", "Rae"];
@@ -112,7 +111,6 @@ export function SetupScreen() {
               size="lg"
               className="w-full lg:max-w-xs"
               onClick={() => {
-                sfxScratch();
                 void startGame({
                   mode,
                   names: visibleNames,
