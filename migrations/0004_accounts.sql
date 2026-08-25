@@ -21,3 +21,9 @@ CREATE TABLE IF NOT EXISTS jahrgang_board (
 
 CREATE INDEX IF NOT EXISTS jahrgang_board_rank
   ON jahrgang_board (wins DESC, points DESC, played_at DESC);
+
+CREATE INDEX IF NOT EXISTS jahrgang_board_played
+  ON jahrgang_board (played_at DESC);
+
+CREATE INDEX IF NOT EXISTS jahrgang_board_account
+  ON jahrgang_board (account_id);

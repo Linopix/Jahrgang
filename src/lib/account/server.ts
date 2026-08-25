@@ -1,10 +1,11 @@
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { getSql } from "@/lib/db";
+import type { Account, AccountStats, BoardRange, BoardRow } from "./types";
+
+export type { Account, AccountStats, BoardRange, BoardRow } from "./types";
 
 const COOKIE = "jg_konto";
 const MAX_AGE = 60 * 60 * 24 * 30;
-
-export type Account = { id: string; name: string };
 
 function env(key: string) {
   const value = process.env[key]?.trim();
@@ -118,6 +119,12 @@ export async function ensureAccountTables() {
       played_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`,
   );
+  await sql.query(
+    `CREATE INDEX IF NOT EXISTS jahrgang_board_played ON jahrgang_board (played_at DESC)`,
+  );
+  await sql.query(
+    `CREATE INDEX IF NOT EXISTS jahrgang_board_account ON jahrgang_board (account_id)`,
+  );
 }
 
 const attempts = new Map<string, { n: number; at: number }>();
@@ -198,39 +205,148 @@ export async function saveBoard(
   );
 }
 
-export type BoardRow = {
-  accountId: string;
-  name: string;
-  wins: number;
-  points: number;
-  heard: number;
+const RANGE_SQL: Record<Exclude<BoardRange, "all">, string> = {
+  day: `(date_trunc('day', now() AT TIME ZONE 'Europe/Berlin') AT TIME ZONE 'Europe/Berlin')`,
+  week: `(date_trunc('week', now() AT TIME ZONE 'Europe/Berlin') AT TIME ZONE 'Europe/Berlin')`,
 };
 
-export async function listBoard(limit = 25): Promise<BoardRow[]> {
+function hitOf(placed: number, heard: number) {
+  if (heard <= 0) return 0;
+  return Math.round((100 * placed) / heard);
+}
+
+function mapBoard(row: {
+  account_id: string;
+  name: string;
+  games: string | number;
+  wins: string | number;
+  points: string | number;
+  heard: string | number;
+  placed_ok: string | number;
+  rank: string | number;
+}): BoardRow {
+  const heard = Number(row.heard) || 0;
+  const placedOk = Number(row.placed_ok) || 0;
+  return {
+    accountId: row.account_id,
+    name: row.name,
+    games: Number(row.games) || 0,
+    wins: Number(row.wins) || 0,
+    points: Number(row.points) || 0,
+    heard,
+    placedOk,
+    hit: hitOf(placedOk, heard),
+    rank: Number(row.rank) || 0,
+  };
+}
+
+async function boardQuery(range: BoardRange, limit: number) {
   await ensureAccountTables();
   const sql = await getSql();
+  const where = range === "all" ? "" : `WHERE played_at >= ${RANGE_SQL[range]}`;
   const rows = await sql.query<{
     account_id: string;
     name: string;
+    games: string | number;
     wins: string | number;
     points: string | number;
     heard: string | number;
+    placed_ok: string | number;
+    rank: string | number;
   }>(
-    `SELECT account_id, name,
-            SUM(wins)::int AS wins,
-            SUM(points)::int AS points,
-            SUM(heard)::int AS heard
-     FROM jahrgang_board
-     GROUP BY account_id, name
-     ORDER BY SUM(wins) DESC, SUM(points) DESC
+    `SELECT account_id, name, games, wins, points, heard, placed_ok,
+            RANK() OVER (ORDER BY wins DESC, points DESC, heard DESC)::int AS rank
+     FROM (
+       SELECT account_id, name,
+              COUNT(*)::int AS games,
+              SUM(wins)::int AS wins,
+              SUM(points)::int AS points,
+              SUM(heard)::int AS heard,
+              SUM(placed_ok)::int AS placed_ok
+       FROM jahrgang_board
+       ${where}
+       GROUP BY account_id, name
+     ) grouped
+     ORDER BY rank ASC, name ASC
      LIMIT $1`,
     [limit],
   );
-  return rows.map((row) => ({
-    accountId: row.account_id,
-    name: row.name,
-    wins: Number(row.wins) || 0,
-    points: Number(row.points) || 0,
-    heard: Number(row.heard) || 0,
-  }));
+  return rows.map(mapBoard);
+}
+
+async function rankOf(accountId: string, range: BoardRange) {
+  await ensureAccountTables();
+  const sql = await getSql();
+  const where = range === "all" ? "" : `WHERE played_at >= ${RANGE_SQL[range]}`;
+  const rows = await sql.query<{ rank: string | number }>(
+    `SELECT rank FROM (
+       SELECT account_id,
+              RANK() OVER (ORDER BY wins DESC, points DESC, heard DESC)::int AS rank
+       FROM (
+         SELECT account_id,
+                SUM(wins)::int AS wins,
+                SUM(points)::int AS points,
+                SUM(heard)::int AS heard
+         FROM jahrgang_board
+         ${where}
+         GROUP BY account_id
+       ) grouped
+     ) ranked
+     WHERE account_id = $1
+     LIMIT 1`,
+    [accountId],
+  );
+  const rank = Number(rows[0]?.rank);
+  return rank > 0 ? rank : null;
+}
+
+export async function listBoard(range: BoardRange = "all", limit = 25) {
+  return boardQuery(range, limit);
+}
+
+export async function listBoards(limit = 20) {
+  const [day, week, all] = await Promise.all([
+    boardQuery("day", limit),
+    boardQuery("week", limit),
+    boardQuery("all", limit),
+  ]);
+  return { day, week, all };
+}
+
+export async function accountStats(accountId: string): Promise<AccountStats> {
+  await ensureAccountTables();
+  const sql = await getSql();
+  const rows = await sql.query<{
+    games: string | number;
+    wins: string | number;
+    points: string | number;
+    heard: string | number;
+    placed_ok: string | number;
+  }>(
+    `SELECT COUNT(*)::int AS games,
+            COALESCE(SUM(wins),0)::int AS wins,
+            COALESCE(SUM(points),0)::int AS points,
+            COALESCE(SUM(heard),0)::int AS heard,
+            COALESCE(SUM(placed_ok),0)::int AS placed_ok
+     FROM jahrgang_board
+     WHERE account_id = $1`,
+    [accountId],
+  );
+  const row = rows[0];
+  const heard = Number(row?.heard) || 0;
+  const placedOk = Number(row?.placed_ok) || 0;
+  const [day, week, all] = await Promise.all([
+    rankOf(accountId, "day"),
+    rankOf(accountId, "week"),
+    rankOf(accountId, "all"),
+  ]);
+  return {
+    games: Number(row?.games) || 0,
+    wins: Number(row?.wins) || 0,
+    points: Number(row?.points) || 0,
+    heard,
+    placedOk,
+    hit: hitOf(placedOk, heard),
+    rank: { day, week, all },
+  };
 }

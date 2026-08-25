@@ -1,15 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { listBoard, saveBoard } from "@/lib/account/server";
-import { readAccount } from "@/lib/account/server";
+import { accountStats, listBoards, readAccount, saveBoard } from "@/lib/account/server";
 
 export const Route = createFileRoute("/api/scores")({
   server: {
     handlers: {
-      GET: async () => {
+      GET: async ({ request }) => {
         try {
-          return Response.json({ board: await listBoard(25) });
+          const boards = await listBoards(20);
+          const me = readAccount(request);
+          const stats = me ? await accountStats(me.id) : null;
+          return Response.json({ ...boards, me: stats });
         } catch {
-          return Response.json({ board: [] });
+          return Response.json({ day: [], week: [], all: [], me: null });
         }
       },
       POST: async ({ request }) => {
