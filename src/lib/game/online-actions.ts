@@ -27,6 +27,19 @@ export function canControlTurn() {
   return Boolean(current && current.id === online.selfId);
 }
 
+export function canSeeCue() {
+  const online = useOnline.getState();
+  if (online.status !== "playing") return true;
+  return online.role === "host";
+}
+
+export function canStartNextRound() {
+  const online = useOnline.getState();
+  if (online.status !== "playing") return true;
+  if (online.role === "host") return true;
+  return online.nextRound === "all";
+}
+
 export function requestPlace(guess?: SongGuess) {
   const online = useOnline.getState();
   const game = useGame.getState();
@@ -143,14 +156,33 @@ export async function requestStartOnline() {
   pushState();
 }
 
+export async function requestAgain() {
+  const online = useOnline.getState();
+  const game = useGame.getState();
+  if (online.status !== "playing") {
+    if (game.lastSetup) {
+      await game.startGame(game.lastSetup);
+      return;
+    }
+    game.openSetup(game.mode);
+    return;
+  }
+  if (!canStartNextRound()) return;
+  if (online.role === "host") {
+    await requestStartOnline();
+    return;
+  }
+  online.setPending(true);
+  netSend({ t: "again" } satisfies OnlineMessage);
+}
+
 export function requestBackToLobby() {
   const online = useOnline.getState();
+  if (online.status === "playing" && !canStartNextRound()) return;
   useGame.getState().resetBoard();
   if (online.status === "off") return;
   online.markLobby();
-  if (online.role === "host") {
-    netSend({ t: "back-lobby" } satisfies OnlineMessage);
-  }
+  netSend({ t: "back-lobby" } satisfies OnlineMessage);
 }
 
 export function requestLeave() {

@@ -2,16 +2,19 @@ import { create } from "zustand";
 import {
   DEFAULT_MIX_FROM,
   DEFAULT_MIX_TO,
+  DEFAULT_NEXT_ROUND,
   DEFAULT_ROOM_CONFIG,
   DEFAULT_TARGET,
   DEFAULT_TOKENS,
   DEFAULT_VARIANT,
   isEraId,
   isGenreId,
+  isNextRoundPolicy,
   isPlayVariant,
   isTokenCount,
   type EraId,
   type GenreId,
+  type NextRoundPolicy,
   type PlayVariant,
   type RoomConfig,
   type TokenCount,
@@ -59,6 +62,7 @@ type OnlineStore = {
   target: 6 | 8 | 10;
   variant: PlayVariant;
   tokens: TokenCount;
+  nextRound: NextRoundPolicy;
   playlistUrl: string;
   playlistLabel: string;
   mixFrom: number;
@@ -94,6 +98,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   target: DEFAULT_TARGET,
   variant: DEFAULT_VARIANT,
   tokens: DEFAULT_TOKENS,
+  nextRound: DEFAULT_NEXT_ROUND,
   playlistUrl: "",
   playlistLabel: "",
   mixFrom: DEFAULT_MIX_FROM,
@@ -197,6 +202,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       target: config.target,
       variant: isPlayVariant(config.variant) ? config.variant : DEFAULT_VARIANT,
       tokens: isTokenCount(config.tokens) ? config.tokens : DEFAULT_TOKENS,
+      nextRound: isNextRoundPolicy(config.nextRound) ? config.nextRound : DEFAULT_NEXT_ROUND,
       playlistUrl: config.playlistUrl ?? "",
       playlistLabel: config.playlistLabel ?? "",
       mixFrom: typeof config.mixFrom === "number" ? config.mixFrom : DEFAULT_MIX_FROM,
@@ -216,6 +222,7 @@ export function roomConfigFrom(
     | "target"
     | "variant"
     | "tokens"
+    | "nextRound"
     | "playlistUrl"
     | "playlistLabel"
     | "mixFrom"
@@ -228,6 +235,7 @@ export function roomConfigFrom(
     target: state.target,
     variant: state.variant,
     tokens: state.tokens,
+    nextRound: state.nextRound,
     playlistUrl: state.playlistUrl,
     playlistLabel: state.playlistLabel,
     mixFrom: state.mixFrom,

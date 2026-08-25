@@ -320,9 +320,9 @@ export function songsForPack(pack: EraId, mix?: MixFilter): CatalogSong[] {
         return inKit(song, PARTY_SET);
       case "charts":
         return song.year >= 2015;
-      case "tiktok-2024":
+      case "viral-2024":
         return inKit(song, TIKTOK_2024_SET);
-      case "tiktok-2025":
+      case "viral-2025":
         return inKit(song, TIKTOK_2025_SET);
       case "rap-charts":
         return matchesGenre(song, "rap") && song.year >= 2015;

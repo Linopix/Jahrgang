@@ -12,9 +12,9 @@ test("each playable pack has enough songs for a round", () => {
   }
 });
 
-test("tiktok packs are distinct curated kits", () => {
-  const a = songsForPack("tiktok-2024");
-  const b = songsForPack("tiktok-2025");
+test("viral packs are distinct curated kits", () => {
+  const a = songsForPack("viral-2024");
+  const b = songsForPack("viral-2025");
   assert.ok(a.some((s) => s.title === "Espresso"));
   assert.ok(b.some((s) => s.title === "Ordinary" || s.title === "APT."));
   assert.ok(b.length >= 20);

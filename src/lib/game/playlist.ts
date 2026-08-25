@@ -1,15 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { matchCatalogSong, songId } from "./catalog";
-import { lookupPreview } from "./preview";
-import { parsePlaylistUrl, type PlaylistRef } from "./playlist-url";
+import { lookupYear } from "./year";
+import { parsePlaylistInput, type ListedTrack } from "./playlist-url";
 import type { CatalogSong } from "./types";
 
 const MAX_TRACKS = 80;
 
-export type PlaylistTrack = CatalogSong & {
-  previewUrl?: string;
-  artworkUrl?: string;
-};
+export type PlaylistTrack = CatalogSong;
 
 export type PlaylistPeek = {
   title: string;
@@ -17,88 +14,16 @@ export type PlaylistPeek = {
   url: string;
 };
 
-type RawTrack = {
-  title: string;
-  artist: string;
-  previewUrl?: string;
-  artworkUrl?: string;
-};
-
-function headers() {
-  return {
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    Accept: "text/html,application/json",
-    "Accept-Language": "de-DE,de;q=0.9,en;q=0.8",
-  };
-}
-
-type SpotifyEmbedTrack = {
-  title?: string;
-  subtitle?: string;
-  audioPreview?: { url?: string };
-};
-
-type SpotifyNextData = {
-  props?: {
-    pageProps?: {
-      state?: {
-        data?: {
-          entity?: {
-            name?: string;
-            title?: string;
-            trackList?: SpotifyEmbedTrack[];
-          };
-        };
-      };
-    };
-  };
-};
-
-async function fromSpotify(ref: Extract<PlaylistRef, { source: "spotify" }>): Promise<{
-  title: string;
-  tracks: RawTrack[];
-}> {
-  const url = `https://open.spotify.com/embed/${ref.kind}/${ref.id}`;
-  const res = await fetch(url, { headers: headers(), signal: AbortSignal.timeout(12000) });
-  if (!res.ok) throw new Error("spotify");
-  const html = await res.text();
-  const match = html.match(
-    /<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/,
-  );
-  if (!match?.[1]) throw new Error("spotify-parse");
-  const data = JSON.parse(match[1]) as SpotifyNextData;
-  const entity = data.props?.pageProps?.state?.data?.entity;
-  const list = (entity?.trackList ?? []).slice(0, MAX_TRACKS);
-  const tracks: RawTrack[] = [];
-  for (const row of list) {
-    const title = row.title?.trim();
-    const artist = row.subtitle?.split(",")[0]?.trim();
-    if (!title || !artist) continue;
-    tracks.push({
-      title,
-      artist,
-      previewUrl: row.audioPreview?.url || undefined,
-    });
-  }
-  return {
-    title: entity?.name || entity?.title || "Playlist",
-    tracks,
-  };
-}
-
 type DeezerTrack = {
   title?: string;
   artist?: { name?: string };
-  preview?: string;
-  album?: { cover_medium?: string; cover_big?: string; title?: string };
 };
 
-async function fromDeezer(ref: Extract<PlaylistRef, { source: "deezer" }>): Promise<{
+async function fromDeezer(kind: "playlist" | "album", id: string): Promise<{
   title: string;
-  tracks: RawTrack[];
+  tracks: ListedTrack[];
 }> {
-  const start = `https://api.deezer.com/${ref.kind}/${ref.id}`;
+  const start = `https://api.deezer.com/${kind}/${id}`;
   const first = await fetch(start, { signal: AbortSignal.timeout(10000) });
   if (!first.ok) throw new Error("deezer");
   const body = (await first.json()) as {
@@ -108,21 +33,15 @@ async function fromDeezer(ref: Extract<PlaylistRef, { source: "deezer" }>): Prom
     tracks?: { data?: DeezerTrack[]; next?: string };
   };
   if (body.error) throw new Error("deezer");
-  const tracks: RawTrack[] = [];
-  let nextUrl: string | undefined = undefined;
+  const tracks: ListedTrack[] = [];
   const initial = body.tracks?.data ?? [];
   for (const row of initial) {
     const title = row.title?.trim();
     const artist = row.artist?.name?.trim();
     if (!title || !artist) continue;
-    tracks.push({
-      title,
-      artist,
-      previewUrl: row.preview || undefined,
-      artworkUrl: row.album?.cover_big ?? row.album?.cover_medium,
-    });
+    tracks.push({ title, artist });
   }
-  nextUrl = body.tracks?.next;
+  let nextUrl = body.tracks?.next;
   while (nextUrl && tracks.length < MAX_TRACKS) {
     const page = await fetch(nextUrl, { signal: AbortSignal.timeout(10000) });
     if (!page.ok) break;
@@ -131,12 +50,7 @@ async function fromDeezer(ref: Extract<PlaylistRef, { source: "deezer" }>): Prom
       const title = row.title?.trim();
       const artist = row.artist?.name?.trim();
       if (!title || !artist) continue;
-      tracks.push({
-        title,
-        artist,
-        previewUrl: row.preview || undefined,
-        artworkUrl: row.album?.cover_big ?? row.album?.cover_medium,
-      });
+      tracks.push({ title, artist });
       if (tracks.length >= MAX_TRACKS) break;
     }
     nextUrl = json.next;
@@ -147,26 +61,36 @@ async function fromDeezer(ref: Extract<PlaylistRef, { source: "deezer" }>): Prom
   };
 }
 
-async function loadRaw(url: string): Promise<{ title: string; tracks: RawTrack[]; url: string }> {
-  const ref = parsePlaylistUrl(url);
-  if (!ref) {
-    throw new Error("unsupported");
+async function loadRaw(input: string): Promise<{ title: string; tracks: ListedTrack[]; url: string }> {
+  const ref = parsePlaylistInput(input);
+  if (!ref) throw new Error("unsupported");
+  if (ref.source === "list") {
+    return {
+      title: `Eigene Liste`,
+      tracks: ref.tracks.slice(0, MAX_TRACKS),
+      url: input.trim(),
+    };
   }
-  const packed = ref.source === "spotify" ? await fromSpotify(ref) : await fromDeezer(ref);
-  return { ...packed, url: url.trim() };
+  const packed = await fromDeezer(ref.kind, ref.id);
+  return { ...packed, url: input.trim() };
 }
 
-async function hydrate(tracks: RawTrack[]): Promise<PlaylistTrack[]> {
+async function hydrate(tracks: ListedTrack[]): Promise<PlaylistTrack[]> {
   const out: PlaylistTrack[] = [];
-  const pending: RawTrack[] = [];
+  const pending: ListedTrack[] = [];
 
   for (const raw of tracks) {
     const known = matchCatalogSong(raw.title, raw.artist);
     if (known) {
+      out.push(known);
+      continue;
+    }
+    if (raw.year && raw.year >= 1950) {
       out.push({
-        ...known,
-        previewUrl: raw.previewUrl,
-        artworkUrl: raw.artworkUrl,
+        id: songId(raw.title, raw.artist, raw.year),
+        title: raw.title,
+        artist: raw.artist,
+        year: raw.year,
       });
       continue;
     }
@@ -178,25 +102,14 @@ async function hydrate(tracks: RawTrack[]): Promise<PlaylistTrack[]> {
     const batch = pending.slice(i, i + concurrency);
     const resolved = await Promise.all(
       batch.map(async (raw) => {
-        const id = songId(raw.title, raw.artist, 0);
-        const found = await lookupPreview({
-          id,
-          title: raw.title,
-          artist: raw.artist,
-          year: 0,
-        });
-        const year = found.year;
-        const maxYear = new Date().getFullYear() + 1;
-        if (!year || year < 1950 || year > maxYear) return null;
-        const song: PlaylistTrack = {
+        const year = await lookupYear(raw.title, raw.artist);
+        if (!year) return null;
+        return {
           id: songId(raw.title, raw.artist, year),
           title: raw.title,
           artist: raw.artist,
           year,
-          previewUrl: found.previewUrl || raw.previewUrl,
-          artworkUrl: found.artworkUrl || raw.artworkUrl,
-        };
-        return song;
+        } satisfies PlaylistTrack;
       }),
     );
     for (const song of resolved) {
@@ -220,7 +133,7 @@ export const peekPlaylist = createServerFn({ method: "POST" })
       if (loaded.tracks.length < 4) {
         return {
           ok: false,
-          error: "Zu wenige Titel in der Playlist. Mindestens vier werden gebraucht.",
+          error: "Mindestens vier Zeilen: Interpret – Titel. Optional das Jahr.",
         };
       }
       return {
@@ -236,12 +149,12 @@ export const peekPlaylist = createServerFn({ method: "POST" })
       if (code === "unsupported") {
         return {
           ok: false,
-          error: "Bitte einen öffentlichen Spotify- oder Deezer-Link einfügen.",
+          error: "Titelliste einfügen (Interpret – Titel) oder einen öffentlichen Deezer-Link.",
         };
       }
       return {
         ok: false,
-        error: "Playlist nicht lesbar. Sie muss öffentlich sein.",
+        error: "Liste nicht lesbar. Öffentlichen Deezer-Link oder Textzeilen verwenden.",
       };
     }
   });

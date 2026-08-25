@@ -16,6 +16,7 @@ export function OnlineLobbyScreen() {
   const target = useOnline((s) => s.target);
   const variant = useOnline((s) => s.variant);
   const tokens = useOnline((s) => s.tokens);
+  const nextRound = useOnline((s) => s.nextRound);
   const playlistUrl = useOnline((s) => s.playlistUrl);
   const playlistLabel = useOnline((s) => s.playlistLabel);
   const mixFrom = useOnline((s) => s.mixFrom);
@@ -33,6 +34,7 @@ export function OnlineLobbyScreen() {
     target,
     variant,
     tokens,
+    nextRound,
     playlistUrl,
     playlistLabel,
     mixFrom,
@@ -81,7 +83,7 @@ export function OnlineLobbyScreen() {
           ? isHost
             ? "Raum wird geöffnet…"
             : `Verbinde mit ${roomCode}…`
-          : "Code oder Link teilen. Der Host startet, sobald alle verbunden sind."}
+          : "Code oder Link teilen. Der Host legt die Titel in seinem Musik-Abo auf."}
       </p>
 
       <div className="lg:mt-8 lg:grid lg:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)] lg:items-start lg:gap-12">
@@ -146,7 +148,7 @@ export function OnlineLobbyScreen() {
 
       {isHost ? (
         <div>
-          <GameOptions value={config} onChange={requestConfig} />
+          <GameOptions value={config} onChange={requestConfig} online />
           <Button
             size="lg"
             className="mt-8 w-full lg:max-w-xs"
@@ -154,7 +156,7 @@ export function OnlineLobbyScreen() {
             onClick={() => void requestStartOnline()}
           >
             {pending
-              ? "Titel werden geladen…"
+              ? "Repertoire wird gemischt…"
               : readyCount < 2
                 ? "Mindestens zwei Personen"
                 : "Abend starten"}

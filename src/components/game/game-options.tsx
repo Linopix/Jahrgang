@@ -6,6 +6,9 @@ import {
   ERA_BLURBS,
   ERA_LABELS,
   GENRE_LABELS,
+  NEXT_ROUND_BLURB,
+  NEXT_ROUND_LABELS,
+  NEXT_ROUND_OPTIONS,
   PACK_GROUPS,
   TARGET_OPTIONS,
   TOKEN_OPTIONS,
@@ -13,6 +16,7 @@ import {
   VARIANT_LABELS,
   decadeLabelYear,
   type GenreId,
+  type NextRoundPolicy,
   type PlayVariant,
   type RoomConfig,
   type TokenCount,
@@ -25,6 +29,7 @@ const GENRES: GenreId[] = ["all", "pop", "rock", "rap", "dance", "german"];
 type GameOptionsProps = {
   value: RoomConfig;
   onChange: (patch: Partial<RoomConfig>) => void;
+  online?: boolean;
 };
 
 function Choice<T extends string | number>({
@@ -101,23 +106,19 @@ function PlaylistField({
   return (
     <div className="mt-3 rounded-xl bg-raised p-4 shadow-border" data-playlist-field>
       <p className="text-sm text-muted">
-        Öffentlichen Link einfügen. Fehlt ein Jahr, rückt der Katalog nach.
+        Eine Zeile pro Titel: Interpret – Titel. Optional das Jahr. Alternativ ein
+        öffentlicher Deezer-Link (nur Metadaten, keine Wiedergabe).
       </p>
-      <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-        <input
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          placeholder="https://open.spotify.com/playlist/…"
-          autoComplete="off"
-          spellCheck={false}
-          className="h-12 min-w-0 flex-1 rounded-md bg-surface px-4 text-sm text-fg shadow-border outline-none transition-[box-shadow] placeholder:text-subtle focus:ring-2 focus:ring-primary/70"
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              void apply();
-            }
-          }}
-        />
+      <textarea
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        placeholder={"Queen – Bohemian Rhapsody – 1975\nNena – 99 Luftballons"}
+        autoComplete="off"
+        spellCheck={false}
+        rows={6}
+        className="mt-3 w-full rounded-md bg-surface px-4 py-3 text-sm text-fg shadow-border outline-none transition-[box-shadow] placeholder:text-subtle focus:ring-2 focus:ring-primary/70"
+      />
+      <div className="mt-2 flex justify-end">
         <Button
           type="button"
           variant="secondary"
@@ -183,7 +184,7 @@ function MixField({
   );
 }
 
-export function GameOptions({ value, onChange }: GameOptionsProps) {
+export function GameOptions({ value, onChange, online }: GameOptionsProps) {
   return (
     <div>
       <div className="mt-8 grid gap-8 lg:mt-0 lg:grid-cols-2">
@@ -220,6 +221,22 @@ export function GameOptions({ value, onChange }: GameOptionsProps) {
           <p className="mt-2 text-sm text-muted">Karten bis zum Sieg · Joker pro Person.</p>
         </section>
       </div>
+
+      {online ? (
+        <section className="mt-8">
+          <h2 className="text-sm font-medium text-fg">Nächste Runde</h2>
+          <div className="mt-3 max-w-md">
+            <Choice
+              items={NEXT_ROUND_OPTIONS}
+              value={value.nextRound}
+              onChange={(nextRound) => onChange({ nextRound: nextRound as NextRoundPolicy })}
+              label={(item) => NEXT_ROUND_LABELS[item]}
+              columns="grid-cols-2"
+            />
+          </div>
+          <p className="mt-2 text-sm text-muted">{NEXT_ROUND_BLURB[value.nextRound]}</p>
+        </section>
+      ) : null}
 
       <section className="mt-8">
         <h2 className="text-sm font-medium text-fg">Repertoire</h2>
@@ -260,11 +277,12 @@ export function GameOptions({ value, onChange }: GameOptionsProps) {
 
 export function roomConfigSummary(config: RoomConfig) {
   const joker = config.tokens === 0 ? "ohne Joker" : `${config.tokens} Joker`;
+  const round = config.nextRound === "all" ? "alle starten neu" : "Host startet neu";
   if (config.era === "playlist" && config.playlistLabel) {
-    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${config.playlistLabel}`;
+    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · ${config.playlistLabel}`;
   }
   if (config.era === "mix") {
-    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · Mix ${decadeLabelYear(config.mixFrom)}–${decadeLabelYear(config.mixTo)} · ${GENRE_LABELS[config.mixGenre]}`;
+    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · Mix ${decadeLabelYear(config.mixFrom)}–${decadeLabelYear(config.mixTo)} · ${GENRE_LABELS[config.mixGenre]}`;
   }
-  return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${ERA_LABELS[config.era]}`;
+  return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · ${ERA_LABELS[config.era]}`;
 }

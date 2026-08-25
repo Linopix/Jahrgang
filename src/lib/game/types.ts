@@ -13,8 +13,8 @@ export type EraId =
   | "dance"
   | "party"
   | "charts"
-  | "tiktok-2024"
-  | "tiktok-2025"
+  | "viral-2024"
+  | "viral-2025"
   | "rap-charts"
   | "mix"
   | "playlist";
@@ -26,6 +26,8 @@ export type GameMode = "party" | "solo";
 export type PlayVariant = "timeline" | "original";
 
 export type TokenCount = 0 | 1 | 2;
+
+export type NextRoundPolicy = "host" | "all";
 
 export type Phase =
   | "home"
@@ -46,10 +48,7 @@ export interface CatalogSong {
   genre?: Genre;
 }
 
-export interface ResolvedSong extends CatalogSong {
-  previewUrl: string;
-  artworkUrl?: string;
-}
+export type ResolvedSong = CatalogSong;
 
 export interface Player {
   id: string;
@@ -109,6 +108,7 @@ export interface RoomConfig {
   target: 6 | 8 | 10;
   variant: PlayVariant;
   tokens: TokenCount;
+  nextRound: NextRoundPolicy;
   playlistUrl: string;
   playlistLabel: string;
   mixFrom: number;
@@ -131,8 +131,8 @@ export const ERA_IDS: EraId[] = [
   "dance",
   "party",
   "charts",
-  "tiktok-2024",
-  "tiktok-2025",
+  "viral-2024",
+  "viral-2025",
   "rap-charts",
   "mix",
   "playlist",
@@ -153,11 +153,11 @@ export const ERA_LABELS: Record<EraId, string> = {
   dance: "Dance",
   party: "Party",
   charts: "Charts",
-  "tiktok-2024": "TikTok 2024",
-  "tiktok-2025": "TikTok 2025",
+  "viral-2024": "Viral 2024",
+  "viral-2025": "Viral 2025",
   "rap-charts": "Rap Charts",
   mix: "Mix",
-  playlist: "Spotify",
+  playlist: "Liste",
 };
 
 export const ERA_BLURBS: Record<EraId, string> = {
@@ -175,11 +175,11 @@ export const ERA_BLURBS: Record<EraId, string> = {
   dance: "Dance, Disco, elektronische Hits.",
   party: "Laut, bekannt, für den Abend.",
   charts: "Große Single-Hits ab 2015.",
-  "tiktok-2024": "Virale Titel von 2024.",
-  "tiktok-2025": "Virale Titel von 2025.",
+  "viral-2024": "Viel gespielte Titel von 2024.",
+  "viral-2025": "Viel gespielte Titel von 2025.",
   "rap-charts": "Hip-Hop-Hits der letzten Jahre.",
   mix: "Zeitraum und Genre selbst wählen.",
-  playlist: "Öffentliche Spotify- oder Deezer-Playlist.",
+  playlist: "Eigene Titelliste. Wiedergabe in deinem Musik-Abo.",
 };
 
 export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [
@@ -193,7 +193,7 @@ export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [
   },
   {
     title: "Kits",
-    ids: ["all", "party", "charts", "tiktok-2024", "tiktok-2025", "rap-charts"],
+    ids: ["all", "party", "charts", "viral-2024", "viral-2025", "rap-charts"],
   },
   {
     title: "Eigene",
@@ -203,12 +203,12 @@ export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [
 
 export const VARIANT_LABELS: Record<PlayVariant, string> = {
   timeline: "Zeitstrahl",
-  original: "Original",
+  original: "Kenner",
 };
 
 export const VARIANT_BLURBS: Record<PlayVariant, string> = {
-  timeline: "Nur das Erscheinungsjahr. Das Cover darf während des Hörens sichtbar sein.",
-  original: "Interpret und Titel raten, danach einordnen. Das Cover bleibt bis zum Aufdecken verdeckt.",
+  timeline: "Nur das Erscheinungsjahr. Der Host legt in seinem Abo auf.",
+  original: "Interpret und Titel raten, danach einordnen. Online sieht nur der Host den Namen.",
 };
 
 export const GENRE_LABELS: Record<GenreId, string> = {
@@ -220,12 +220,23 @@ export const GENRE_LABELS: Record<GenreId, string> = {
   german: "Deutsch",
 };
 
+export const NEXT_ROUND_OPTIONS = ["host", "all"] as const;
+export const NEXT_ROUND_LABELS: Record<NextRoundPolicy, string> = {
+  host: "Nur Host",
+  all: "Alle",
+};
+export const NEXT_ROUND_BLURB: Record<NextRoundPolicy, string> = {
+  host: "Nach dem Sieg startet nur der Host neu.",
+  all: "Jede Person im Raum darf die nächste Runde starten.",
+};
+
 export const DECADE_OPTIONS = [1960, 1970, 1980, 1990, 2000, 2010, 2020] as const;
 export const TARGET_OPTIONS = [6, 8, 10] as const;
 export const TOKEN_OPTIONS = [0, 1, 2] as const;
 export const DEFAULT_TARGET = 8;
 export const DEFAULT_TOKENS: TokenCount = 2;
 export const DEFAULT_VARIANT: PlayVariant = "timeline";
+export const DEFAULT_NEXT_ROUND: NextRoundPolicy = "host";
 export const DEFAULT_MIX_FROM = 1980;
 export const DEFAULT_MIX_TO = 2020;
 export const SOLO_LIVES = 3;
@@ -235,6 +246,7 @@ export const DEFAULT_ROOM_CONFIG: RoomConfig = {
   target: DEFAULT_TARGET,
   variant: DEFAULT_VARIANT,
   tokens: DEFAULT_TOKENS,
+  nextRound: DEFAULT_NEXT_ROUND,
   playlistUrl: "",
   playlistLabel: "",
   mixFrom: DEFAULT_MIX_FROM,
@@ -248,6 +260,10 @@ export function isPlayVariant(value: unknown): value is PlayVariant {
 
 export function isTokenCount(value: unknown): value is TokenCount {
   return value === 0 || value === 1 || value === 2;
+}
+
+export function isNextRoundPolicy(value: unknown): value is NextRoundPolicy {
+  return value === "host" || value === "all";
 }
 
 export function isEraId(value: unknown): value is EraId {

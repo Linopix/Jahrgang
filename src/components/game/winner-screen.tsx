@@ -1,11 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Timeline } from "./timeline";
 import { Vinyl } from "./vinyl";
-import { isOnlinePlay, requestBackToLobby, requestLeave } from "@/lib/game/online-actions";
+import {
+  canStartNextRound,
+  isOnlinePlay,
+  requestAgain,
+  requestBackToLobby,
+  requestLeave,
+} from "@/lib/game/online-actions";
 import { rankPlayers } from "@/lib/game/engine";
 import { useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
-import { SOLO_LIVES, VARIANT_LABELS } from "@/lib/game/types";
+import { NEXT_ROUND_BLURB, SOLO_LIVES, VARIANT_LABELS } from "@/lib/game/types";
 
 export function WinnerScreen() {
   const players = useGame((s) => s.players);
@@ -16,6 +22,9 @@ export function WinnerScreen() {
   const openHome = useGame((s) => s.openHome);
   const online = isOnlinePlay();
   const isHost = useOnline((s) => s.role) === "host";
+  const nextRound = useOnline((s) => s.nextRound);
+  const pending = useOnline((s) => s.pending);
+  const mayStart = !online || canStartNextRound();
   const original = variant === "original";
   const ranked = rankPlayers(players);
   const champ = ranked[0];
@@ -71,25 +80,38 @@ export function WinnerScreen() {
       <div className="mt-10 flex flex-col gap-3 sm:flex-row">
         {online ? (
           <>
-            {isHost ? (
-              <Button size="lg" className="flex-1" onClick={requestBackToLobby}>
-                Zurück zur Lobby
+            {mayStart ? (
+              <Button
+                size="lg"
+                className="flex-1"
+                disabled={pending}
+                onClick={() => void requestAgain()}
+              >
+                Nächste Runde
               </Button>
             ) : (
               <p className="flex-1 self-center text-center text-sm text-muted">
-                Der Host startet die nächste Runde.
+                {NEXT_ROUND_BLURB[nextRound]}
               </p>
             )}
+            {mayStart ? (
+              <Button size="lg" variant="secondary" className="flex-1" onClick={requestBackToLobby}>
+                {isHost ? "Zur Lobby" : "Zurück zur Lobby"}
+              </Button>
+            ) : null}
             <Button size="lg" variant="secondary" className="flex-1" onClick={requestLeave}>
               Raum verlassen
             </Button>
           </>
         ) : (
           <>
-            <Button size="lg" className="flex-1" onClick={() => openSetup(mode)}>
+            <Button size="lg" className="flex-1" onClick={() => void requestAgain()}>
               Nochmal
             </Button>
-            <Button size="lg" variant="secondary" className="flex-1" onClick={openHome}>
+            <Button size="lg" variant="secondary" className="flex-1" onClick={() => openSetup(mode)}>
+              Einstellungen
+            </Button>
+            <Button size="lg" variant="ghost" className="flex-1" onClick={openHome}>
               Zum Start
             </Button>
           </>

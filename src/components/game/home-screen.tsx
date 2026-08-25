@@ -1,4 +1,5 @@
 import { Disc3, Radio, User, Users } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Vinyl } from "./vinyl";
 import { useGame } from "@/lib/game/store";
@@ -22,8 +23,8 @@ export function HomeScreen() {
           Jahrgang
         </h1>
         <p className="mt-4 max-w-md text-pretty text-base text-muted sm:text-lg">
-          Hits hören und auf die Zeitlinie legen. Zeitstrahl nach Jahr, Original
-          mit Interpret und Titel.
+          Hits hören und auf die Zeitlinie legen. Zeitstrahl nach Jahr, Kenner
+          mit Interpret und Titel. Musik kommt aus deinem eigenen Abo.
         </p>
       </header>
 
@@ -74,6 +75,11 @@ export function HomeScreen() {
         <Vinyl size="lg" spinning />
       </div>
       </div>
+      <p className="mt-8 text-center text-xs text-subtle lg:mt-10 lg:text-left">
+        <Link to="/hinweise" className="hover:text-fg">
+          Hinweise
+        </Link>
+      </p>
     </main>
   );
 }

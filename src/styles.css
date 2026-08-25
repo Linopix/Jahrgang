@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "@fontsource-variable/figtree";
+@import "@fontsource-variable/fraunces";
 
 @theme {
   --color-bg: #0c0b0a;
@@ -17,8 +19,8 @@
   --color-danger: #c45c4a;
   --color-groove: #12110f;
 
-  --font-sans: "Figtree", "Segoe UI", system-ui, sans-serif;
-  --font-display: "Fraunces", "Times New Roman", serif;
+  --font-sans: "Figtree Variable", "Figtree", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Fraunces Variable", "Fraunces", "Times New Roman", serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   --radius-xs: 4px;

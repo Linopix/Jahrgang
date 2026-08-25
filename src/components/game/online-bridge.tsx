@@ -5,7 +5,8 @@ import { isOnlineMessage, type MemberWire, type OnlineMessage } from "@/lib/game
 import { bindNet } from "@/lib/game/net";
 import { useGame } from "@/lib/game/store";
 import { useOnline, type OnlineMember } from "@/lib/game/online-store";
-import { DEFAULT_ROOM_CONFIG, DEFAULT_TOKENS, DEFAULT_VARIANT, isPlayVariant, isTokenCount } from "@/lib/game/types";
+import { requestStartOnline } from "@/lib/game/online-actions";
+import { DEFAULT_NEXT_ROUND, DEFAULT_ROOM_CONFIG, DEFAULT_TOKENS, DEFAULT_VARIANT, isNextRoundPolicy, isPlayVariant, isTokenCount } from "@/lib/game/types";
 import type { PeerInfo } from "@/lib/multiplayer";
 
 const JOIN_TIMEOUT_MS = 14000;
@@ -34,6 +35,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   const target = useOnline((s) => s.target);
   const variant = useOnline((s) => s.variant);
   const tokens = useOnline((s) => s.tokens);
+  const nextRound = useOnline((s) => s.nextRound);
   const playlistUrl = useOnline((s) => s.playlistUrl);
   const playlistLabel = useOnline((s) => s.playlistLabel);
   const mixFrom = useOnline((s) => s.mixFrom);
@@ -114,6 +116,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       target,
       variant,
       tokens,
+      nextRound,
       playlistUrl,
       playlistLabel,
       mixFrom,
@@ -121,7 +124,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       mixGenre,
     };
     p2p.send(msg);
-  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, members]);
+  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, members]);
 
   useEffect(() => {
     return p2p.onMessage((from, data, channel) => {
@@ -193,6 +196,7 @@ function handleMessage(
       target: msg.target,
       variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
       tokens: isTokenCount(msg.tokens) ? msg.tokens : DEFAULT_TOKENS,
+      nextRound: isNextRoundPolicy(msg.nextRound) ? msg.nextRound : DEFAULT_NEXT_ROUND,
       playlistUrl: msg.playlistUrl ?? "",
       playlistLabel: msg.playlistLabel ?? "",
       mixFrom: msg.mixFrom ?? DEFAULT_ROOM_CONFIG.mixFrom,
@@ -212,6 +216,7 @@ function handleMessage(
       target: msg.target,
       variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
       tokens: isTokenCount(msg.tokens) ? msg.tokens : DEFAULT_TOKENS,
+      nextRound: isNextRoundPolicy(msg.nextRound) ? msg.nextRound : DEFAULT_NEXT_ROUND,
       playlistUrl: msg.playlistUrl ?? "",
       playlistLabel: msg.playlistLabel ?? "",
       mixFrom: msg.mixFrom ?? DEFAULT_ROOM_CONFIG.mixFrom,
@@ -248,8 +253,24 @@ function handleMessage(
   }
 
   if (msg.t === "back-lobby") {
+    if (online.role === "host") {
+      if (from === ctx.selfId) return;
+      if (online.nextRound !== "all") return;
+      game.resetBoard();
+      online.markLobby();
+      ctx.send({ t: "back-lobby" });
+      return;
+    }
+    if (from !== online.hostId) return;
     game.resetBoard();
     online.markLobby();
+    return;
+  }
+
+  if (msg.t === "again") {
+    if (online.role !== "host") return;
+    if (online.nextRound !== "all") return;
+    void requestStartOnline();
     return;
   }
 

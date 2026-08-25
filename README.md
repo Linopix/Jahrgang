@@ -4,7 +4,9 @@
 
 Ein Titel läuft. Name und Jahr bleiben verdeckt. Du ordnest ihn auf deiner Zeitlinie ein: links früher, rechts später. Wer zuerst alle Karten richtig liegen hat, gewinnt.
 
-Zwei Varianten: **Zeitstrahl** nur nach Jahr, **Original** mit Interpret und Titel. Keine Anmeldung. Läuft im Browser auf Handy und Rechner.
+Zwei Varianten: **Zeitstrahl** nur nach Jahr, **Kenner** mit Interpret und Titel. Keine Anmeldung. Läuft im Browser auf Handy und Rechner.
+
+Jahrgang spielt keine Musikdateien. Der Host öffnet den Titel in seinem eigenen Abo und teilt den Ton — zum Beispiel in Discord.
 
 ![Jahrgang](public/og.jpg)
 
@@ -12,13 +14,13 @@ Zwei Varianten: **Zeitstrahl** nur nach Jahr, **Original** mit Interpret und Tit
 
 Jede Person beginnt mit einer offenen Karte. Dann kommt ein neuer Titel. Du hörst ihn und wählst den Platz auf deiner Zeitlinie. Sitzt die Lage, bleibt die Karte. Liegt sie falsch, geht sie zurück.
 
-**Zeitstrahl** ist das klassische Einordnen nach Erscheinungsjahr.
+**Zeitstrahl** ist das Einordnen nach Erscheinungsjahr.
 
-**Original** verlangt zusätzlich einen Tipp zu Interpret und Titel. Das Cover bleibt bis zum Aufdecken verdeckt. Richtige Tipps zählen als Treffer, die Karte selbst hängt weiter am Jahr.
+**Kenner** verlangt zusätzlich einen Tipp zu Interpret und Titel. Richtige Tipps zählen als Treffer, die Karte selbst hängt weiter am Jahr.
 
 Joker nach Einstellung: keine, eine oder zwei. Damit lässt sich das Jahrzehnt anzeigen oder der Titel überspringen.
 
-Ziel sind 6, 8 oder 10 Karten. Repertoire als Pack: Jahrzehnt, Stil, Party, Charts, Rap Charts, TikTok 2024 und 2025. Mix aus Zeitraum plus Genre. Oder Spotify unter Repertoire – öffentlicher Playlist-Link.
+Ziel sind 6, 8 oder 10 Karten. Repertoire als Pack: Jahrzehnt, Stil, Party, Charts, Rap Charts, Viral 2024 und 2025. Mix aus Zeitraum plus Genre. Oder eine eigene Titelliste.
 
 ## Mit anderen spielen
 
@@ -26,23 +28,23 @@ Ziel sind 6, 8 oder 10 Karten. Repertoire als Pack: Jahrzehnt, Stil, Party, Char
 2. Namen eingeben, **Raum öffnen**.
 3. Den Code oder den Link an die Runde schicken.
 4. Die anderen treten bei.
-5. Der Host wählt Spiel, Repertoire und startet.
+5. Der Host wählt Spiel, Repertoire und ob nur der Host oder alle die nächste Runde starten dürfen.
 
-Nur wer am Zug ist, legt. Alle hören denselben Titel auf ihrem Gerät. Bis zu acht Personen.
+Nur wer am Zug ist, legt. Alle hören denselben Titel — über Discord oder denselben Raum, nicht über die Website. Bis zu acht Personen.
 
 ## Ein Bildschirm oder Solo
 
-**Ein Bildschirm:** ein Gerät, reihum. Gut für denselben Tisch.
+**Ein Bildschirm:** ein Gerät, reihum. Gut für denselben Tisch. Zum Auflegen den Titel im eigenen Abo öffnen.
 
 **Solo:** eine Zeitlinie, drei Fehlversuche.
 
 ## Hinweise
 
-Die Vorschauen kommen von iTunes, Deezer oder der Playlist. Ohne Internet startet keine Runde. Die Playlist muss öffentlich sein. Spotify spielt nicht live, es werden nur die 30-Sekunden-Vorschauen gelesen.
-
-Wenn jemand den Raum nicht findet: dieselbe Website öffnen, nicht eine lokale Datei. Code ohne Null und Eins vorlesen (die Zeichen gibt es im Code nicht).
+Ohne Internet startet keine Online-Runde. Code ohne Null und Eins vorlesen.
 
 Kleine Tippfehler beim Raten sind in Ordnung. „Beatles“ zählt für The Beatles, „YMCA“ für Y.M.C.A.
+
+Mehr unter [Hinweise](https://jahrgang.vercel.app/hinweise).
 
 ## Entwicklung
 

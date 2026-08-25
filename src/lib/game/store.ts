@@ -3,10 +3,7 @@ import { songsForPack } from "./packs";
 import { canPlace, decadeLabel, fisherYates, insertSong, winner } from "./engine";
 import { scoreGuesses } from "./guess";
 import { loadPlaylistSongs, type PlaylistTrack } from "./playlist";
-import { resolvePreviews } from "./preview";
 import {
-  pausePreview,
-  playPreview,
   sfxCorrect,
   sfxPlace,
   sfxWin,
@@ -56,6 +53,7 @@ type GameStore = {
   decadeHint: string | null;
   loadProgress: { done: number; total: number };
   loadError: string | null;
+  lastSetup: SetupConfig | null;
   rulesOpen: boolean;
   volume: number;
   muted: boolean;
@@ -135,6 +133,7 @@ export const useGame = create<GameStore>((set, get) => ({
   decadeHint: null,
   loadProgress: { done: 0, total: 1 },
   loadError: null,
+  lastSetup: null,
   rulesOpen: false,
   volume: 0.85,
   muted: false,
@@ -199,8 +198,6 @@ export const useGame = create<GameStore>((set, get) => ({
 
   applySnapshot: (snap) => {
     const prev = get();
-    const songChanged =
-      prev.current?.id !== snap.current?.id || prev.phase !== snap.phase;
     set({
       phase: snap.phase,
       mode: snap.mode,
@@ -219,20 +216,12 @@ export const useGame = create<GameStore>((set, get) => ({
           : null,
       loadError: null,
     });
-    if (snap.phase === "listen" && snap.current && songChanged) {
-      void playPreview(snap.current.previewUrl);
-    }
     if (snap.phase === "reveal" && prev.phase !== "reveal") {
-      pausePreview();
       if (snap.lastResult?.correct) sfxCorrect();
       else sfxWrong();
     }
     if (snap.phase === "winner" && prev.phase !== "winner") {
-      stopPreview();
       if (snap.lastResult?.correct) sfxWin();
-    }
-    if (snap.phase === "loading" && prev.phase !== "loading") {
-      stopPreview();
     }
   },
 
@@ -246,6 +235,7 @@ export const useGame = create<GameStore>((set, get) => ({
       era: config.era,
       target: config.target,
       variant,
+      lastSetup: config,
       loadProgress: { done: 0, total: POOL_SIZE },
       loadError: null,
     });
@@ -267,7 +257,7 @@ export const useGame = create<GameStore>((set, get) => ({
       if (config.era === "playlist" && !config.playlistUrl) {
         set({
           phase: "setup",
-          loadError: "Bitte einen öffentlichen Spotify- oder Deezer-Link übernehmen.",
+          loadError: "Bitte eine Titelliste mit mindestens vier Zeilen übernehmen.",
         });
         return false;
       }
@@ -285,7 +275,7 @@ export const useGame = create<GameStore>((set, get) => ({
           genre: config.mixGenre ?? "all",
         }),
       );
-      const pool: Array<CatalogSong | PlaylistTrack> = imported.length
+      const pool: CatalogSong[] = imported.length
         ? [...fisherYates(imported), ...catalogPool]
         : catalogPool;
       const resolved: ResolvedSong[] = [];
@@ -294,35 +284,9 @@ export const useGame = create<GameStore>((set, get) => ({
 
       for (const song of pool) {
         if (resolved.length >= needed) break;
-        if (seen.has(song.id)) continue;
-        const ready = "previewUrl" in song ? song.previewUrl : undefined;
-        if (ready) {
-          seen.add(song.id);
-          resolved.push({
-            ...song,
-            previewUrl: ready,
-            artworkUrl: "artworkUrl" in song ? song.artworkUrl : undefined,
-          });
-          set({ loadProgress: { done: Math.min(resolved.length, needed), total: needed } });
-        }
-      }
-
-      for (let i = 0; i < pool.length && resolved.length < needed; i += 8) {
-        const slice = pool.slice(i, i + 8).filter((song) => !seen.has(song.id));
-        slice.forEach((song) => seen.add(song.id));
-        if (slice.length === 0) continue;
-        const results = await resolvePreviews({ data: { queries: slice } });
-        for (const result of results) {
-          if (!result.previewUrl) continue;
-          const song = slice.find((row) => row.id === result.id);
-          if (!song) continue;
-          resolved.push({
-            ...song,
-            year: song.year || result.year || song.year,
-            previewUrl: result.previewUrl,
-            artworkUrl: result.artworkUrl ?? undefined,
-          });
-        }
+        if (seen.has(song.id) || !song.year) continue;
+        seen.add(song.id);
+        resolved.push(song);
         set({ loadProgress: { done: Math.min(resolved.length, needed), total: needed } });
       }
 
@@ -330,8 +294,8 @@ export const useGame = create<GameStore>((set, get) => ({
         set({
           phase: "setup",
           loadError: config.playlistUrl
-            ? "Zu wenige Titel mit Jahr und Vorschau. Playlist öffentlich teilen oder Repertoire nutzen."
-            : "Zu wenige Songs mit Vorschau gefunden. Anderes Repertoire wählen oder später nochmal versuchen.",
+            ? "Zu wenige Titel mit Jahr. Jahr an die Zeile hängen oder Repertoire nutzen."
+            : "Zu wenige Titel im Repertoire. Anderes Pack wählen.",
         });
         return false;
       }
@@ -351,12 +315,11 @@ export const useGame = create<GameStore>((set, get) => ({
         phase: "listen",
         loadProgress: { done: resolved.length, total: resolved.length },
       });
-      if (current) void playPreview(current.previewUrl);
       return true;
     } catch {
       set({
         phase: "setup",
-        loadError: "Vorschauen konnten nicht geladen werden. Verbindung prüfen und erneut starten.",
+        loadError: "Repertoire konnte nicht geladen werden. Eingabe prüfen und erneut starten.",
       });
       return false;
     }
@@ -377,7 +340,6 @@ export const useGame = create<GameStore>((set, get) => ({
     if (phase !== "listen" || !current || selectedSlot === null) return;
     const player = players[currentPlayerIndex];
     if (!player) return;
-    pausePreview();
     const correct = canPlace(player.timeline, selectedSlot, current.year);
     const scored =
       variant === "original"
@@ -413,7 +375,6 @@ export const useGame = create<GameStore>((set, get) => ({
   nextTurn: (opts) => {
     const { phase, players, currentPlayerIndex, deck, mode, target, lastResult } = get();
     if (phase !== "reveal") return;
-    stopPreview();
     if (isOver(players, target, mode) || deck.length === 0) {
       if (lastResult?.correct && winner(players, target)) sfxWin();
       set({ phase: "winner", current: null });
@@ -430,7 +391,6 @@ export const useGame = create<GameStore>((set, get) => ({
       decadeHint: null,
       phase: "listen",
     });
-    if (current) void playPreview(current.previewUrl);
   },
 
   useDecade: () => {
@@ -451,7 +411,6 @@ export const useGame = create<GameStore>((set, get) => ({
     if (phase !== "listen" || !current || deck.length === 0) return;
     const player = players[currentPlayerIndex];
     if (!player || player.tokens <= 0) return;
-    stopPreview();
     const leftover = current;
     const next = deck[0];
     if (!next) return;
@@ -465,13 +424,10 @@ export const useGame = create<GameStore>((set, get) => ({
       selectedSlot: null,
       decadeHint: null,
     });
-    void playPreview(next.previewUrl);
   },
 
   replay: () => {
-    const { current, phase } = get();
-    if (!current || phase !== "listen") return;
-    void playPreview(current.previewUrl);
+    // Playback lives in the player's own music app. Nothing to replay here.
   },
 }));
 
