@@ -71,7 +71,7 @@ export function HomeScreen() {
       </div>
       </div>
 
-      <div className="flex justify-center py-10 lg:py-0">
+      <div className="flex justify-center py-10 transition-transform duration-300 ease-out hover:scale-[1.03] lg:py-0">
         <Vinyl size="lg" spinning />
       </div>
       </div>

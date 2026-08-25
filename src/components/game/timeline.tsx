@@ -33,7 +33,7 @@ export function Timeline({
                   aria-label={`Platz ${index + 1} wählen`}
                   onClick={() => onSelectSlot?.(index)}
                   className={cn(
-                    "flex h-36 w-11 shrink-0 items-center justify-center rounded-sm border border-dashed transition-[background-color,border-color,color,transform] duration-150 ease-out active:scale-[0.96]",
+                    "flex h-36 w-11 shrink-0 items-center justify-center rounded-sm border border-dashed transition-[background-color,border-color,color,transform] duration-150 ease-out hover:-translate-y-px active:scale-[0.96]",
                     selected
                       ? "scale-105 border-primary bg-primary/20 text-primary"
                       : "border-border bg-raised/60 text-muted hover:border-primary/50 hover:text-fg",

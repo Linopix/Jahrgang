@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { peekPlaylist } from "@/lib/game/playlist";
-import { sfxTick } from "@/lib/game/audio";
+import { sfxHover, sfxTick } from "@/lib/game/audio";
 import {
   DECADE_OPTIONS,
   ERA_BLURBS,
@@ -34,7 +34,7 @@ type GameOptionsProps = {
 };
 
 const CHIP =
-  "h-12 rounded-md px-3 text-sm font-medium transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.96]";
+  "h-12 rounded-md px-3 text-sm font-medium transition-[background-color,color,transform,box-shadow] duration-150 ease-out hover:-translate-y-px active:scale-[0.96]";
 
 function Choice<T extends string | number>({
   items,
@@ -55,6 +55,9 @@ function Choice<T extends string | number>({
         <button
           key={String(item)}
           type="button"
+          onMouseEnter={() => {
+            if (item !== value) sfxHover();
+          }}
           onClick={() => {
             if (item !== value) sfxTick();
             onChange(item);
@@ -259,6 +262,9 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
                     key={id}
                     type="button"
                     data-pack={id}
+                    onMouseEnter={() => {
+                      if (id !== value.era) sfxHover();
+                    }}
                     onClick={() => {
                       if (id !== value.era) sfxTick();
                       onChange({ era: id });

@@ -1,9 +1,12 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
+import { ThemePicker } from "@/components/game/theme-picker";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "Jahrgang";
+
+const THEME_BOOT = `(function(){try{var t=localStorage.getItem("jahrgang-theme");if(t==="night"||t==="paper"||t==="ink"||t==="ember")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`;
 
 export const Route = createRootRoute({
   head: () => ({
@@ -29,12 +32,14 @@ export const Route = createRootRoute({
     <html lang="de" className="antialiased" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
       </head>
       <body className="groove-bg min-h-dvh bg-bg text-fg">
         <PreviewHostBridge />
         <AuthProvider>
           <Outlet />
         </AuthProvider>
+        <ThemePicker />
         <Scripts />
       </body>
     </html>

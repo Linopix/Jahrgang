@@ -10,7 +10,7 @@ import { RevealScreen } from "./reveal-screen";
 import { RulesDialog } from "./rules-dialog";
 import { SetupScreen } from "./setup-screen";
 import { WinnerScreen } from "./winner-screen";
-import { unlockAudio } from "@/lib/game/audio";
+import { setLobbyWanted, unlockAudio } from "@/lib/game/audio";
 import { useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 
@@ -20,6 +20,10 @@ export function GameApp() {
   const setRulesOpen = useGame((s) => s.setRulesOpen);
   const onlineStatus = useOnline((s) => s.status);
   const onlineRole = useOnline((s) => s.role);
+
+  const playing =
+    (onlineStatus === "off" || onlineStatus === "playing") &&
+    (phase === "listen" || phase === "reveal" || phase === "loading");
 
   useEffect(() => {
     const resume = () => unlockAudio();
@@ -35,6 +39,10 @@ export function GameApp() {
       document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
+
+  useEffect(() => {
+    setLobbyWanted(!playing);
+  }, [playing]);
 
   const localPhase = onlineStatus === "off" || onlineStatus === "playing";
 

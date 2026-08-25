@@ -109,7 +109,7 @@ export function PlayScreen() {
 
   return (
     <main className="screen-in mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden px-4 pb-[env(safe-area-inset-bottom)] pt-4 sm:px-6 sm:pt-6 lg:max-w-7xl">
-      <header className="flex items-center justify-between gap-3">
+      <header className="flex items-center justify-between gap-3 pr-16">
         <button
           type="button"
           onClick={() => (online ? requestLeave() : openHome())}
@@ -151,7 +151,7 @@ export function PlayScreen() {
               <li
                 key={row.id}
                 className={cn(
-                  "flex min-w-28 shrink-0 flex-col rounded-md px-3 py-2 transition-[background-color,color] duration-200 ease-out",
+                  "flex min-w-28 shrink-0 flex-col rounded-md px-3 py-2 transition-[background-color,color,transform] duration-200 ease-out hover:-translate-y-px",
                   active ? "bg-primary text-primary-fg" : "bg-raised text-fg shadow-border",
                 )}
               >

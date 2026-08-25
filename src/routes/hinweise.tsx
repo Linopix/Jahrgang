@@ -14,8 +14,9 @@ function HinweisePage() {
       </a>
       <h1 className="mt-6 font-display text-4xl font-medium text-fg">Hinweise</h1>
       <p className="mt-3 text-sm text-muted">
-        Jahrgang ist ein Zeitspiel für den privaten Abend. Kein offizielles
-        Produkt, keine Verbindung zu anderen Spielen oder Labels.
+        Jahrgang ist ein Zeitspiel für den privaten Abend. Es erzielt keinen
+        Gewinn. Kein offizielles Produkt, keine Verbindung zu anderen Spielen
+        oder Labels.
       </p>
 
       <section className="mt-10 space-y-3">
@@ -43,6 +44,14 @@ function HinweisePage() {
         <p className="text-sm leading-relaxed text-muted">
           Keine Konten. Namen bleiben auf dem Gerät. Online-Räume dienen nur der
           Verbindung; Spielzüge gehen direkt zwischen den Geräten.
+        </p>
+      </section>
+
+      <section className="mt-10 space-y-3">
+        <h2 className="font-display text-2xl font-medium text-fg">Projekt</h2>
+        <p className="text-sm leading-relaxed text-muted">
+          Jahrgang ist privat und unentgeltlich. Keine Werbung, kein Shop, keine
+          Beiträge. Es wird kein Gewinn erzielt.
         </p>
       </section>
 

@@ -34,6 +34,111 @@
   --shadow-lift: 0 0 0 1px rgb(242 238 230 / 0.1), 0 18px 40px -24px rgb(0 0 0 / 0.7);
 }
 
+:root,
+[data-theme="night"] {
+  color-scheme: dark;
+  --color-bg: #0c0b0a;
+  --color-surface: #161412;
+  --color-raised: #1e1b18;
+  --color-fg: #f2eee6;
+  --color-muted: #9a9388;
+  --color-subtle: #6e685f;
+  --color-primary: #ece6d9;
+  --color-primary-fg: #0c0b0a;
+  --color-border: #2a2622;
+  --color-card: #efe8d8;
+  --color-card-fg: #1a1612;
+  --color-card-muted: #6a6258;
+  --color-success: #8aa384;
+  --color-danger: #c45c4a;
+  --color-groove: #12110f;
+  --groove-spot: rgb(242 238 230 / 0.05);
+  --groove-ring: rgb(242 238 230 / 0.015);
+  --vinyl-mid: #2a2724;
+  --vinyl-dark: #0e0d0c;
+  --vinyl-groove: #161412;
+  --shadow-border: 0 0 0 1px rgb(242 238 230 / 0.08);
+  --shadow-lift: 0 0 0 1px rgb(242 238 230 / 0.1), 0 18px 40px -24px rgb(0 0 0 / 0.7);
+}
+
+[data-theme="paper"] {
+  color-scheme: light;
+  --color-bg: #f3eee4;
+  --color-surface: #ebe4d6;
+  --color-raised: #fffaf2;
+  --color-fg: #1c1814;
+  --color-muted: #6f675c;
+  --color-subtle: #93897c;
+  --color-primary: #1c1814;
+  --color-primary-fg: #f3eee4;
+  --color-border: #d9d0c2;
+  --color-card: #2a241e;
+  --color-card-fg: #f6efe4;
+  --color-card-muted: #b4a898;
+  --color-success: #4f6e4c;
+  --color-danger: #b14a3c;
+  --color-groove: #e8e0d2;
+  --groove-spot: rgb(28 24 20 / 0.06);
+  --groove-ring: rgb(28 24 20 / 0.03);
+  --vinyl-mid: #3a342e;
+  --vinyl-dark: #1a1612;
+  --vinyl-groove: #2a241e;
+  --shadow-border: 0 0 0 1px rgb(28 24 20 / 0.08);
+  --shadow-lift: 0 0 0 1px rgb(28 24 20 / 0.08), 0 18px 40px -24px rgb(28 24 20 / 0.35);
+}
+
+[data-theme="ink"] {
+  color-scheme: dark;
+  --color-bg: #0b0e14;
+  --color-surface: #141821;
+  --color-raised: #1b2130;
+  --color-fg: #e8eef6;
+  --color-muted: #8b97a8;
+  --color-subtle: #5e6a7a;
+  --color-primary: #c5d4e8;
+  --color-primary-fg: #0b0e14;
+  --color-border: #2a3344;
+  --color-card: #dce4ef;
+  --color-card-fg: #141821;
+  --color-card-muted: #5c6a7c;
+  --color-success: #7fa392;
+  --color-danger: #c45c4a;
+  --color-groove: #10141c;
+  --groove-spot: rgb(197 212 232 / 0.06);
+  --groove-ring: rgb(197 212 232 / 0.02);
+  --vinyl-mid: #222836;
+  --vinyl-dark: #0a0c12;
+  --vinyl-groove: #141821;
+  --shadow-border: 0 0 0 1px rgb(232 238 246 / 0.08);
+  --shadow-lift: 0 0 0 1px rgb(232 238 246 / 0.1), 0 18px 40px -24px rgb(0 0 0 / 0.7);
+}
+
+[data-theme="ember"] {
+  color-scheme: dark;
+  --color-bg: #140c0a;
+  --color-surface: #1c1210;
+  --color-raised: #271816;
+  --color-fg: #f6ebe4;
+  --color-muted: #a89086;
+  --color-subtle: #7a645c;
+  --color-primary: #e8b4a2;
+  --color-primary-fg: #1a0e0c;
+  --color-border: #3a2420;
+  --color-card: #f0d9cc;
+  --color-card-fg: #1c1210;
+  --color-card-muted: #7a5e52;
+  --color-success: #8aa384;
+  --color-danger: #d46a58;
+  --color-groove: #120a08;
+  --groove-spot: rgb(232 180 162 / 0.08);
+  --groove-ring: rgb(232 180 162 / 0.03);
+  --vinyl-mid: #3a2420;
+  --vinyl-dark: #120a08;
+  --vinyl-groove: #1c1210;
+  --shadow-border: 0 0 0 1px rgb(246 235 228 / 0.08);
+  --shadow-lift: 0 0 0 1px rgb(246 235 228 / 0.1), 0 18px 40px -24px rgb(0 0 0 / 0.7);
+}
+
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
@@ -84,23 +189,24 @@
 .groove-bg {
   background-color: var(--color-bg);
   background-image:
-    radial-gradient(circle at 50% -10%, rgb(242 238 230 / 0.05), transparent 42%),
+    radial-gradient(circle at 50% -10%, var(--groove-spot), transparent 42%),
     repeating-radial-gradient(
       circle at 50% 120%,
-      rgb(242 238 230 / 0.015) 0 1px,
+      var(--groove-ring) 0 1px,
       transparent 2px 7px
     );
+  transition: background-color 280ms ease-out, color 280ms ease-out;
 }
 
 .vinyl-disc {
   position: relative;
   background:
     radial-gradient(circle at 50% 50%, var(--color-card) 0 13.5%, transparent 13.7% 100%),
-    radial-gradient(circle at 50% 50%, #2a2724 0 16%, transparent 16.2%),
+    radial-gradient(circle at 50% 50%, var(--vinyl-mid) 0 16%, transparent 16.2%),
     repeating-radial-gradient(
       circle at 50% 50%,
-      #161412 0 1px,
-      #0e0d0c 2px 3px
+      var(--vinyl-groove) 0 1px,
+      var(--vinyl-dark) 2px 3px
     );
   box-shadow:
     inset 0 0 0 1px rgb(242 238 230 / 0.08),

@@ -12,7 +12,7 @@ export function SongCard({ song, hidden, compact, className }: SongCardProps) {
   return (
     <article
       className={cn(
-        "relative flex flex-col justify-between overflow-hidden bg-card text-card-fg shadow-lift",
+        "relative flex flex-col justify-between overflow-hidden bg-card text-card-fg shadow-lift transition-transform duration-150 ease-out",
         compact
           ? "h-36 w-28 rounded-md p-2.5"
           : "h-52 w-40 rounded-lg p-3.5",

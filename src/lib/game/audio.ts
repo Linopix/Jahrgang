@@ -2,14 +2,23 @@ let music: HTMLAudioElement | null = null;
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let sfxBus: GainNode | null = null;
+let lobbyGain: GainNode | null = null;
+let lobbyReady = false;
 let volume = 0.85;
-let muted = false;
+let previewMuted = false;
+let uiMuted = false;
+let lobbyWanted = true;
+const uiListeners = new Set<() => void>();
+
+function notifyUi() {
+  uiListeners.forEach((fn) => fn());
+}
 
 function ensureMusic() {
   if (music) return music;
   music = new Audio();
   music.preload = "auto";
-  applyVolume();
+  applyPreviewVolume();
   return music;
 }
 
@@ -19,24 +28,93 @@ function ensureCtx() {
   ctx = new AudioCtx({ latencyHint: "interactive" });
   master = ctx.createGain();
   sfxBus = ctx.createGain();
-  sfxBus.gain.value = 0.7;
+  lobbyGain = ctx.createGain();
   sfxBus.connect(master);
+  lobbyGain.connect(master);
   master.connect(ctx.destination);
-  applyVolume();
+  lobbyGain.gain.value = 0;
+  applyUiVolume();
   return ctx;
 }
 
-function gainValue() {
-  if (muted) return 0;
+function previewGainValue() {
+  if (previewMuted) return 0;
   return volume * volume;
 }
 
-function applyVolume() {
-  const g = gainValue();
-  if (music) music.volume = g;
-  if (master && ctx) {
-    master.gain.setTargetAtTime(g, ctx.currentTime, 0.02);
+function applyPreviewVolume() {
+  if (music) music.volume = previewGainValue();
+}
+
+function applyUiVolume() {
+  if (!ctx) return;
+  const sfx = uiMuted ? 0 : 0.7;
+  const lobby = uiMuted || !lobbyWanted ? 0 : 0.045;
+  if (sfxBus) sfxBus.gain.setTargetAtTime(sfx, ctx.currentTime, 0.04);
+  if (lobbyGain) lobbyGain.gain.setTargetAtTime(lobby, ctx.currentTime, 0.08);
+}
+
+function ensureLobby() {
+  const audioCtx = ensureCtx();
+  if (!lobbyGain) return;
+  if (lobbyReady) {
+    applyUiVolume();
+    return;
   }
+  lobbyReady = true;
+
+  const mix = audioCtx.createGain();
+  mix.gain.value = 1;
+  mix.connect(lobbyGain);
+
+  const pad = (freq: number, type: OscillatorType, detune: number, level: number) => {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+    osc.type = type;
+    osc.frequency.value = freq;
+    osc.detune.value = detune;
+    g.gain.value = level;
+    filter.type = "lowpass";
+    filter.frequency.value = 720;
+    filter.Q.value = 0.5;
+    osc.connect(g);
+    g.connect(filter);
+    filter.connect(mix);
+    osc.start();
+  };
+
+  pad(110, "sine", 0, 0.22);
+  pad(164.81, "sine", 5, 0.16);
+  pad(220, "triangle", -3, 0.07);
+
+  const length = Math.floor(audioCtx.sampleRate * 3);
+  const buffer = audioCtx.createBuffer(1, length, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+  noise.loop = true;
+  const band = audioCtx.createBiquadFilter();
+  band.type = "bandpass";
+  band.frequency.value = 1400;
+  band.Q.value = 0.5;
+  const ng = audioCtx.createGain();
+  ng.gain.value = 0.028;
+  noise.connect(band);
+  band.connect(ng);
+  ng.connect(mix);
+  noise.start();
+
+  const lfo = audioCtx.createOscillator();
+  const lfoGain = audioCtx.createGain();
+  lfo.type = "sine";
+  lfo.frequency.value = 0.08;
+  lfoGain.gain.value = 180;
+  lfo.connect(lfoGain);
+  lfo.start();
+
+  applyUiVolume();
 }
 
 export function unlockAudio() {
@@ -45,16 +123,17 @@ export function unlockAudio() {
   if (audioCtx.state === "suspended") {
     void audioCtx.resume();
   }
+  if (lobbyWanted) ensureLobby();
 }
 
 export function setMasterVolume(next: number) {
   volume = Math.min(1, Math.max(0, next));
-  applyVolume();
+  applyPreviewVolume();
 }
 
 export function setMuted(next: boolean) {
-  muted = next;
-  applyVolume();
+  previewMuted = next;
+  applyPreviewVolume();
 }
 
 export function getMasterVolume() {
@@ -62,7 +141,48 @@ export function getMasterVolume() {
 }
 
 export function isMuted() {
-  return muted;
+  return previewMuted;
+}
+
+export function isUiMuted() {
+  return uiMuted;
+}
+
+export function setUiMuted(next: boolean) {
+  uiMuted = next;
+  try {
+    localStorage.setItem("jahrgang-ui-muted", next ? "1" : "0");
+  } catch {
+    /* ignore */
+  }
+  ensureCtx();
+  applyUiVolume();
+  notifyUi();
+}
+
+export function hydrateUiMute() {
+  try {
+    uiMuted = localStorage.getItem("jahrgang-ui-muted") === "1";
+  } catch {
+    uiMuted = false;
+  }
+  applyUiVolume();
+  notifyUi();
+}
+
+export function subscribeUiAudio(fn: () => void) {
+  uiListeners.add(fn);
+  return () => {
+    uiListeners.delete(fn);
+  };
+}
+
+export function setLobbyWanted(next: boolean) {
+  lobbyWanted = next;
+  if (next) {
+    ensureLobby();
+  }
+  applyUiVolume();
 }
 
 export function playPreview(url: string) {
@@ -163,6 +283,10 @@ function thunk(when = 0, gain = 0.05) {
 
 export function sfxTick() {
   tone({ freq: 980 * jitter(0.04), duration: 0.035, type: "triangle", gain: 0.028, filter: 2400 });
+}
+
+export function sfxHover() {
+  tone({ freq: 720 * jitter(0.03), duration: 0.025, type: "sine", gain: 0.012, filter: 1800 });
 }
 
 export function sfxPlace() {
