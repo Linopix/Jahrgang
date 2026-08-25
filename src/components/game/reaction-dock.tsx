@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Smile } from "lucide-react";
 import { REACTION_EMOJIS, sendReaction, useReactions } from "@/lib/game/reactions";
 import { useOnline } from "@/lib/game/online-store";
-import { unlockAudio } from "@/lib/game/audio";
+import { sfxHover, unlockAudio } from "@/lib/game/audio";
 import { cn } from "@/lib/utils";
 
 export function ReactionDock() {
@@ -58,6 +58,7 @@ export function ReactionDock() {
                 key={emoji}
                 type="button"
                 aria-label={`Reaktion ${emoji}`}
+                onMouseEnter={() => sfxHover()}
                 onClick={() => {
                   unlockAudio();
                   sendReaction(emoji);

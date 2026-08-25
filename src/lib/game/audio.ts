@@ -429,6 +429,46 @@ export function sfxPop() {
   tone({ freq: 1240, duration: 0.07, type: "triangle", when: 0.02, gain: 0.018, filter: 2800 });
 }
 
+export function sfxReact(emoji: string) {
+  switch (emoji) {
+    case "🔥":
+      tone({ freq: 210, freqEnd: 560, duration: 0.16, type: "sawtooth", gain: 0.026, filter: 1500 });
+      thunk(0.02, 0.028);
+      break;
+    case "😂":
+      tone({ freq: 640, duration: 0.055, type: "triangle", gain: 0.034, filter: 2200 });
+      tone({ freq: 500, duration: 0.06, type: "triangle", when: 0.07, gain: 0.028, filter: 2000 });
+      tone({ freq: 720, duration: 0.05, type: "triangle", when: 0.14, gain: 0.022, filter: 2400 });
+      break;
+    case "😱":
+      tone({ freq: 260, freqEnd: 980, duration: 0.2, type: "sine", gain: 0.04, filter: 2600 });
+      break;
+    case "👏":
+      thunk(0, 0.07);
+      thunk(0.055, 0.05);
+      break;
+    case "💯":
+      tone({ freq: 880, duration: 0.08, type: "sine", gain: 0.038, filter: 2800 });
+      tone({ freq: 1320, duration: 0.12, type: "triangle", when: 0.05, gain: 0.028, filter: 3200 });
+      break;
+    case "💀":
+      tone({ freq: 92, duration: 0.18, type: "sine", gain: 0.055, filter: 380 });
+      thunk(0, 0.045);
+      break;
+    case "❤️":
+      tone({ freq: 392, duration: 0.12, type: "sine", gain: 0.038, filter: 1800 });
+      tone({ freq: 523.25, duration: 0.18, type: "sine", when: 0.08, gain: 0.032, filter: 2000 });
+      break;
+    case "🎵":
+      tone({ freq: 659.25, duration: 0.1, type: "triangle", gain: 0.036, filter: 2600 });
+      tone({ freq: 783.99, duration: 0.14, type: "triangle", when: 0.09, gain: 0.03, filter: 2800 });
+      break;
+    default:
+      sfxPop();
+  }
+  if (retro && sfxBus && ctx) noiseHit(sfxBus, ctx.currentTime, 0.045, 0.016, 1800, 6200);
+}
+
 export function sfxScratch() {
   const audioCtx = ensureCtx();
   if (!sfxBus) return;

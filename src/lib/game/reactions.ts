@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { sfxPop } from "./audio";
+import { sfxReact } from "./audio";
 import { netSend } from "./net";
 import { useOnline } from "./online-store";
 
@@ -44,7 +44,7 @@ export function receiveReaction(emoji: unknown, name: string) {
   if (!useOnline.getState().emoji) return;
   if (!isReactionEmoji(emoji)) return;
   useReactions.getState().push(emoji, name);
-  sfxPop();
+  sfxReact(emoji);
 }
 
 export function sendReaction(emoji: ReactionEmoji) {
@@ -54,6 +54,6 @@ export function sendReaction(emoji: ReactionEmoji) {
   if (now - lastSentAt < 700) return;
   lastSentAt = now;
   useReactions.getState().push(emoji, online.selfName || "Du");
-  sfxPop();
+  sfxReact(emoji);
   netSend({ t: "react", emoji });
 }
