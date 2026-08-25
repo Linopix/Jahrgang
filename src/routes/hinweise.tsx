@@ -13,74 +13,71 @@ function HinweisePage() {
         Zurück
       </a>
       <h1 className="mt-6 font-display text-4xl font-medium text-fg">Hinweise</h1>
-      <p className="mt-3 text-sm text-muted">
-        Jahrgang ist ein Zeitspiel für den privaten Abend. Es erzielt keinen
-        Gewinn. Kein offizielles Produkt, keine Verbindung zu anderen Spielen
-        oder Labels.
+      <p className="mt-3 text-sm leading-relaxed text-muted">
+        Jahrgang ist zum Spielen bei euch, am Tisch oder im Call. Es kostet
+        nichts und verdient nichts. Es gehört zu keinem anderen Brettspiel und
+        zu keinem Label.
       </p>
 
       <section className="mt-10 space-y-3">
         <h2 className="font-display text-2xl font-medium text-fg">Name</h2>
         <p className="text-sm leading-relaxed text-muted">
-          Jahrgang steht für sich. Es ist weder lizenziert noch unterstützt von
-          Herstellern ähnlicher Gesellschaftsspiele. Wer die Runde öffentlich
-          zeigt, soll sie als Jahrgang benennen — nicht unter einem anderen
-          Markennamen.
+          Wenn ihr streamt oder Freunde einladet, nennt es bitte Jahrgang. Nicht
+          so tun, als wäre es ein anderes Spiel — auch wenn es sich ähnlich
+          anfühlt.
         </p>
       </section>
 
       <section className="mt-10 space-y-3">
         <h2 className="font-display text-2xl font-medium text-fg">Musik</h2>
         <p className="text-sm leading-relaxed text-muted">
-          Zum Raten läuft eine kurze Vorschau, die die Stores öffentlich
-          anbieten. Jahrgang ist kein Streamingdienst und speichert die Dateien
-          nicht. Öffentliche Playlists von Spotify oder Deezer dienen nur dazu,
-          Titel für die Runde zu finden.
+          Du hörst eine kurze Vorschau, so wie sie der Store öffentlich
+          anbietet. Mehr läuft nicht, und die Datei bleibt nicht hier. Eine
+          Spotify- oder Deezer-Playlist ist nur die Titelliste für die Runde.
         </p>
       </section>
 
       <section className="mt-10 space-y-3">
         <h2 className="font-display text-2xl font-medium text-fg">Daten</h2>
         <p className="text-sm leading-relaxed text-muted">
-          Namen bleiben auf dem Gerät. Online-Räume dienen nur der Verbindung;
-          Spielzüge gehen direkt zwischen den Geräten. Ein optionales Konto für
-          die Rangliste ist im Code vorbereitet, derzeit aber ausgeschaltet.
+          Dein Name liegt auf dem Gerät. Der Server kennt den Raumcode, die Züge
+          gehen direkt zwischen euch. Ein Konto für die Rangliste steckt schon
+          im Code, ist aber gerade aus.
         </p>
       </section>
 
       <section className="mt-10 space-y-3">
         <h2 className="font-display text-2xl font-medium text-fg">Projekt</h2>
         <p className="text-sm leading-relaxed text-muted">
-          Jahrgang ist privat und unentgeltlich. Keine Werbung, kein Shop, keine
-          Beiträge. Es wird kein Gewinn erzielt.
+          Privat gebaut, ohne Werbung und ohne Shop. Wenn sich das ändert,
+          steht es hier.
         </p>
       </section>
 
       <section className="mt-10 space-y-3">
         <h2 className="font-display text-2xl font-medium text-fg">Discord</h2>
         <p className="text-sm leading-relaxed text-muted">
-          Stimme bleibt in Discord, das Spiel im Browser. Ein Status im
-          Discord-Profil aus dem normalen Tab geht nicht — Discord erlaubt das
-          nur in einer Activity.
+          Sprecht ruhig weiter in Discord, das Spiel läuft im Browser. Einen
+          Status im Profil setzt Jahrgang von hier aus nicht.
         </p>
       </section>
 
       <section className="mt-10 space-y-3">
         <h2 className="font-display text-2xl font-medium text-fg">Kontakt</h2>
         <p className="text-sm leading-relaxed text-muted">
-          Rechtliche Hinweise, Abmahnungen und Fragen an{" "}
+          Fragen, auch rechtliche, an{" "}
           <a
             href={`mailto:${CONTACT}`}
             className="text-fg underline decoration-border underline-offset-4 hover:decoration-fg"
           >
             {CONTACT}
           </a>
-          . Repository:{" "}
+          . Der Code liegt auf{" "}
           <a
             href="https://github.com/Linopix/Jahrgang"
             className="text-fg underline decoration-border underline-offset-4 hover:decoration-fg"
           >
-            Linopix/Jahrgang
+            GitHub
           </a>
           .
         </p>

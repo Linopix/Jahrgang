@@ -17,7 +17,7 @@ function Off({ title }: { title: string }) {
       </a>
       <h1 className="mt-6 font-display text-4xl font-medium text-fg">{title}</h1>
       <p className="mt-3 text-sm text-muted">
-        Konto ist vorbereitet, derzeit aber ausgeschaltet. Der Abend läuft ohne Anmeldung.
+        Konto kommt später wieder. Spielen geht ganz ohne.
       </p>
     </main>
   );

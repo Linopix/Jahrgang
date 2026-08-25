@@ -261,10 +261,10 @@ export const ERA_BLURBS: Record<EraId, string> = {
   dance: "Dance, Disco, elektronische Hits.",
   soul: "Soul, R&B, Funk.",
   metal: "Metal und härterer Rock.",
-  indie: "Indie, Alternative, Gitarren abseits der Arena.",
-  latin: "Latin, Reggaeton, tropische Hits.",
-  schlager: "Schlager und Deutschpop der Bühne.",
-  party: "Laut, bekannt, für den Abend.",
+  indie: "Indie und das, was nicht ins Stadion passt.",
+  latin: "Latin, Reggaeton und tropische Hits.",
+  schlager: "Schlager und Deutschpop.",
+  party: "Laut und bekannt, für den Abend.",
   charts: "Große Single-Hits ab 2015.",
   "rap-charts": "Hip-Hop-Hits der letzten Jahre.",
   mix: "Zeitraum und Genre selbst wählen.",
@@ -311,13 +311,13 @@ export const VARIANT_LABELS: Record<PlayVariant, string> = {
 };
 
 export const VARIANT_BLURBS: Record<PlayVariant, string> = {
-  timeline: "Nur das Erscheinungsjahr. Das Cover darf während des Hörens sichtbar sein.",
-  blind: "Wie Zeitstrahl, aber das Cover bleibt bis zum Aufdecken verdeckt.",
-  original: "Interpret und Titel raten, danach einordnen. Das Cover bleibt verdeckt.",
-  star: "Nur den Interpreten raten, dann einordnen. Das Cover bleibt verdeckt.",
-  hook: "Nur den Titel raten, dann einordnen. Das Cover bleibt verdeckt.",
-  wild: "Kenner, Cover zu, Jahre weg, links ist später — und die Platte läuft zu schnell oder zu langsam.",
-  custom: "Regeln selbst setzen: Raten, Cover, Linie, Tempo, Ziel.",
+  timeline: "Du hörst den Titel und legst das Jahr. Das Cover darfst du sehen.",
+  blind: "Dasselbe, nur ohne Cover bis zum Aufdecken.",
+  original: "Erst Interpret und Titel tippen, dann legen. Cover bleibt zu.",
+  star: "Nur den Interpreten, dann legen.",
+  hook: "Nur den Titel, dann legen.",
+  wild: "Raten, Cover zu, keine Jahreszahlen, links ist später — und die Platte spinnt am Tempo.",
+  custom: "Raten, Cover, Linie, Tempo und Ziel stellst du selbst ein.",
 };
 
 export type ResolvedRules = {
@@ -423,9 +423,9 @@ export const GENRE_BLURBS: Record<GenreId, string> = {
   dance: "Dance, Disco, elektronische Hits.",
   soul: "Soul, R&B, Funk.",
   metal: "Metal und härterer Rock.",
-  indie: "Indie, Alternative, Gitarren abseits der Arena.",
-  latin: "Latin, Reggaeton, tropische Hits.",
-  schlager: "Schlager und Deutschpop der Bühne.",
+  indie: "Indie und das, was nicht ins Stadion passt.",
+  latin: "Latin, Reggaeton und tropische Hits.",
+  schlager: "Schlager und Deutschpop.",
   german: "Deutschsprachige Titel.",
 };
 
@@ -435,8 +435,8 @@ export const NEXT_ROUND_LABELS: Record<NextRoundPolicy, string> = {
   all: "Alle",
 };
 export const NEXT_ROUND_BLURB: Record<NextRoundPolicy, string> = {
-  host: "Nach dem Sieg startet nur der Host weiter. Der Raum und der Abend-Stand bleiben.",
-  all: "Jede Person im Raum darf weiter spielen. Der Code bleibt, der Stand auch.",
+  host: "Nur du als Host startest die nächste Runde. Raum und Stand bleiben.",
+  all: "Jede und jeder im Raum darf weiter. Code und Stand bleiben.",
 };
 
 export const YEAR_MIN = 1960;
