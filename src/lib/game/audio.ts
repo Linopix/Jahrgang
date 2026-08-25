@@ -342,6 +342,7 @@ export function setDiscoAudio(next: boolean) {
 
 export function unlockAudio() {
   ensureMusic();
+  preloadEmojiSfx();
   const audioCtx = ensureCtx();
   if (audioCtx.state === "suspended") {
     void audioCtx.resume();
@@ -532,18 +533,41 @@ const EMOJI_FILES: Record<string, string> = {
   "🎵": "/sfx/note.mp3",
 };
 
-function playSample(src: string, gain = 0.5) {
+const sampleCache = new Map<string, HTMLAudioElement>();
+
+function sampleFor(src: string) {
+  let el = sampleCache.get(src);
+  if (!el) {
+    el = new Audio(src);
+    el.preload = "auto";
+    sampleCache.set(src, el);
+  }
+  return el;
+}
+
+function preloadEmojiSfx() {
+  for (const src of Object.values(EMOJI_FILES)) sampleFor(src);
+}
+
+function playSample(src: string, gain = 0.7) {
   if (uiMuted) return;
-  const el = new Audio(src);
+  unlockAudio();
+  const el = sampleFor(src);
+  el.pause();
+  el.currentTime = 0;
   el.volume = Math.min(1, gain);
-  void el.play().catch(() => {});
+  void el.play().catch(() => {
+    const extra = new Audio(src);
+    extra.volume = Math.min(1, gain);
+    void extra.play().catch(() => {});
+  });
 }
 
 export function sfxReact(emoji: string) {
   const file = EMOJI_FILES[emoji];
   if (file) {
-    playSample(file, 0.52);
-    if (retro && sfxBus && ctx) noiseHit(sfxBus, ctx.currentTime, 0.045, 0.016, 1800, 6200);
+    playSample(file, 0.78);
+    if (retro && sfxBus && ctx) noiseHit(sfxBus, ctx.currentTime, 0.04, 0.012, 1800, 6200);
     return;
   }
   sfxPop();
