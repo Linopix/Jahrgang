@@ -65,7 +65,7 @@ export function OnlineLobbyScreen() {
   const canStart = !connecting && !pending && readyCount >= 2;
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 py-8 lg:max-w-6xl lg:px-8">
+    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 py-8 lg:max-w-6xl lg:px-8">
       <button
         type="button"
         onClick={() => requestLeave()}

@@ -12,6 +12,7 @@ import { rankPlayers } from "@/lib/game/engine";
 import { useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { NEXT_ROUND_BLURB, SOLO_LIVES, VARIANT_LABELS } from "@/lib/game/types";
+import { cn } from "@/lib/utils";
 
 export function WinnerScreen() {
   const players = useGame((s) => s.players);
@@ -36,9 +37,9 @@ export function WinnerScreen() {
       : "Ende";
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col px-5 py-10 lg:max-w-6xl lg:px-8">
+    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-4xl flex-col px-5 py-10 lg:max-w-6xl lg:px-8">
       <div className="flex flex-col items-center text-center">
-        <Vinyl size="sm" />
+        <Vinyl size="sm" spinning slow />
         <p className="mt-6 text-xs font-medium tracking-[0.24em] text-muted uppercase">
           {soloFailed ? "Drei Fehler" : VARIANT_LABELS[variant]}
         </p>
@@ -65,10 +66,13 @@ export function WinnerScreen() {
           {ranked.map((player) => (
             <li
               key={player.id}
-              className="flex items-center justify-between rounded-md bg-raised px-4 py-3 text-sm shadow-border"
+              className={cn(
+                "flex items-center justify-between rounded-md px-4 py-3 text-sm shadow-border",
+                player.id === champ?.id ? "bg-primary text-primary-fg" : "bg-raised text-fg",
+              )}
             >
-              <span className="font-medium text-fg">{player.name}</span>
-              <span className="tabular-nums text-muted">
+              <span className="font-medium">{player.name}</span>
+              <span className="tabular-nums opacity-70">
                 {player.timeline.length}/{target}
                 {original ? ` · ${player.quiz}` : ""}
               </span>

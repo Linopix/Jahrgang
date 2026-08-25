@@ -44,8 +44,8 @@ export function RulesDialog({ open, onOpenChange }: RulesDialogProps) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-bg/80" />
-        <Dialog.Content className="fixed inset-x-3 top-1/2 z-50 max-h-[min(36rem,calc(100dvh-2rem))] w-auto max-w-lg -translate-y-1/2 overflow-y-auto rounded-xl bg-surface p-5 shadow-lift sm:inset-x-auto sm:left-1/2 sm:w-full sm:-translate-x-1/2 sm:p-7">
+        <Dialog.Overlay className="dialog-overlay fixed inset-0 z-50 bg-bg/80" />
+        <Dialog.Content className="dialog-panel fixed inset-x-3 top-1/2 z-50 max-h-[min(36rem,calc(100dvh-2rem))] w-auto max-w-lg -translate-y-1/2 overflow-y-auto rounded-xl bg-surface p-5 shadow-lift sm:inset-x-auto sm:left-1/2 sm:w-full sm:-translate-x-1/2 sm:p-7">
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
               <Dialog.Title className="font-display text-2xl font-medium text-fg">
@@ -61,7 +61,7 @@ export function RulesDialog({ open, onOpenChange }: RulesDialogProps) {
               </Button>
             </Dialog.Close>
           </div>
-          <ol className="space-y-4">
+          <ol className="stagger-in space-y-4">
             {STEPS.map((step) => (
               <li key={step.n} className="grid grid-cols-[auto_1fr] gap-3">
                 <span className="font-display text-sm tabular-nums text-subtle">{step.n}</span>

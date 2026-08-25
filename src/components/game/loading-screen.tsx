@@ -8,7 +8,7 @@ export function LoadingScreen() {
   const pct = Math.round((progress.done / Math.max(progress.total, 1)) * 100);
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">
+    <main className="screen-in flex min-h-dvh flex-col items-center justify-center px-6 text-center">
       <Vinyl spinning size="md" />
       <h1 className="mt-8 font-display text-3xl font-medium text-fg">Nadel setzt auf</h1>
       <p className="mt-2 max-w-sm text-sm text-muted">
@@ -18,7 +18,10 @@ export function LoadingScreen() {
       </p>
       {onlineGuest ? null : (
         <div className="mt-6 h-1 w-48 overflow-hidden rounded-full bg-raised">
-          <div className="h-full bg-primary transition-[width] duration-300" style={{ width: `${pct}%` }} />
+          <div
+            className="h-full origin-left bg-primary transition-transform duration-300 ease-out"
+            style={{ transform: `scaleX(${Math.max(pct / 100, 0.02)})` }}
+          />
         </div>
       )}
     </main>

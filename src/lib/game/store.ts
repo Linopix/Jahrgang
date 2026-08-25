@@ -8,7 +8,9 @@ import {
   pausePreview,
   playPreview,
   sfxCorrect,
+  sfxHint,
   sfxPlace,
+  sfxSkip,
   sfxWin,
   sfxWrong,
   stopPreview,
@@ -441,6 +443,7 @@ export const useGame = create<GameStore>((set, get) => ({
     if (phase !== "listen" || !current || decadeHint) return;
     const player = players[currentPlayerIndex];
     if (!player || player.tokens <= 0) return;
+    sfxHint();
     set({
       decadeHint: decadeLabel(current.year),
       players: players.map((row, i) =>
@@ -458,6 +461,7 @@ export const useGame = create<GameStore>((set, get) => ({
     const leftover = current;
     const next = deck[0];
     if (!next) return;
+    sfxSkip();
     const rest = deck.slice(1);
     set({
       players: players.map((row, i) =>

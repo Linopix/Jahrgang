@@ -43,7 +43,7 @@ export function RevealScreen() {
     Number(lastResult.titleCorrect) + Number(lastResult.artistCorrect);
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col items-center justify-center px-5 py-10 text-center lg:max-w-3xl">
+    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col items-center justify-center px-5 py-10 text-center lg:max-w-3xl">
       <p
         className={cn(
           "text-xs font-medium tracking-[0.24em] uppercase",
@@ -62,7 +62,7 @@ export function RevealScreen() {
         {original ? ` ${quizHits} von 2 Treffern beim Raten.` : ""}
       </p>
 
-      <div className="mt-8">
+      <div className="mt-8 pop-in">
         <SongCard song={lastResult.song} />
       </div>
 

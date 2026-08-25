@@ -7,7 +7,7 @@ export function OnlineConnectingScreen() {
   const roomCode = useOnline((s) => s.roomCode);
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">
+    <main className="screen-in flex min-h-dvh flex-col items-center justify-center px-6 text-center">
       <Vinyl spinning size="md" />
       <p className="mt-8 font-mono text-3xl tracking-[0.28em] text-fg">{roomCode}</p>
       <h1 className="mt-4 font-display text-3xl font-medium text-fg">Verbinden</h1>

@@ -18,7 +18,37 @@ import { VARIANT_LABELS } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
 
 const FIELD =
-  "h-12 w-full rounded-md bg-raised px-4 text-sm text-fg shadow-border outline-none transition-[box-shadow] focus:ring-2 focus:ring-primary/70";
+  "h-12 w-full rounded-md bg-raised px-4 text-sm text-fg shadow-border outline-none transition-[box-shadow,background-color] duration-150 focus:ring-2 focus:ring-primary/70";
+
+function SwapIcon({
+  on,
+  OnIcon,
+  OffIcon,
+  onClassName,
+}: {
+  on: boolean;
+  OnIcon: typeof Pause;
+  OffIcon: typeof Play;
+  onClassName?: string;
+}) {
+  return (
+    <span className="relative inline-flex size-4">
+      <OnIcon
+        className={cn(
+          "icon-swap absolute inset-0 size-4",
+          onClassName,
+          on ? "scale-100 opacity-100 blur-none" : "scale-[0.25] opacity-0 blur-[4px]",
+        )}
+      />
+      <OffIcon
+        className={cn(
+          "icon-swap size-4",
+          on ? "scale-[0.25] opacity-0 blur-[4px]" : "scale-100 opacity-100 blur-none",
+        )}
+      />
+    </span>
+  );
+}
 
 export function PlayScreen() {
   const players = useGame((s) => s.players);
@@ -78,7 +108,7 @@ export function PlayScreen() {
   const canPlaceCard = myTurn && selectedSlot !== null && !pending && guessesReady;
 
   return (
-    <main className="mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden px-4 pb-[env(safe-area-inset-bottom)] pt-4 sm:px-6 sm:pt-6 lg:max-w-7xl">
+    <main className="screen-in mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden px-4 pb-[env(safe-area-inset-bottom)] pt-4 sm:px-6 sm:pt-6 lg:max-w-7xl">
       <header className="flex items-center justify-between gap-3">
         <button
           type="button"
@@ -108,7 +138,7 @@ export function PlayScreen() {
               setMutedState(next);
             }}
           >
-            {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+            <SwapIcon on={muted} OnIcon={VolumeX} OffIcon={Volume2} />
           </button>
         </div>
       </header>
@@ -121,7 +151,7 @@ export function PlayScreen() {
               <li
                 key={row.id}
                 className={cn(
-                  "flex min-w-28 shrink-0 flex-col rounded-md px-3 py-2",
+                  "flex min-w-28 shrink-0 flex-col rounded-md px-3 py-2 transition-[background-color,color] duration-200 ease-out",
                   active ? "bg-primary text-primary-fg" : "bg-raised text-fg shadow-border",
                 )}
               >
@@ -175,8 +205,8 @@ export function PlayScreen() {
 
         <div className="mt-4 h-1 w-48 overflow-hidden rounded-full bg-raised">
           <div
-            className="h-full bg-primary transition-[width] duration-150"
-            style={{ width: `${Math.round(progress * 100)}%` }}
+            className="h-full origin-left bg-primary"
+            style={{ transform: `scaleX(${progress})` }}
           />
         </div>
 
@@ -192,7 +222,7 @@ export function PlayScreen() {
               else replay();
             }}
           >
-            {playing ? <Pause className="size-4" /> : <Play className="ml-0.5 size-4" />}
+            <SwapIcon on={playing} OnIcon={Pause} OffIcon={Play} onClassName="" />
           </Button>
           <Button variant="secondary" size="icon" className="size-11" aria-label="Nochmal" onClick={replay}>
             <RotateCcw className="size-4" />
@@ -210,7 +240,7 @@ export function PlayScreen() {
         </div>
 
         {decadeHint ? (
-          <p className="mt-3 rounded-full bg-raised px-3 py-1.5 text-sm text-fg shadow-border">
+          <p className="mt-3 rounded-full bg-raised px-3 py-1.5 text-sm text-fg shadow-border pop-in">
             Jahrzehnt: {decadeHint}
           </p>
         ) : null}

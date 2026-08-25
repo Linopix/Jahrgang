@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { peekPlaylist } from "@/lib/game/playlist";
+import { sfxTick } from "@/lib/game/audio";
 import {
   DECADE_OPTIONS,
   ERA_BLURBS,
@@ -32,6 +33,9 @@ type GameOptionsProps = {
   online?: boolean;
 };
 
+const CHIP =
+  "h-12 rounded-md px-3 text-sm font-medium transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.96]";
+
 function Choice<T extends string | number>({
   items,
   value,
@@ -51,9 +55,12 @@ function Choice<T extends string | number>({
         <button
           key={String(item)}
           type="button"
-          onClick={() => onChange(item)}
+          onClick={() => {
+            if (item !== value) sfxTick();
+            onChange(item);
+          }}
           className={cn(
-            "h-12 rounded-md px-2 text-sm font-medium transition-colors",
+            CHIP,
             value === item
               ? "bg-primary text-primary-fg"
               : "bg-raised text-fg shadow-border hover:bg-surface",
@@ -252,9 +259,12 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
                     key={id}
                     type="button"
                     data-pack={id}
-                    onClick={() => onChange({ era: id })}
+                    onClick={() => {
+                      if (id !== value.era) sfxTick();
+                      onChange({ era: id });
+                    }}
                     className={cn(
-                      "h-12 rounded-md px-3 text-sm font-medium transition-colors",
+                      CHIP,
                       value.era === id
                         ? "bg-primary text-primary-fg"
                         : "bg-raised text-fg shadow-border hover:bg-surface",
