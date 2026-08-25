@@ -24,7 +24,7 @@ export function HomeScreen() {
         </h1>
         <p className="mt-4 max-w-md text-pretty text-base text-muted sm:text-lg">
           Hits hören und auf die Zeitlinie legen. Zeitstrahl nach Jahr, Kenner
-          mit Interpret und Titel. Musik kommt aus deinem eigenen Abo.
+          mit Interpret und Titel.
         </p>
       </header>
 

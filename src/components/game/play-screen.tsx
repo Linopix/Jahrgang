@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
+import { Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Timeline } from "./timeline";
 import { Vinyl } from "./vinyl";
-import { CuePanel } from "./cue-panel";
 import {
-  canControlTurn,
-  canSeeCue,
-  isOnlinePlay,
-  requestDecade,
-  requestLeave,
-  requestPlace,
-  requestSkip,
-} from "@/lib/game/online-actions";
+  getMusicElement,
+  isMuted,
+  pausePreview,
+  setMasterVolume,
+  setMuted,
+  unlockAudio,
+} from "@/lib/game/audio";
+import { canControlTurn, isOnlinePlay, requestDecade, requestLeave, requestPlace, requestSkip } from "@/lib/game/online-actions";
 import { currentPlayer, useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { VARIANT_LABELS } from "@/lib/game/types";
@@ -31,31 +31,51 @@ export function PlayScreen() {
   const variant = useGame((s) => s.variant);
   const deckLength = useGame((s) => s.deck.length);
   const selectSlot = useGame((s) => s.selectSlot);
+  const replay = useGame((s) => s.replay);
   const openHome = useGame((s) => s.openHome);
   const setRulesOpen = useGame((s) => s.setRulesOpen);
   const pending = useOnline((s) => s.pending);
   const selfId = useOnline((s) => s.selfId);
   const online = isOnlinePlay();
   const myTurn = canControlTurn();
-  const showCue = canSeeCue();
   const original = variant === "original";
 
   const player = currentPlayer({ players, currentPlayerIndex });
+  const [playing, setPlaying] = useState(true);
+  const [muted, setMutedState] = useState(isMuted);
+  const [progress, setProgress] = useState(0);
   const [titleGuess, setTitleGuess] = useState("");
   const [artistGuess, setArtistGuess] = useState("");
-  const [localCue, setLocalCue] = useState(false);
 
   useEffect(() => {
     setTitleGuess("");
     setArtistGuess("");
-    setLocalCue(false);
+  }, [current?.id]);
+
+  useEffect(() => {
+    const el = getMusicElement();
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+    const onTime = () => {
+      if (!el.duration) return;
+      setProgress(el.currentTime / el.duration);
+    };
+    el.addEventListener("play", onPlay);
+    el.addEventListener("pause", onPause);
+    el.addEventListener("timeupdate", onTime);
+    el.addEventListener("ended", onPause);
+    return () => {
+      el.removeEventListener("play", onPlay);
+      el.removeEventListener("pause", onPause);
+      el.removeEventListener("timeupdate", onTime);
+      el.removeEventListener("ended", onPause);
+    };
   }, [current?.id]);
 
   if (!player || !current) return null;
 
   const guessesReady = !original || (titleGuess.trim().length > 0 && artistGuess.trim().length > 0);
   const canPlaceCard = myTurn && selectedSlot !== null && !pending && guessesReady;
-  const cueOpen = showCue && (online || !original || localCue);
 
   return (
     <main className="mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden px-4 pb-[env(safe-area-inset-bottom)] pt-4 sm:px-6 sm:pt-6 lg:max-w-7xl">
@@ -77,6 +97,18 @@ export function PlayScreen() {
             onClick={() => setRulesOpen(true)}
           >
             Regeln
+          </button>
+          <button
+            type="button"
+            aria-label={muted ? "Ton an" : "Stummschalten"}
+            className="flex size-11 items-center justify-center rounded-md text-muted hover:text-fg"
+            onClick={() => {
+              const next = !muted;
+              setMuted(next);
+              setMutedState(next);
+            }}
+          >
+            {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
           </button>
         </div>
       </header>
@@ -134,25 +166,48 @@ export function PlayScreen() {
         </p>
 
         <div className="mt-4">
-          <Vinyl spinning size="md" />
+          <Vinyl
+            spinning={playing}
+            artworkUrl={original ? undefined : current.artworkUrl}
+            size="md"
+          />
         </div>
 
-        {showCue && original && !online && !localCue ? (
+        <div className="mt-4 h-1 w-48 overflow-hidden rounded-full bg-raised">
+          <div
+            className="h-full bg-primary transition-[width] duration-150"
+            style={{ width: `${Math.round(progress * 100)}%` }}
+          />
+        </div>
+
+        <div className="mt-3 flex items-center gap-2">
           <Button
             variant="secondary"
-            className="mt-4"
-            onClick={() => setLocalCue(true)}
+            size="icon"
+            className="size-11"
+            aria-label={playing ? "Pause" : "Abspielen"}
+            onClick={() => {
+              unlockAudio();
+              if (playing) pausePreview();
+              else replay();
+            }}
           >
-            Titel zum Auflegen einblenden
+            {playing ? <Pause className="size-4" /> : <Play className="ml-0.5 size-4" />}
           </Button>
-        ) : (
-          <CuePanel
-            title={current.title}
-            artist={current.artist}
-            open={cueOpen}
-            online={online}
+          <Button variant="secondary" size="icon" className="size-11" aria-label="Nochmal" onClick={replay}>
+            <RotateCcw className="size-4" />
+          </Button>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            defaultValue={0.85}
+            aria-label="Lautstärke"
+            className="hidden h-11 w-24 accent-primary sm:block"
+            onChange={(event) => setMasterVolume(Number(event.target.value))}
           />
-        )}
+        </div>
 
         {decadeHint ? (
           <p className="mt-3 rounded-full bg-raised px-3 py-1.5 text-sm text-fg shadow-border">

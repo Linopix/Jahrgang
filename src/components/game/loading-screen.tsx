@@ -13,8 +13,8 @@ export function LoadingScreen() {
       <h1 className="mt-8 font-display text-3xl font-medium text-fg">Nadel setzt auf</h1>
       <p className="mt-2 max-w-sm text-sm text-muted">
         {onlineGuest
-          ? "Der Host mischt das Repertoire."
-          : "Das Repertoire wird gemischt."}
+          ? "Der Host lädt die Titel."
+          : "Songvorschauen werden geladen."}
       </p>
       {onlineGuest ? null : (
         <div className="mt-6 h-1 w-48 overflow-hidden rounded-full bg-raised">

@@ -5,9 +5,12 @@ export type ListedTrack = {
 };
 
 export type PlaylistRef =
-  | { source: "list"; tracks: ListedTrack[] }
-  | { source: "deezer"; kind: "playlist" | "album"; id: string };
+  | { source: "spotify"; kind: "playlist" | "album"; id: string }
+  | { source: "deezer"; kind: "playlist" | "album"; id: string }
+  | { source: "list"; tracks: ListedTrack[] };
 
+const SPOTIFY_RE =
+  /(?:open\.spotify\.com\/(?:intl-[a-z]{2}\/)?|spotify:)(playlist|album)[/:]([A-Za-z0-9]+)/i;
 const DEEZER_RE = /deezer\.com\/(?:[a-z]{2}\/)?(playlist|album)\/(\d+)/i;
 
 export function parseTrackLine(line: string): ListedTrack | null {
@@ -46,16 +49,31 @@ export function parseTrackList(text: string): ListedTrack[] {
   return tracks;
 }
 
+export function parsePlaylistUrl(input: string): PlaylistRef | null {
+  return parsePlaylistInput(input);
+}
+
 export function parsePlaylistInput(input: string): PlaylistRef | null {
   const value = input.trim();
   if (!value) return null;
-  const deezer = value.match(DEEZER_RE);
-  if (deezer?.[1] && deezer[2] && !value.includes("\n")) {
-    return {
-      source: "deezer",
-      kind: deezer[1].toLowerCase() as "playlist" | "album",
-      id: deezer[2],
-    };
+  const first = value.split(/\r?\n/)[0]?.trim() ?? "";
+  if (!first.includes("\n") && !value.includes("\n")) {
+    const spotify = value.match(SPOTIFY_RE);
+    if (spotify?.[1] && spotify[2]) {
+      return {
+        source: "spotify",
+        kind: spotify[1].toLowerCase() as "playlist" | "album",
+        id: spotify[2],
+      };
+    }
+    const deezer = value.match(DEEZER_RE);
+    if (deezer?.[1] && deezer[2]) {
+      return {
+        source: "deezer",
+        kind: deezer[1].toLowerCase() as "playlist" | "album",
+        id: deezer[2],
+      };
+    }
   }
   const tracks = parseTrackList(value);
   if (tracks.length >= 4) return { source: "list", tracks };

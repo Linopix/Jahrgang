@@ -10,13 +10,13 @@ const STEPS = [
   },
   {
     n: "02",
-    title: "Auflegen",
-    body: "Jahrgang spielt keine Musikdateien. Der Host öffnet den Titel in seinem Abo (Spotify, Apple Music, YouTube oder Deezer) und teilt den Ton, etwa in Discord. Die anderen hören mit, ohne den Namen zu sehen.",
+    title: "Hören",
+    body: "Ein neuer Titel spielt ohne Angabe von Name oder Jahr. Im Zeitstrahl zählt nur die Lage. Im Kenner-Modus rätst du zusätzlich Interpret und Titel.",
   },
   {
     n: "03",
     title: "Legen",
-    body: "Platz vor, zwischen oder hinter den Karten wählen. Im Zeitstrahl zählt nur die Lage. Im Kenner-Modus rätst du zusätzlich Interpret und Titel.",
+    body: "Platz vor, zwischen oder hinter den Karten wählen. Entscheidend für die Karte ist, ob der Titel früher oder später erschien.",
   },
   {
     n: "04",

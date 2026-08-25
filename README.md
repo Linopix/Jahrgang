@@ -6,8 +6,6 @@ Ein Titel läuft. Name und Jahr bleiben verdeckt. Du ordnest ihn auf deiner Zeit
 
 Zwei Varianten: **Zeitstrahl** nur nach Jahr, **Kenner** mit Interpret und Titel. Keine Anmeldung. Läuft im Browser auf Handy und Rechner.
 
-Jahrgang spielt keine Musikdateien. Der Host öffnet den Titel in seinem eigenen Abo und teilt den Ton — zum Beispiel in Discord.
-
 ![Jahrgang](public/og.jpg)
 
 ## So wird gespielt
@@ -20,7 +18,7 @@ Jede Person beginnt mit einer offenen Karte. Dann kommt ein neuer Titel. Du hör
 
 Joker nach Einstellung: keine, eine oder zwei. Damit lässt sich das Jahrzehnt anzeigen oder der Titel überspringen.
 
-Ziel sind 6, 8 oder 10 Karten. Repertoire als Pack: Jahrzehnt, Stil, Party, Charts, Rap Charts, Viral 2024 und 2025. Mix aus Zeitraum plus Genre. Oder eine eigene Titelliste.
+Ziel sind 6, 8 oder 10 Karten. Repertoire als Pack: Jahrzehnt, Stil, Party, Charts, Rap Charts, Viral 2024 und 2025. Mix aus Zeitraum plus Genre. Oder eine öffentliche Spotify- bzw. Deezer-Playlist.
 
 ## Mit anderen spielen
 
@@ -30,21 +28,19 @@ Ziel sind 6, 8 oder 10 Karten. Repertoire als Pack: Jahrzehnt, Stil, Party, Char
 4. Die anderen treten bei.
 5. Der Host wählt Spiel, Repertoire und ob nur der Host oder alle die nächste Runde starten dürfen.
 
-Nur wer am Zug ist, legt. Alle hören denselben Titel — über Discord oder denselben Raum, nicht über die Website. Bis zu acht Personen.
+Nur wer am Zug ist, legt. Alle hören denselben Titel. Bis zu acht Personen.
 
 ## Ein Bildschirm oder Solo
 
-**Ein Bildschirm:** ein Gerät, reihum. Gut für denselben Tisch. Zum Auflegen den Titel im eigenen Abo öffnen.
+**Ein Bildschirm:** ein Gerät, reihum. Gut für denselben Tisch.
 
 **Solo:** eine Zeitlinie, drei Fehlversuche.
 
 ## Hinweise
 
-Ohne Internet startet keine Online-Runde. Code ohne Null und Eins vorlesen.
+Ohne Internet keine Vorschau und keine Online-Runde. Code ohne Null und Eins vorlesen.
 
 Kleine Tippfehler beim Raten sind in Ordnung. „Beatles“ zählt für The Beatles, „YMCA“ für Y.M.C.A.
-
-Mehr unter [Hinweise](https://jahrgang.vercel.app/hinweise).
 
 ## Entwicklung
 

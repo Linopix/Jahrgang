@@ -83,7 +83,7 @@ export function OnlineLobbyScreen() {
           ? isHost
             ? "Raum wird geöffnet…"
             : `Verbinde mit ${roomCode}…`
-          : "Code oder Link teilen. Der Host legt die Titel in seinem Musik-Abo auf."}
+          : "Code oder Link teilen. Der Host startet, sobald alle verbunden sind."}
       </p>
 
       <div className="lg:mt-8 lg:grid lg:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)] lg:items-start lg:gap-12">
@@ -156,7 +156,7 @@ export function OnlineLobbyScreen() {
             onClick={() => void requestStartOnline()}
           >
             {pending
-              ? "Repertoire wird gemischt…"
+              ? "Titel werden geladen…"
               : readyCount < 2
                 ? "Mindestens zwei Personen"
                 : "Abend starten"}

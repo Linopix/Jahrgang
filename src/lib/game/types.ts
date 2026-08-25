@@ -48,7 +48,10 @@ export interface CatalogSong {
   genre?: Genre;
 }
 
-export type ResolvedSong = CatalogSong;
+export interface ResolvedSong extends CatalogSong {
+  previewUrl: string;
+  artworkUrl?: string;
+}
 
 export interface Player {
   id: string;
@@ -157,7 +160,7 @@ export const ERA_LABELS: Record<EraId, string> = {
   "viral-2025": "Viral 2025",
   "rap-charts": "Rap Charts",
   mix: "Mix",
-  playlist: "Liste",
+  playlist: "Playlist",
 };
 
 export const ERA_BLURBS: Record<EraId, string> = {
@@ -179,7 +182,7 @@ export const ERA_BLURBS: Record<EraId, string> = {
   "viral-2025": "Viel gespielte Titel von 2025.",
   "rap-charts": "Hip-Hop-Hits der letzten Jahre.",
   mix: "Zeitraum und Genre selbst wählen.",
-  playlist: "Eigene Titelliste. Wiedergabe in deinem Musik-Abo.",
+  playlist: "Öffentliche Spotify- oder Deezer-Playlist, oder eine Titelliste.",
 };
 
 export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [
@@ -207,8 +210,8 @@ export const VARIANT_LABELS: Record<PlayVariant, string> = {
 };
 
 export const VARIANT_BLURBS: Record<PlayVariant, string> = {
-  timeline: "Nur das Erscheinungsjahr. Der Host legt in seinem Abo auf.",
-  original: "Interpret und Titel raten, danach einordnen. Online sieht nur der Host den Namen.",
+  timeline: "Nur das Erscheinungsjahr. Das Cover darf während des Hörens sichtbar sein.",
+  original: "Interpret und Titel raten, danach einordnen. Das Cover bleibt bis zum Aufdecken verdeckt.",
 };
 
 export const GENRE_LABELS: Record<GenreId, string> = {

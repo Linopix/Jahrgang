@@ -106,16 +106,15 @@ function PlaylistField({
   return (
     <div className="mt-3 rounded-xl bg-raised p-4 shadow-border" data-playlist-field>
       <p className="text-sm text-muted">
-        Eine Zeile pro Titel: Interpret – Titel. Optional das Jahr. Alternativ ein
-        öffentlicher Deezer-Link (nur Metadaten, keine Wiedergabe).
+        Öffentlichen Spotify- oder Deezer-Link einfügen, oder Zeilen: Interpret – Titel.
       </p>
       <textarea
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
-        placeholder={"Queen – Bohemian Rhapsody – 1975\nNena – 99 Luftballons"}
+        placeholder="https://open.spotify.com/playlist/…"
         autoComplete="off"
         spellCheck={false}
-        rows={6}
+        rows={4}
         className="mt-3 w-full rounded-md bg-surface px-4 py-3 text-sm text-fg shadow-border outline-none transition-[box-shadow] placeholder:text-subtle focus:ring-2 focus:ring-primary/70"
       />
       <div className="mt-2 flex justify-end">

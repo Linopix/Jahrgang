@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import type { ResolvedSong } from "@/lib/game/types";
 
 type SongCardProps = {
-  song: Pick<ResolvedSong, "title" | "artist" | "year">;
+  song: Pick<ResolvedSong, "title" | "artist" | "year" | "artworkUrl">;
   hidden?: boolean;
   compact?: boolean;
   className?: string;
