@@ -1,4 +1,4 @@
-import { Radio } from "lucide-react";
+import { ChevronLeft, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Vinyl } from "./vinyl";
 import { unlockAudio } from "@/lib/game/audio";
@@ -23,8 +23,9 @@ export function OnlineEntryScreen() {
       <button
         type="button"
         onClick={() => leaveRoom()}
-        className="inline-flex h-11 items-center self-start text-sm text-muted transition-colors hover:text-fg"
+        className="inline-flex h-11 items-center gap-1 self-start text-sm text-muted transition-colors hover:text-fg"
       >
+        <ChevronLeft className="size-4" />
         Zurück
       </button>
 
@@ -55,6 +56,12 @@ export function OnlineEntryScreen() {
           maxLength={18}
           autoComplete="nickname"
           className="mt-2 h-12 w-full rounded-md bg-raised px-4 text-sm text-fg shadow-border outline-none transition-[box-shadow] focus:ring-2 focus:ring-primary/70"
+          onKeyDown={(event) => {
+            if (event.key !== "Enter" || !named) return;
+            event.preventDefault();
+            unlockAudio();
+            createRoom();
+          }}
         />
       </label>
 
@@ -106,6 +113,12 @@ export function OnlineEntryScreen() {
           autoCorrect="off"
           spellCheck={false}
           className="mt-2 h-12 w-full rounded-md bg-raised px-4 font-mono text-lg tracking-[0.28em] text-fg uppercase shadow-border outline-none focus:ring-2 focus:ring-primary/70"
+          onKeyDown={(event) => {
+            if (event.key !== "Enter" || !named || inviteCode.length < 4) return;
+            event.preventDefault();
+            unlockAudio();
+            joinRoom();
+          }}
         />
       </label>
 

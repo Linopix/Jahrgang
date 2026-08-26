@@ -667,6 +667,31 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .stagger-in > *,
+  .screen-in,
+  .pop-in,
+  .dialog-overlay,
+  .dialog-panel,
+  .menu-panel,
+  .menu-sheet,
+  .podium-bar,
+  .podium-name,
+  .react-burst,
+  .pack-cover,
+  .pack-sleeve,
+  .flip-inner,
+  .icon-swap {
+    animation: none !important;
+    transition: none !important;
+    filter: none !important;
+  }
+
+  .vinyl-disc {
+    animation: none !important;
+  }
+}
+
 .icon-swap {
   transition-property: opacity, filter, scale;
   transition-duration: 300ms;

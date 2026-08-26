@@ -68,11 +68,13 @@ function SlotButton({
     <button
       type="button"
       aria-label={`Platz ${index + 1} wählen`}
+      aria-pressed={selected}
       onClick={() => onSelect?.(index)}
+      data-slot={index}
       className={cn(
-        "relative z-10 flex h-36 w-11 shrink-0 items-center justify-center rounded-sm border border-dashed transition-[background-color,border-color,color,transform] duration-150 ease-out hover:-translate-y-px active:scale-[0.96]",
+        "relative z-10 flex h-36 w-12 shrink-0 items-center justify-center rounded-sm border border-dashed transition-[background-color,border-color,color,transform,box-shadow] duration-150 ease-out hover:-translate-y-px active:scale-[0.96]",
         selected
-          ? "scale-105 border-primary bg-primary/20 text-primary"
+          ? "scale-105 border-primary bg-primary text-primary-fg shadow-border"
           : "border-border bg-raised/60 text-muted hover:border-primary/50 hover:text-fg",
       )}
     >

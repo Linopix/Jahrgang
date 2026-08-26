@@ -25,7 +25,7 @@ export function GuessField({ value, onChange, pool, placeholder, label }: GuessF
 
   return (
     <label className="relative block">
-      <span className="sr-only">{label}</span>
+      <span className="mb-1 block text-xs font-medium text-muted">{label}</span>
       <input
         value={value}
         onChange={(event) => {
@@ -53,6 +53,7 @@ export function GuessField({ value, onChange, pool, placeholder, label }: GuessF
             setOpen(false);
           }
         }}
+        data-guess={label}
         className={FIELD}
         placeholder={placeholder}
         maxLength={80}

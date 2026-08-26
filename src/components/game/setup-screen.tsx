@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Minus, Plus } from "lucide-react";
+import { ChevronLeft, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GameOptions } from "./game-options";
 import { useGame } from "@/lib/game/store";
@@ -28,8 +28,9 @@ export function SetupScreen() {
       <button
         type="button"
         onClick={openHome}
-        className="inline-flex h-11 items-center self-start text-sm text-muted transition-colors hover:text-fg"
+        className="inline-flex h-11 items-center gap-1 self-start text-sm text-muted transition-colors hover:text-fg"
       >
+        <ChevronLeft className="size-4" />
         Zurück
       </button>
       <div className="lg:mt-6 lg:grid lg:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)] lg:items-start lg:gap-12">
@@ -74,10 +75,12 @@ export function SetupScreen() {
             </section>
           ) : null}
 
-          <section className="mt-6 space-y-2">
+          <section className="mt-6 space-y-3">
             {visibleNames.map((name, i) => (
               <label key={i} className="block">
-                <span className="sr-only">Name {i + 1}</span>
+                <span className="mb-1 block text-xs font-medium text-muted">
+                  {mode === "solo" ? "Dein Name" : `Spieler ${i + 1}`}
+                </span>
                 <input
                   value={name}
                   onChange={(event) => {

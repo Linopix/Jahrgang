@@ -124,11 +124,10 @@ export function PlayScreen() {
   if (!player || !current) return null;
 
   const guessesReady = !original || (titleGuess.trim().length > 0 && artistGuess.trim().length > 0);
-  const canPlaceCard = myTurn && selectedSlot !== null && !pending && guessesReady;
 
   return (
-    <main className="screen-in mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden px-4 pb-[env(safe-area-inset-bottom)] pt-4 sm:px-6 sm:pt-6 lg:max-w-7xl">
-      <header className="flex items-center justify-between gap-3 pr-14">
+    <main className="screen-in mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden px-4 pb-[env(safe-area-inset-bottom)] pt-3 sm:px-6 sm:pt-6 lg:max-w-7xl">
+      <header className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <button
             type="button"
@@ -183,7 +182,7 @@ export function PlayScreen() {
               <li
                 key={row.id}
                 className={cn(
-                  "flex min-w-28 shrink-0 flex-col rounded-md px-3 py-2 transition-[background-color,color,transform] duration-200 ease-out hover:-translate-y-px",
+                  "flex min-w-28 shrink-0 flex-col rounded-md px-3 py-2 transition-[background-color,color,transform] duration-200 ease-out",
                   active ? "bg-primary text-primary-fg" : "bg-raised text-fg shadow-border",
                 )}
               >
@@ -192,6 +191,7 @@ export function PlayScreen() {
                   {online && row.id === selfId ? " · du" : ""}
                 </span>
                 <span className="text-xs tabular-nums opacity-70">
+                  {active ? "dran · " : ""}
                   {rules.open ? row.timeline.length : `${row.timeline.length}/${target}`}
                   {original ? ` · ${row.quiz}` : ""}
                 </span>
@@ -226,8 +226,8 @@ export function PlayScreen() {
           {online && !myTurn ? "Du hörst mit" : original ? "Raten und legen" : "Am Zug"}
         </p>
         {tvRemote ? <div className="mt-3 w-full max-w-sm"><TvListenBanner /></div> : null}
-        <h1 className="mt-1 font-display text-3xl font-medium text-fg sm:text-5xl">{player.name}</h1>
-        <p className="mt-2 max-w-md text-sm text-muted">
+        <h1 className="mt-1 font-display text-2xl font-medium text-fg sm:text-5xl">{player.name}</h1>
+        <p className="mt-2 hidden max-w-md text-sm text-muted sm:block">
           {online && !myTurn
             ? `${player.name} ist am Zug.`
             : kind === "both"
@@ -289,7 +289,7 @@ export function PlayScreen() {
             step={0.01}
             defaultValue={0.85}
             aria-label="Lautstärke"
-            className="hidden h-11 w-24 accent-primary sm:block"
+            className="range-single hidden w-24 sm:block"
             onChange={(event) => setMasterVolume(Number(event.target.value))}
           />
         </div>
@@ -371,11 +371,34 @@ export function PlayScreen() {
         </div>
         <Button
           size="lg"
-          className="mt-3 w-full"
-          disabled={!canPlaceCard}
-          onClick={() => requestPlace({ title: titleGuess, artist: artistGuess })}
+          className={cn("mt-3 w-full", online && "max-lg:mx-14 max-lg:w-auto")}
+          disabled={!myTurn || pending}
+          onClick={() => {
+            if (!myTurn || pending) return;
+            if (selectedSlot === null) {
+              document.querySelector<HTMLElement>("[data-slot]")?.focus();
+              return;
+            }
+            if (!guessesReady) {
+              document.querySelector<HTMLInputElement>("[data-guess]")?.focus();
+              return;
+            }
+            requestPlace({ title: titleGuess, artist: artistGuess });
+          }}
         >
-          {myTurn ? (original ? "Tipp ablegen" : "Hier ablegen") : `Warten auf ${player.name}`}
+          {!myTurn
+            ? `Warten auf ${player.name}`
+            : selectedSlot === null
+              ? "Platz auf der Linie wählen"
+              : original && !guessesReady
+                ? kind === "both"
+                  ? "Titel und Interpret eintragen"
+                  : kind === "title"
+                    ? "Titel eintragen"
+                    : "Interpret eintragen"
+                : original
+                  ? "Tipp ablegen"
+                  : "Hier ablegen"}
         </Button>
       </section>
       </div>

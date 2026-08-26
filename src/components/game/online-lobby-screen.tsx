@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Copy, Link2 } from "lucide-react";
+import { Check, ChevronLeft, Copy, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GameOptions, roomConfigSummary } from "./game-options";
 import { shareUrl } from "@/lib/game/room-code";
@@ -81,8 +81,9 @@ export function OnlineLobbyScreen() {
       <button
         type="button"
         onClick={() => requestLeave()}
-        className="inline-flex h-11 items-center self-start text-sm text-muted transition-colors hover:text-fg"
+        className="inline-flex h-11 items-center gap-1 self-start text-sm text-muted transition-colors hover:text-fg"
       >
+        <ChevronLeft className="size-4" />
         Raum verlassen
       </button>
 
@@ -193,7 +194,7 @@ export function OnlineLobbyScreen() {
       {isHost ? (
         <div>
           <GameOptions value={config} onChange={requestConfig} online />
-          <div className="fixed inset-x-0 bottom-0 z-20 bg-bg/90 px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:static lg:inset-auto lg:bg-transparent lg:px-0 lg:pt-8 lg:pb-0 lg:backdrop-blur-none">
+          <div className="fixed inset-x-0 bottom-0 z-20 bg-bg/90 px-16 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:static lg:inset-auto lg:bg-transparent lg:px-0 lg:pt-8 lg:pb-0 lg:backdrop-blur-none">
             <Button
               size="lg"
               className="w-full lg:max-w-xs"

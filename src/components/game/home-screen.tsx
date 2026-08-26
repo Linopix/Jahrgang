@@ -1,4 +1,4 @@
-import { Disc3, Radio, User, Users } from "lucide-react";
+import { Radio, User, Users } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Vinyl } from "./vinyl";
@@ -88,10 +88,6 @@ export function HomeScreen() {
           <User className="size-4" />
           Alleine spielen
         </Button>
-        <Button size="lg" variant="ghost" className="w-full sm:col-span-2" onClick={() => setRulesOpen(true)}>
-          <Disc3 className="size-4" />
-          Spielregeln
-        </Button>
       </div>
       </div>
 
@@ -100,6 +96,10 @@ export function HomeScreen() {
       </div>
       </div>
       <p className="mt-8 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-subtle lg:mt-10 lg:justify-start lg:text-left">
+        <button type="button" className="hover:text-fg" onClick={() => setRulesOpen(true)}>
+          Regeln
+        </button>
+        <span>·</span>
         <Link to="/hinweise" className="hover:text-fg">
           Hinweise
         </Link>

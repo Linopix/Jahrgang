@@ -13,7 +13,7 @@ type VinylProps = {
 
 const sizes = {
   sm: "size-24",
-  md: "size-36 sm:size-52 lg:size-64",
+  md: "size-28 sm:size-48 lg:size-60",
   lg: "size-56 sm:size-72",
 };
 
@@ -27,7 +27,7 @@ export function Vinyl({
 }: VinylProps) {
   return (
     <div
-      className={cn("relative", sizes[size])}
+      className={cn("relative cursor-pointer", sizes[size])}
       onClick={() => {
         sfxScratch();
         noteVinylClick();
