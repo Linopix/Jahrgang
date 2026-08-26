@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { songsForPack } from "./packs";
-import { canPlace, decadeLabel, fisherYates, insertSong, mergeSeries, tallySeries, winner } from "./engine";
+import { canPlace, cardsNeeded, decadeLabel, fisherYates, insertSong, mergeSeries, tallySeries, winner } from "./engine";
 import { scoreForVariant } from "./guess";
 import { loadPlaylistSongs, type PlaylistTrack } from "./playlist";
 import { resolvePreviews } from "./preview";
@@ -46,7 +46,7 @@ import {
   type TokenCount,
 } from "./types";
 
-const POOL_SIZE = 40;
+const POOL_SIZE = 80;
 
 export type SongGuess = {
   title: string;
@@ -318,10 +318,7 @@ export const useGame = create<GameStore>((set, get) => ({
         name,
       }));
       const rules = rulesFor(variant, custom);
-      const needed = Math.min(
-        POOL_SIZE,
-        rules.open ? POOL_SIZE : playerCount + Math.max(config.target + 4, 10),
-      );
+      const needed = cardsNeeded(playerCount, config.target, rules.open, POOL_SIZE);
       let imported: PlaylistTrack[] = [];
       if (config.era === "playlist" && !config.playlistUrl) {
         set({
@@ -493,7 +490,8 @@ export const useGame = create<GameStore>((set, get) => ({
     const { phase, players, currentPlayerIndex, deck, mode, target, lastResult, series, variant, custom } = get();
     if (phase !== "reveal") return;
     stopPreview();
-    if (isOver(players, target, mode, variant, custom) || deck.length === 0) {
+    const open = rulesFor(variant, custom).open;
+    if (isOver(players, target, mode, variant, custom)) {
       if (lastResult?.correct && winner(players, target)) sfxWin();
       set({
         phase: "winner",
@@ -502,11 +500,24 @@ export const useGame = create<GameStore>((set, get) => ({
       });
       return;
     }
+    const pile =
+      lastResult && !lastResult.correct && !open
+        ? [...deck, lastResult.song]
+        : deck;
+    if (pile.length === 0) {
+      sfxWin();
+      set({
+        phase: "winner",
+        current: null,
+        series: tallySeries(series, players, target),
+      });
+      return;
+    }
     const nextIndex = pickNextIndex(players, currentPlayerIndex, mode, opts?.skipIds);
-    const current = deck[0] ?? null;
+    const current = pile[0] ?? null;
     set({
       currentPlayerIndex: nextIndex,
-      deck: deck.slice(1),
+      deck: pile.slice(1),
       current,
       lastResult: null,
       selectedSlot: null,

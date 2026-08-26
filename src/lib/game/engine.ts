@@ -47,6 +47,19 @@ export function decadeLabel(year: number): string {
   return `${decade}er`;
 }
 
+export function cardsNeeded(playerCount: number, target: number, open: boolean, cap = 80): number {
+  const n = Math.max(1, playerCount);
+  if (open) return cap;
+  const goal = Math.max(2, target);
+  return Math.min(cap, n * (goal + 1));
+}
+
+export function turnsUntilFirstWin(playerCount: number, target: number): number {
+  const n = Math.max(1, playerCount);
+  const extras = Math.max(1, target - 1);
+  return (extras - 1) * n + 1;
+}
+
 export function winner(players: Player[], target: number): Player | null {
   return rankPlayers(players).find((player) => player.timeline.length >= target) ?? null;
 }
