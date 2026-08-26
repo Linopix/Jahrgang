@@ -23,9 +23,19 @@ export function HomeScreen() {
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-16">
       <div>
       <header className="stagger-in flex flex-col items-center text-center lg:items-start lg:text-left">
-        <p className="text-xs font-medium tracking-[0.28em] text-muted uppercase">
-          Musik-Zeitspiel
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-xs font-medium tracking-[0.28em] text-muted uppercase">
+            Musik-Zeitspiel
+          </p>
+          <span className="text-subtle">·</span>
+          <button
+            type="button"
+            className="text-xs font-medium text-subtle transition-colors hover:text-fg"
+            onClick={() => setRulesOpen(true)}
+          >
+            Regeln
+          </button>
+        </div>
         <h1
           className={cn(
             "mt-3 font-display text-5xl font-medium tracking-tight text-fg sm:text-7xl",
@@ -89,10 +99,6 @@ export function HomeScreen() {
       </div>
       </div>
       <p className="mt-8 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-subtle lg:mt-10 lg:justify-start lg:text-left">
-        <button type="button" className="hover:text-fg" onClick={() => setRulesOpen(true)}>
-          Regeln
-        </button>
-        <span>·</span>
         <Link to="/hinweise" className="hover:text-fg">
           Hinweise
         </Link>
