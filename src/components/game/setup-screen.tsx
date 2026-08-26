@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { GameOptions } from "./game-options";
+import { GameOptions, optionsPile } from "./game-options";
 import { useGame } from "@/lib/game/store";
 import { DEFAULT_ROOM_CONFIG, type RoomConfig } from "@/lib/game/types";
 import { notePlayerName } from "@/lib/gags";
@@ -22,6 +22,8 @@ export function SetupScreen() {
     () => (mode === "solo" ? names.slice(0, 1) : names.slice(0, count)),
     [mode, names, count],
   );
+  const pile = optionsPile(options, visibleNames.length);
+  const pileBlocked = pile.status === "short" || pile.status === "empty";
 
   return (
     <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pb-32 pt-8 lg:max-w-6xl lg:px-8 lg:pb-8">
@@ -101,6 +103,7 @@ export function SetupScreen() {
           <GameOptions
             value={options}
             onChange={(patch) => setOptions((current) => ({ ...current, ...patch }))}
+            players={visibleNames.length}
           />
         </div>
 
@@ -113,7 +116,9 @@ export function SetupScreen() {
             <Button
               size="lg"
               className="w-full lg:max-w-xs"
+              disabled={pileBlocked}
               onClick={() => {
+                if (pileBlocked) return;
                 void startGame({
                   mode,
                   names: visibleNames,
@@ -121,7 +126,7 @@ export function SetupScreen() {
                 });
               }}
             >
-              Platte auflegen
+              {pileBlocked ? "Zu wenig Titel" : "Platte auflegen"}
             </Button>
           </div>
         </div>

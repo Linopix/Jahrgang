@@ -49,9 +49,27 @@ export function decadeLabel(year: number): string {
 
 export function cardsNeeded(playerCount: number, target: number, open: boolean, cap = 80): number {
   const n = Math.max(1, playerCount);
-  if (open) return cap;
+  if (open) return Math.min(cap, Math.max(16, n * 6));
   const goal = Math.max(2, target);
   return Math.min(cap, n * (goal + 1));
+}
+
+export type PileStatus = "ok" | "tight" | "short" | "empty" | "unknown";
+
+export function pileStatus(
+  pile: number | null,
+  playerCount: number,
+  target: number,
+  open: boolean,
+): PileStatus {
+  if (pile === null) return "unknown";
+  if (pile <= 0) return "empty";
+  const n = Math.max(1, playerCount);
+  if (pile < n + 4) return "short";
+  const need = cardsNeeded(n, target, open);
+  if (pile < need) return "short";
+  if (pile < need + n) return "tight";
+  return "ok";
 }
 
 export function turnsUntilFirstWin(playerCount: number, target: number): number {

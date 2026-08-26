@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { peekPlaylist } from "@/lib/game/playlist";
 import { packSize } from "@/lib/game/packs";
+import { cardsNeeded, pileStatus, type PileStatus } from "@/lib/game/engine";
 import { sfxHover, sfxSlide, sfxTick } from "@/lib/game/audio";
 import { GenreArt, PackArt } from "@/components/game/pack-art";
 import { MenuSelect } from "@/components/game/menu-select";
@@ -36,6 +37,7 @@ type GameOptionsProps = {
   value: RoomConfig;
   onChange: (patch: Partial<RoomConfig>) => void;
   online?: boolean;
+  players?: number;
 };
 
 const CHIP =
@@ -136,33 +138,35 @@ function SwitchRow({
   onChange: (next: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-2">
-      <div className="min-w-0">
-        <p className="text-sm text-fg">{label}</p>
-        <p className="text-xs text-muted">{hint}</p>
-      </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={on}
-        aria-label={label}
-        onClick={() => {
-          sfxTick();
-          onChange(!on);
-        }}
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={() => {
+        onChange(!on);
+        sfxTick();
+      }}
+      className="flex min-h-12 w-full items-center justify-between gap-4 py-2 text-left"
+    >
+      <span className="min-w-0">
+        <span className="block text-sm text-fg">{label}</span>
+        <span className="block text-xs text-muted">{hint}</span>
+      </span>
+      <span
+        aria-hidden
         className={cn(
-          "relative h-7 w-11 shrink-0 rounded-full transition-colors duration-150 ease-out",
-          on ? "bg-primary" : "bg-raised shadow-border",
+          "relative h-7 w-11 shrink-0 overflow-hidden rounded-full transition-colors duration-150 ease-out",
+          on ? "bg-primary" : "bg-surface shadow-border",
         )}
       >
         <span
           className={cn(
-            "absolute top-0.5 size-6 rounded-full transition-transform duration-150 ease-out",
-            on ? "translate-x-4 bg-primary-fg" : "translate-x-0.5 bg-fg",
+            "absolute top-0.5 left-0.5 size-6 rounded-full transition-transform duration-150 ease-out",
+            on ? "translate-x-4 bg-primary-fg" : "bg-fg",
           )}
         />
-      </button>
-    </div>
+      </span>
+    </button>
   );
 }
 
@@ -445,7 +449,60 @@ function pileCount(value: RoomConfig) {
   });
 }
 
-export function GameOptions({ value, onChange, online }: GameOptionsProps) {
+function isOpenPlay(value: RoomConfig) {
+  if (value.variant !== "custom") return false;
+  return (value.custom ?? DEFAULT_CUSTOM).open;
+}
+
+export function optionsPile(value: RoomConfig, players: number) {
+  const pile = pileCount(value);
+  const open = isOpenPlay(value);
+  return {
+    pile,
+    need: cardsNeeded(players, value.target, open),
+    status: pileStatus(pile, players, value.target, open) as PileStatus,
+  };
+}
+
+function PileNote({
+  value,
+  players,
+}: {
+  value: RoomConfig;
+  players: number;
+}) {
+  const { pile, need, status } = optionsPile(value, players);
+  if (status === "ok") return null;
+  if (status === "unknown") {
+    return (
+      <p className="mt-3 rounded-md bg-raised px-3 py-2 text-sm text-muted shadow-border">
+        Liste übernehmen, dann sehen wir ob der Stapel reicht.
+      </p>
+    );
+  }
+  if (status === "empty") {
+    return (
+      <p className="mt-3 rounded-md bg-danger/15 px-3 py-2 text-sm text-fg">
+        Kein Titel in dem Pack. Anderes Repertoire oder Mix weiter stellen.
+      </p>
+    );
+  }
+  if (status === "short") {
+    return (
+      <p className="mt-3 rounded-md bg-danger/15 px-3 py-2 text-sm text-fg">
+        Zu wenig für {players} {players === 1 ? "Person" : "Personen"}
+        {isOpenPlay(value) ? "" : ` mit ${value.target} Karten`}. Es braucht {need} Titel, das Pack hat {pile}.
+      </p>
+    );
+  }
+  return (
+    <p className="mt-3 rounded-md bg-raised px-3 py-2 text-sm text-muted shadow-border">
+      Knapper Stapel ({pile} Titel, {need} nötig). Beim Start können Titel ohne Vorschau fehlen.
+    </p>
+  );
+}
+
+export function GameOptions({ value, onChange, online, players = 2 }: GameOptionsProps) {
   const custom = value.custom ?? DEFAULT_CUSTOM;
   const showTarget = value.variant !== "custom" || !custom.open;
   const pile = pileCount(value);
@@ -601,6 +658,7 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
         </div>
         {value.era === "playlist" ? <PlaylistField value={value} onChange={onChange} /> : null}
         {value.era === "mix" ? <MixField value={value} onChange={onChange} /> : null}
+        <PileNote value={value} players={players} />
       </section>
     </div>
   );

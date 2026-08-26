@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Check, ChevronLeft, Copy, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { GameOptions, roomConfigSummary } from "./game-options";
+import { GameOptions, optionsPile, roomConfigSummary } from "./game-options";
 import { shareUrl } from "@/lib/game/room-code";
 import { requestConfig, requestKick, requestLeave, requestStartOnline } from "@/lib/game/online-actions";
 import { roomConfigFrom, useOnline } from "@/lib/game/online-store";
@@ -74,7 +74,9 @@ export function OnlineLobbyScreen() {
   const readyCount = members.filter((m) => m.connectionState !== "failed").length;
   const seats = playerSeats(members, hostId, tv);
   const need = TV_LIVE && tv ? 1 : 2;
-  const canStart = !connecting && !pending && seats.length >= need;
+  const pile = optionsPile(config, Math.max(seats.length, need));
+  const pileBlocked = pile.status === "short" || pile.status === "empty";
+  const canStart = !connecting && !pending && seats.length >= need && !pileBlocked;
 
   return (
     <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pb-28 pt-8 lg:max-w-6xl lg:px-8 lg:pb-8">
@@ -193,7 +195,7 @@ export function OnlineLobbyScreen() {
 
       {isHost ? (
         <div>
-          <GameOptions value={config} onChange={requestConfig} online />
+          <GameOptions value={config} onChange={requestConfig} online players={Math.max(seats.length, need)} />
           <div className="fixed inset-x-0 bottom-0 z-20 bg-bg/90 px-16 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:static lg:inset-auto lg:bg-transparent lg:px-0 lg:pt-8 lg:pb-0 lg:backdrop-blur-none">
             <Button
               size="lg"
@@ -209,7 +211,9 @@ export function OnlineLobbyScreen() {
                   ? tv
                     ? "Mindestens ein Handy"
                     : "Mindestens zwei Personen"
-                  : "Abend starten"}
+                  : pileBlocked
+                    ? "Zu wenig Titel"
+                    : "Abend starten"}
             </Button>
           </div>
         </div>
