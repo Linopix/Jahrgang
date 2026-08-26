@@ -14,6 +14,7 @@ import { Route as HinweiseRouteImport } from './routes/hinweise'
 import { Route as KontoRouteImport } from './routes/konto'
 import { Route as RanglisteRouteImport } from './routes/rangliste'
 import { Route as ApiAccountRouteImport } from './routes/api/account'
+import { Route as ApiOgRouteImport } from './routes/api/og'
 import { Route as ApiRtcRouteImport } from './routes/api/rtc'
 import { Route as ApiScoresRouteImport } from './routes/api/scores'
 import { Route as ApiSpotifyRouteImport } from './routes/api/spotify'
@@ -44,6 +45,11 @@ const RanglisteRoute = RanglisteRouteImport.update({
 const ApiAccountRoute = ApiAccountRouteImport.update({
   id: '/api/account',
   path: '/api/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOgRoute = ApiOgRouteImport.update({
+  id: '/api/og',
+  path: '/api/og',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiRtcRoute = ApiRtcRouteImport.update({
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/konto': typeof KontoRoute
   '/rangliste': typeof RanglisteRoute
   '/api/account': typeof ApiAccountRoute
+  '/api/og': typeof ApiOgRoute
   '/api/rtc': typeof ApiRtcRoute
   '/api/scores': typeof ApiScoresRoute
   '/api/spotify': typeof ApiSpotifyRouteWithChildren
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/konto': typeof KontoRoute
   '/rangliste': typeof RanglisteRoute
   '/api/account': typeof ApiAccountRoute
+  '/api/og': typeof ApiOgRoute
   '/api/rtc': typeof ApiRtcRoute
   '/api/scores': typeof ApiScoresRoute
   '/api/spotify': typeof ApiSpotifyRouteWithChildren
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/konto': typeof KontoRoute
   '/rangliste': typeof RanglisteRoute
   '/api/account': typeof ApiAccountRoute
+  '/api/og': typeof ApiOgRoute
   '/api/rtc': typeof ApiRtcRoute
   '/api/scores': typeof ApiScoresRoute
   '/api/spotify': typeof ApiSpotifyRouteWithChildren
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/konto'
     | '/rangliste'
     | '/api/account'
+    | '/api/og'
     | '/api/rtc'
     | '/api/scores'
     | '/api/spotify'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/konto'
     | '/rangliste'
     | '/api/account'
+    | '/api/og'
     | '/api/rtc'
     | '/api/scores'
     | '/api/spotify'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/konto'
     | '/rangliste'
     | '/api/account'
+    | '/api/og'
     | '/api/rtc'
     | '/api/scores'
     | '/api/spotify'
@@ -165,6 +177,7 @@ export interface RootRouteChildren {
   KontoRoute: typeof KontoRoute
   RanglisteRoute: typeof RanglisteRoute
   ApiAccountRoute: typeof ApiAccountRoute
+  ApiOgRoute: typeof ApiOgRoute
   ApiRtcRoute: typeof ApiRtcRoute
   ApiScoresRoute: typeof ApiScoresRoute
   ApiSpotifyRoute: typeof ApiSpotifyRouteWithChildren
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       path: '/api/account'
       fullPath: '/api/account'
       preLoaderRoute: typeof ApiAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/og': {
+      id: '/api/og'
+      path: '/api/og'
+      fullPath: '/api/og'
+      preLoaderRoute: typeof ApiOgRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/rtc': {
@@ -274,6 +294,7 @@ const rootRouteChildren: RootRouteChildren = {
   KontoRoute: KontoRoute,
   RanglisteRoute: RanglisteRoute,
   ApiAccountRoute: ApiAccountRoute,
+  ApiOgRoute: ApiOgRoute,
   ApiRtcRoute: ApiRtcRoute,
   ApiScoresRoute: ApiScoresRoute,
   ApiSpotifyRoute: ApiSpotifyRouteWithChildren,

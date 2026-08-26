@@ -110,6 +110,15 @@ export function OnlineLobbyScreen() {
       <section className="mt-8 rounded-xl bg-surface px-5 py-6 text-center shadow-border lg:mt-0">
         <p className="text-xs tracking-[0.22em] text-muted uppercase">Raumcode</p>
         <p className="mt-3 font-mono text-5xl tracking-[0.28em] text-fg">{roomCode || "····"}</p>
+        {roomCode ? (
+          <img
+            src={`/api/og?room=${encodeURIComponent(roomCode)}`}
+            alt={`Einladung Raum ${roomCode}`}
+            width={1200}
+            height={630}
+            className="mt-5 w-full rounded-lg shadow-border"
+          />
+        ) : null}
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
           <Button variant="secondary" className="flex-1" onClick={() => void copy("code")}>
             {copied === "code" ? <Check className="size-4" /> : <Copy className="size-4" />}

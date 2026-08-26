@@ -4,5 +4,5 @@
   "card": "custom",
   "color": "0c0b0a",
   "description": "Musik-Zeitspiel. Einen Hit hören und auf der Zeitlinie einordnen.",
-  "image": "https://jahrgang.vercel.app/og.jpg"
+  "image": "https://jahrgang.vercel.app/api/og"
 }

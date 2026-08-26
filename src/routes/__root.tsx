@@ -2,46 +2,34 @@ import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-r
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { ThemePicker } from "@/components/game/theme-picker";
+import { inviteCode, ogMeta } from "@/lib/og/invite";
 import appCss from "../styles.css?url";
-
-const APP_NAME = "Jahrgang";
-const SITE = "https://jahrgang.vercel.app";
-const OG_IMAGE = `${SITE}/og.jpg`;
 
 const THEME_BOOT = `(function(){try{var t=localStorage.getItem("jahrgang-theme");var u=[];try{u=JSON.parse(localStorage.getItem("jahrgang-theme-unlocks")||"[]")}catch(e){}var ok=t==="night"||t==="paper"||t==="ink"||t==="ember"||t==="glass"||t==="retro"||(t==="disco"&&u.indexOf("disco")>=0);if(ok)document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`;
 
+function roomFromLocation(location: { href?: string; search?: unknown; searchStr?: string }) {
+  if (typeof location.search === "object" && location.search && "room" in location.search) {
+    const value = (location.search as { room?: unknown }).room;
+    if (typeof value === "string") return inviteCode(value);
+  }
+  const href = location.href || "";
+  try {
+    const url = href.includes("://") ? new URL(href) : new URL(href, "https://jahrgang.vercel.app");
+    return inviteCode(url.searchParams.get("room"));
+  } catch {
+    const raw = typeof location.search === "string" ? location.search : location.searchStr || "";
+    return inviteCode(new URLSearchParams(raw.startsWith("?") ? raw.slice(1) : raw).get("room"));
+  }
+}
+
 export const Route = createRootRoute({
-  head: () => ({
+  loader: ({ location }) => ({ room: roomFromLocation(location) }),
+  head: ({ loaderData }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: APP_NAME },
-      {
-        name: "description",
-        content:
-          "Jahrgang: Titel hören und nach Erscheinungsjahr auf der Zeitlinie einordnen.",
-      },
-      { property: "og:title", content: APP_NAME },
-      {
-        property: "og:description",
-        content: "Musik-Zeitspiel. Raumcode teilen, mitspielen.",
-      },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: SITE },
-      { property: "og:site_name", content: APP_NAME },
-      { property: "og:image", content: OG_IMAGE },
-      { property: "og:image:secure_url", content: OG_IMAGE },
-      { property: "og:image:width", content: "1200" },
-      { property: "og:image:height", content: "630" },
-      { property: "og:image:type", content: "image/jpeg" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: APP_NAME },
-      {
-        name: "twitter:description",
-        content: "Musik-Zeitspiel. Raumcode teilen, mitspielen.",
-      },
-      { name: "twitter:image", content: OG_IMAGE },
       { name: "theme-color", content: "#0c0b0a" },
+      ...ogMeta(loaderData?.room || undefined),
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
