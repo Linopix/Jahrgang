@@ -66,6 +66,7 @@ let titleHits = 0;
 let konami = 0;
 let konamiTimer = 0;
 let lastKonamiRoast = 0;
+let konamiWord = "";
 let nameTimer = 0;
 const said = new Set<string>();
 const KONAMI = [
@@ -81,6 +82,7 @@ const KONAMI = [
   "a",
 ];
 const KONAMI_ARROWS = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+const KONAMI_WORD = "konami";
 const KONAMI_NEAR = ["Fast.", "Fast. Von vorn.", "Nah dran.", "So knapp."];
 const KONAMI_ONE = [
   "Was ist das, willst du cheaten?",
@@ -227,26 +229,43 @@ export function noteTitleClick() {
   window.setTimeout(() => useGags.getState().setScramble(false), 1400);
 }
 
+function unlockDisco() {
+  konami = 0;
+  konamiWord = "";
+  window.clearTimeout(konamiTimer);
+  sfxWin();
+  unlockTheme("disco");
+  applyTheme("disco");
+  setRetroAudio(false);
+  setDiscoAudio(true);
+  useGags.getState().setDisco(true);
+  toastGag("Disco-Edit freigeschaltet. Niemand hat etwas gesehen.");
+  markEgg("disco");
+  useGags.getState().addFound("disco");
+  const clip = GAG_CLIPS.disco;
+  if (clip) void playStoreClip(clip);
+  window.setTimeout(() => useGags.getState().setDisco(false), 1800);
+}
+
 export function noteKonamiKey(key: string) {
+  const letter = key.length === 1 ? key.toLowerCase() : "";
+  if (letter >= "a" && letter <= "z") {
+    konamiWord = (konamiWord + letter).slice(-KONAMI_WORD.length);
+    if (konamiWord === KONAMI_WORD) {
+      unlockDisco();
+      return;
+    }
+  } else if (key !== "Shift") {
+    konamiWord = "";
+  }
+
   window.clearTimeout(konamiTimer);
   const expect = KONAMI[konami];
   const match = key === expect || key.toLowerCase() === expect;
   if (match) {
     konami += 1;
     if (konami === KONAMI.length) {
-      konami = 0;
-      sfxWin();
-      unlockTheme("disco");
-      applyTheme("disco");
-      setRetroAudio(false);
-      setDiscoAudio(true);
-      useGags.getState().setDisco(true);
-      toastGag("Disco-Edit freigeschaltet. Niemand hat etwas gesehen.");
-      markEgg("disco");
-      useGags.getState().addFound("disco");
-      const clip = GAG_CLIPS.disco;
-      if (clip) void playStoreClip(clip);
-      window.setTimeout(() => useGags.getState().setDisco(false), 1800);
+      unlockDisco();
       return;
     }
     konamiTimer = window.setTimeout(() => {
