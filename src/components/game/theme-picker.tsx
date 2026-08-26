@@ -14,6 +14,8 @@ import {
 import { THEMES, applyTheme, readTheme, visibleThemes, type ThemeId } from "@/lib/theme";
 import { notePaperSign } from "@/lib/gags";
 import { EggTally } from "@/components/game/gag-layer";
+import { useGame } from "@/lib/game/store";
+import { useOnline } from "@/lib/game/online-store";
 import { cn } from "@/lib/utils";
 
 function SignaturePad({ onInk }: { onInk: (enough: boolean) => void }) {
@@ -83,6 +85,10 @@ function SignaturePad({ onInk }: { onInk: (enough: boolean) => void }) {
   );
 }
 
+export function openAppearance() {
+  window.dispatchEvent(new Event("jahrgang-appearance"));
+}
+
 export function ThemePicker() {
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState<ThemeId>("night");
@@ -90,6 +96,7 @@ export function ThemePicker() {
   const [paperWarn, setPaperWarn] = useState(false);
   const [signed, setSigned] = useState(false);
   const root = useRef<HTMLDivElement>(null);
+  const onHome = useGame((s) => s.phase === "home") && useOnline((s) => s.status === "off");
 
   const [palette, setPalette] = useState(() =>
     typeof window === "undefined" ? THEMES.filter((row) => !row.secret) : visibleThemes(),
@@ -115,9 +122,12 @@ export function ThemePicker() {
       setDiscoAudio(readTheme() === "disco");
     };
     window.addEventListener("jahrgang-theme", sync);
+    const openPanel = () => setOpen(true);
+    window.addEventListener("jahrgang-appearance", openPanel);
     const unsub = subscribeUiAudio(() => setUiMutedState(isUiMuted()));
     return () => {
       window.removeEventListener("jahrgang-theme", sync);
+      window.removeEventListener("jahrgang-appearance", openPanel);
       unsub();
     };
   }, []);
@@ -163,21 +173,30 @@ export function ThemePicker() {
   }
 
   return (
-    <div ref={root} className="fixed top-3 right-3 z-40 sm:top-4 sm:right-4">
-      <button
-        type="button"
-        aria-label="Darstellung"
-        aria-expanded={open}
-        onClick={() => {
-          unlockAudio();
-          setOpen((value) => !value);
-        }}
-        className="flex size-11 items-center justify-center rounded-md bg-raised text-fg shadow-border transition-[transform,background-color,box-shadow] duration-150 ease-out hover:-translate-y-px hover:bg-surface active:scale-[0.96]"
-      >
-        <Palette className="size-4" />
-      </button>
+    <div
+      ref={root}
+      className={
+        onHome
+          ? "fixed inset-x-0 top-[min(42vh,22rem)] z-40 flex justify-center px-5"
+          : "fixed top-3 right-3 z-40 sm:top-4 sm:right-4"
+      }
+    >
+      {onHome ? null : (
+        <button
+          type="button"
+          aria-label="Einstellungen"
+          aria-expanded={open}
+          onClick={() => {
+            unlockAudio();
+            setOpen((value) => !value);
+          }}
+          className="flex size-11 items-center justify-center rounded-md bg-raised text-fg shadow-border transition-[transform,background-color,box-shadow] duration-150 ease-out hover:-translate-y-px hover:bg-surface active:scale-[0.96]"
+        >
+          <Palette className="size-4" />
+        </button>
+      )}
       {open ? (
-        <div className="absolute right-0 mt-2 w-56 rounded-lg bg-surface p-3 shadow-lift">
+        <div className={onHome ? "w-56 rounded-lg bg-surface p-3 shadow-lift" : "absolute right-0 mt-2 w-56 rounded-lg bg-surface p-3 shadow-lift"}>
           <p className="text-xs font-medium tracking-[0.16em] text-muted uppercase">Thema</p>
           <div className="mt-2 grid grid-cols-3 gap-2">
             {palette.map((row) => {

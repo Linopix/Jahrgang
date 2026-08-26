@@ -1,4 +1,4 @@
-import { Radio, User, Users } from "lucide-react";
+import { Radio, Settings, User, Users } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Vinyl } from "./vinyl";
@@ -8,6 +8,7 @@ import { unlockAudio } from "@/lib/game/audio";
 import { noteTitleClick, useGags } from "@/lib/gags";
 import { EggTally } from "./gag-layer";
 import { SpotifyConnect } from "./spotify-connect";
+import { openAppearance } from "./theme-picker";
 import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
 import { cn } from "@/lib/utils";
 
@@ -90,6 +91,18 @@ export function HomeScreen() {
         >
           <User className="size-4" />
           Alleine spielen
+        </Button>
+        <Button
+          size="lg"
+          variant="secondary"
+          className="w-full sm:col-span-2"
+          onClick={() => {
+            unlockAudio();
+            openAppearance();
+          }}
+        >
+          <Settings className="size-4" />
+          Einstellungen
         </Button>
       </div>
       </div>
