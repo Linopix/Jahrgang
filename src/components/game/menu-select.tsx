@@ -9,6 +9,7 @@ export type MenuOption<T extends string> = {
   label: string;
   blurb?: string;
   art?: ReactNode;
+  group?: string;
 };
 
 type MenuSelectProps<T extends string> = {
@@ -171,43 +172,55 @@ export function MenuSelect<T extends string>({
                   className="overflow-y-auto p-1.5"
                   style={{ maxHeight: Math.max(box.maxHeight - 48, 120) }}
                 >
-                  {items.map((item) => {
+                  {items.map((item, index) => {
                     const selected = item.id === value;
+                    const showGroup = Boolean(item.group && item.group !== items[index - 1]?.group);
                     return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        role="option"
-                        aria-selected={selected}
-                        onMouseEnter={() => {
-                          if (!selected) sfxHover();
-                        }}
-                        onClick={() => {
-                          onChange(item.id);
-                          close();
-                        }}
-                        className={cn(
-                          "flex min-h-14 w-full items-center gap-3 rounded-md px-3 py-2.5 text-left",
-                          "transition-colors duration-150",
-                          selected ? "bg-primary text-primary-fg" : "text-fg hover:bg-raised",
-                        )}
-                      >
-                        {item.art ? <span className="shrink-0">{item.art}</span> : null}
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-medium">{item.label}</span>
-                          {item.blurb ? (
-                            <span
-                              className={cn(
-                                "mt-0.5 block text-xs leading-snug",
-                                selected ? "text-primary-fg/80" : "text-muted",
-                              )}
-                            >
-                              {item.blurb}
-                            </span>
-                          ) : null}
-                        </span>
-                        {selected ? <Check className="size-4 shrink-0" strokeWidth={2} /> : null}
-                      </button>
+                      <div key={item.id}>
+                        {showGroup ? (
+                          <p
+                            className={cn(
+                              "px-3 text-xs font-medium tracking-[0.16em] text-muted uppercase",
+                              index === 0 ? "pt-1 pb-1" : "pt-3 pb-1",
+                            )}
+                          >
+                            {item.group}
+                          </p>
+                        ) : null}
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={selected}
+                          onMouseEnter={() => {
+                            if (!selected) sfxHover();
+                          }}
+                          onClick={() => {
+                            onChange(item.id);
+                            close();
+                          }}
+                          className={cn(
+                            "flex min-h-12 w-full items-center gap-3 rounded-md px-3 py-2 text-left",
+                            "transition-colors duration-150",
+                            selected ? "bg-primary text-primary-fg" : "text-fg hover:bg-raised",
+                          )}
+                        >
+                          {item.art ? <span className="shrink-0">{item.art}</span> : null}
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-medium">{item.label}</span>
+                            {item.blurb ? (
+                              <span
+                                className={cn(
+                                  "mt-0.5 block text-xs leading-snug",
+                                  selected ? "text-primary-fg/80" : "text-muted",
+                                )}
+                              >
+                                {item.blurb}
+                              </span>
+                            ) : null}
+                          </span>
+                          {selected ? <Check className="size-4 shrink-0" strokeWidth={2} /> : null}
+                        </button>
+                      </div>
                     );
                   })}
                 </div>

@@ -23,6 +23,7 @@ import {
   YEAR_MAX,
   YEAR_MIN,
   type CustomRules,
+  type EraId,
   type GuessKind,
   type LineRule,
   type NextRoundPolicy,
@@ -39,6 +40,10 @@ type GameOptionsProps = {
 
 const CHIP =
   "flex h-12 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium transition-[background-color,color,transform,box-shadow] duration-150 ease-out hover:-translate-y-px active:scale-[0.96]";
+
+const PACK_MENU = PACK_GROUPS.filter((group) => group.title !== "Eigene");
+const PACK_IDS = PACK_MENU.flatMap((group) => group.ids);
+const OWN_PACKS = ["mix", "playlist"] as const satisfies readonly EraId[];
 
 function SleeveChip({
   selected,
@@ -80,42 +85,83 @@ function SleeveChip({
   );
 }
 
-function Choice<T extends string | number>({
+function Segment<T extends string | number>({
   items,
   value,
   onChange,
   label,
-  columns,
 }: {
   items: readonly T[];
   value: T;
   onChange: (next: T) => void;
   label: (item: T) => string;
-  columns?: string;
 }) {
   return (
-    <div className={cn("grid gap-2", columns ?? "grid-cols-3")}>
-      {items.map((item) => (
-        <button
-          key={String(item)}
-          type="button"
-          onMouseEnter={() => {
-            if (item !== value) sfxHover();
-          }}
-          onClick={() => {
-            if (item !== value) sfxTick();
-            onChange(item);
-          }}
+    <div className="flex rounded-md bg-raised p-0.5 shadow-border" role="group">
+      {items.map((item) => {
+        const on = item === value;
+        return (
+          <button
+            key={String(item)}
+            type="button"
+            onMouseEnter={() => {
+              if (!on) sfxHover();
+            }}
+            onClick={() => {
+              if (!on) sfxTick();
+              onChange(item);
+            }}
+            className={cn(
+              "h-8 min-w-0 flex-1 truncate rounded-sm px-2 text-xs font-medium transition-colors duration-150",
+              on ? "bg-primary text-primary-fg" : "text-muted hover:text-fg",
+            )}
+          >
+            {label(item)}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function SwitchRow({
+  label,
+  hint,
+  on,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  on: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-2">
+      <div className="min-w-0">
+        <p className="text-sm text-fg">{label}</p>
+        <p className="text-xs text-muted">{hint}</p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        aria-label={label}
+        onClick={() => {
+          sfxTick();
+          onChange(!on);
+        }}
+        className={cn(
+          "relative h-7 w-11 shrink-0 rounded-full transition-colors duration-150 ease-out",
+          on ? "bg-primary" : "bg-raised shadow-border",
+        )}
+      >
+        <span
           className={cn(
-            CHIP,
-            value === item
-              ? "bg-primary text-primary-fg"
-              : "bg-raised text-fg shadow-border hover:bg-surface",
+            "absolute top-0.5 size-6 rounded-full transition-transform duration-150 ease-out",
+            on ? "translate-x-4 bg-primary-fg" : "translate-x-0.5 bg-fg",
           )}
-        >
-          {label(item)}
-        </button>
-      ))}
+        />
+      </button>
     </div>
   );
 }
@@ -338,69 +384,51 @@ function CustomTune({
   onChange: (next: CustomRules) => void;
 }) {
   return (
-    <div className="mt-4 space-y-4 rounded-xl bg-raised p-4 shadow-border" data-custom-tune>
-      <div>
+    <div className="mt-4 divide-y divide-border rounded-xl bg-raised px-4 py-1 shadow-border" data-custom-tune>
+      <div className="py-3">
         <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Raten</p>
-        <Choice
+        <Segment
           items={["none", "artist", "title", "both"] as const}
           value={value.guess}
           onChange={(guess) => onChange({ ...value, guess: guess as GuessKind })}
           label={(item) =>
             item === "none" ? "Keins" : item === "artist" ? "Interpret" : item === "title" ? "Titel" : "Beides"
           }
-          columns="grid-cols-2 sm:grid-cols-4"
         />
       </div>
-      <div>
-        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Cover</p>
-        <Choice
-          items={["sichtbar", "verdeckt"] as const}
-          value={value.cover ? "verdeckt" : "sichtbar"}
-          onChange={(cover) => onChange({ ...value, cover: cover === "verdeckt" })}
-          label={(item) => (item === "verdeckt" ? "Verdeckt" : "Sichtbar")}
-          columns="grid-cols-2"
-        />
-      </div>
-      <div>
-        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Zeitlinie</p>
-        <Choice
+      <div className="py-3">
+        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Linie</p>
+        <Segment
           items={["chrono", "reverse", "free"] as const}
           value={value.line}
           onChange={(line) => onChange({ ...value, line: line as LineRule })}
           label={(item) => (item === "chrono" ? "Früh → spät" : item === "reverse" ? "Spät → früh" : "Frei")}
-          columns="grid-cols-3"
         />
       </div>
-      <div>
-        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Jahre</p>
-        <Choice
-          items={["an", "aus"] as const}
-          value={value.hideYear ? "aus" : "an"}
-          onChange={(years) => onChange({ ...value, hideYear: years === "aus" })}
-          label={(item) => (item === "aus" ? "Versteckt" : "Sichtbar")}
-          columns="grid-cols-2"
-        />
-      </div>
-      <div>
-        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Tempo</p>
-        <Choice
-          items={["normal", "verzogen"] as const}
-          value={value.warp ? "verzogen" : "normal"}
-          onChange={(tempo) => onChange({ ...value, warp: tempo === "verzogen" })}
-          label={(item) => (item === "verzogen" ? "Verzogen" : "Normal")}
-          columns="grid-cols-2"
-        />
-      </div>
-      <div>
-        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Ziel</p>
-        <Choice
-          items={["stapel", "karten"] as const}
-          value={value.open ? "stapel" : "karten"}
-          onChange={(ziel) => onChange({ ...value, open: ziel === "stapel" })}
-          label={(item) => (item === "stapel" ? "Stapel leer" : "Karten-Ziel")}
-          columns="grid-cols-2"
-        />
-      </div>
+      <SwitchRow
+        label="Cover zu"
+        hint={value.cover ? "Erst beim Aufdecken." : "Cover siehst du beim Hören."}
+        on={value.cover}
+        onChange={(cover) => onChange({ ...value, cover })}
+      />
+      <SwitchRow
+        label="Jahre versteckt"
+        hint={value.hideYear ? "Ohne Jahreszahl auf der Karte." : "Jahre stehen auf der Linie."}
+        on={value.hideYear}
+        onChange={(hideYear) => onChange({ ...value, hideYear })}
+      />
+      <SwitchRow
+        label="Tempo verzogen"
+        hint={value.warp ? "Die Platte läuft verkehrt." : "Normales Tempo."}
+        on={value.warp}
+        onChange={(warp) => onChange({ ...value, warp })}
+      />
+      <SwitchRow
+        label="Bis der Stapel leer ist"
+        hint={value.open ? "Kein Kartenziel." : "Sieg bei der eingestellten Kartenanzahl."}
+        on={value.open}
+        onChange={(open) => onChange({ ...value, open })}
+      />
     </div>
   );
 }
@@ -491,12 +519,11 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
         <section className="mt-8">
           <h2 className="text-sm font-medium text-fg">Nächste Runde</h2>
           <div className="mt-3 max-w-md">
-            <Choice
+            <Segment
               items={NEXT_ROUND_OPTIONS}
               value={value.nextRound}
               onChange={(nextRound) => onChange({ nextRound: nextRound as NextRoundPolicy })}
               label={(item) => NEXT_ROUND_LABELS[item]}
-              columns="grid-cols-2"
             />
           </div>
           <p className="mt-2 text-sm text-muted">{NEXT_ROUND_BLURB[value.nextRound]}</p>
@@ -506,29 +533,21 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
       {online ? (
         <section className="mt-8">
           <h2 className="text-sm font-medium text-fg">Emoji und Chat</h2>
-          <div className="mt-3 grid max-w-md gap-4 sm:grid-cols-2">
-            <div>
-              <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Emoji</p>
-              <Choice
-                items={["an", "aus"] as const}
-                value={value.emoji ? "an" : "aus"}
-                onChange={(next) => onChange({ emoji: next === "an" })}
-                label={(item) => (item === "an" ? "An" : "Aus")}
-                columns="grid-cols-2"
-              />
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Chat</p>
-              <Choice
-                items={["an", "aus"] as const}
-                value={value.chat ? "an" : "aus"}
-                onChange={(next) => onChange({ chat: next === "an" })}
-                label={(item) => (item === "an" ? "An" : "Aus")}
-                columns="grid-cols-2"
-              />
-            </div>
+          <div className="mt-1 max-w-md divide-y divide-border">
+            <SwitchRow
+              label="Emoji"
+              hint={value.emoji ? "Reaktionen sind an." : "Keine Reaktionen."}
+              on={value.emoji}
+              onChange={(emoji) => onChange({ emoji })}
+            />
+            <SwitchRow
+              label="Chat"
+              hint={value.chat ? "Nachrichten sind an." : "Kein Chat."}
+              on={value.chat}
+              onChange={(chat) => onChange({ chat })}
+            />
           </div>
-          <p className="mt-2 text-sm text-muted">Beides einzeln. Nur der Host stellt das ein.</p>
+          <p className="mt-2 text-sm text-muted">Nur der Host stellt das ein.</p>
         </section>
       ) : null}
 
@@ -544,53 +563,41 @@ export function GameOptions({ value, onChange, online }: GameOptionsProps) {
           </p>
         </div>
         <p className="mt-1 text-sm text-muted">{ERA_BLURBS[value.era]}</p>
-        <div className="mt-4 grid gap-6 lg:grid-cols-2">
-          {PACK_GROUPS.map((group) => {
-            const dropdown = group.title !== "Eigene";
-            return (
-              <div key={group.title}>
-                <p className="text-xs font-medium tracking-[0.16em] text-muted uppercase">
-                  {group.title}
-                </p>
-                {dropdown ? (
-                  <div className="mt-2">
-                    <MenuSelect
-                      ariaLabel={group.title}
-                      name={group.title.toLowerCase()}
-                      placeholder={`${group.title} wählen`}
-                      value={group.ids.includes(value.era) ? value.era : undefined}
-                      onChange={(era) => {
-                        notePack(era);
-                        onChange({ era });
-                      }}
-                      items={group.ids.map((id) => ({
-                        id,
-                        label: ERA_LABELS[id],
-                        blurb: `${ERA_BLURBS[id]} ${packSize(id)} Titel.`,
-                        art: <PackArt id={id} className="size-7" />,
-                      }))}
-                    />
-                  </div>
-                ) : (
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    {group.ids.map((id) => (
-                      <SleeveChip
-                        key={id}
-                        packId={id}
-                        selected={value.era === id}
-                        label={ERA_LABELS[id]}
-                        art={<PackArt id={id} />}
-                        onSelect={() => {
-                          notePack(id);
-                          onChange({ era: id });
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        <div className="mt-4">
+          <MenuSelect
+            ariaLabel="Repertoire"
+            name="repertoire"
+            placeholder="Pack wählen"
+            value={PACK_IDS.includes(value.era) ? value.era : undefined}
+            onChange={(era) => {
+              notePack(era);
+              onChange({ era });
+            }}
+            items={PACK_MENU.flatMap((group) =>
+              group.ids.map((id) => ({
+                id,
+                group: group.title,
+                label: ERA_LABELS[id],
+                blurb: `${ERA_BLURBS[id]} ${packSize(id)} Titel.`,
+                art: <PackArt id={id} className="size-7" />,
+              })),
+            )}
+          />
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {OWN_PACKS.map((id) => (
+              <SleeveChip
+                key={id}
+                packId={id}
+                selected={value.era === id}
+                label={ERA_LABELS[id]}
+                art={<PackArt id={id} />}
+                onSelect={() => {
+                  notePack(id);
+                  onChange({ era: id });
+                }}
+              />
+            ))}
+          </div>
         </div>
         {value.era === "playlist" ? <PlaylistField value={value} onChange={onChange} /> : null}
         {value.era === "mix" ? <MixField value={value} onChange={onChange} /> : null}
