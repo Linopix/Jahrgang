@@ -7,7 +7,7 @@ import { useOnline } from "@/lib/game/online-store";
 import { unlockAudio } from "@/lib/game/audio";
 import { noteTitleClick, useGags } from "@/lib/gags";
 import { EggTally } from "./gag-layer";
-import { SpotifyConnect, useSpotifyBlocked } from "./spotify-connect";
+import { SpotifyConnect } from "./spotify-connect";
 import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +17,6 @@ export function HomeScreen() {
   const openEntry = useOnline((s) => s.openEntry);
 
   const scramble = useGags((s) => s.scramble);
-  const spotifyBlock = useSpotifyBlocked();
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col justify-between px-5 py-8 sm:max-w-3xl sm:py-12 lg:max-w-6xl lg:justify-center lg:px-8">
@@ -50,9 +49,7 @@ export function HomeScreen() {
         <Button
           size="lg"
           className="w-full sm:col-span-2"
-          disabled={spotifyBlock}
           onClick={() => {
-            if (spotifyBlock) return;
             unlockAudio();
             openEntry();
           }}
@@ -64,9 +61,7 @@ export function HomeScreen() {
           size="lg"
           variant="secondary"
           className="w-full"
-          disabled={spotifyBlock}
           onClick={() => {
-            if (spotifyBlock) return;
             unlockAudio();
             openSetup("party");
           }}
@@ -78,9 +73,7 @@ export function HomeScreen() {
           size="lg"
           variant="secondary"
           className="w-full"
-          disabled={spotifyBlock}
           onClick={() => {
-            if (spotifyBlock) return;
             unlockAudio();
             openSetup("solo");
           }}

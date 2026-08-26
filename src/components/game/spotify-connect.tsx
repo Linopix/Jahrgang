@@ -2,7 +2,7 @@ import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
 import { useSpotify } from "@/lib/spotify/session";
 import { Button } from "@/components/ui/button";
 
-export function SpotifyConnect() {
+export function SpotifyConnect({ compact }: { compact?: boolean }) {
   const user = useSpotify((s) => s.user);
   const ready = useSpotify((s) => s.ready);
   const login = useSpotify((s) => s.login);
@@ -16,10 +16,12 @@ export function SpotifyConnect() {
 
   if (!user) {
     return (
-      <div className="rounded-lg bg-raised px-4 py-3 text-sm text-muted">
-        <p>Mit Spotify anmelden. Dann läuft der Abend über dein Konto.</p>
-        <Button className="mt-3 w-full" onClick={login}>
-          Bei Spotify anmelden
+      <div className={compact ? "text-sm text-muted" : "rounded-lg bg-raised px-4 py-3 text-sm text-muted"}>
+        <p>
+          Optional: Spotify verbindet Likes und Playlists als extra Pack. Ohne Konto läuft der Katalog weiter.
+        </p>
+        <Button className="mt-3 w-full" variant={compact ? "secondary" : "primary"} onClick={login}>
+          Spotify optional verbinden
         </Button>
       </div>
     );
@@ -29,16 +31,20 @@ export function SpotifyConnect() {
     <p className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
       <span>
         Spotify: {user.name}
-        {user.product === "premium" ? "" : " · Free, nur Vorschau"}
+        {user.product === "premium" ? " · volle Titel" : " · Free, Vorschau"}
       </span>
       <button type="button" className="text-xs text-subtle hover:text-fg" onClick={() => void logout()}>
-        Abmelden
+        Trennen
       </button>
     </p>
   );
 }
 
 export function useSpotifyBlocked() {
+  return false;
+}
+
+export function useSpotifyConnected() {
   const user = useSpotify((s) => s.user);
-  return SPOTIFY_LIVE && !user;
+  return SPOTIFY_LIVE && Boolean(user);
 }

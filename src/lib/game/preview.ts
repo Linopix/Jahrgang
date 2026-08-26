@@ -202,17 +202,22 @@ export async function lookupPreview(query: PreviewQuery): Promise<PreviewResult>
 }
 
 async function resolveOne(query: PreviewQuery): Promise<PreviewResult> {
-  if (SPOTIFY_LIVE) {
-    try {
-      const { searchSpotifyPreview } = await import("@/lib/spotify/preview.server");
-      const hit = await searchSpotifyPreview(query);
-      if (hit?.spotifyUri || hit?.previewUrl) return hit;
-    } catch {
-      /* none */
-    }
-    return { id: query.id, previewUrl: null, artworkUrl: null };
+  const base = await lookupPreview(query);
+  if (!SPOTIFY_LIVE) return base;
+  try {
+    const { searchSpotifyPreview } = await import("@/lib/spotify/preview.server");
+    const extra = await searchSpotifyPreview(query);
+    if (!extra?.spotifyUri && !extra?.previewUrl) return base;
+    return {
+      id: query.id,
+      previewUrl: base.previewUrl || extra.previewUrl,
+      artworkUrl: base.artworkUrl || extra.artworkUrl,
+      year: base.year ?? extra.year,
+      spotifyUri: extra.spotifyUri,
+    };
+  } catch {
+    return base;
   }
-  return lookupPreview(query);
 }
 
 export const resolvePreviews = createServerFn({ method: "POST" })

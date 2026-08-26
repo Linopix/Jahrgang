@@ -20,7 +20,8 @@ export type EraId =
   | "charts"
   | "rap-charts"
   | "mix"
-  | "playlist";
+  | "playlist"
+  | "likes";
 
 export type GenreId =
   | "all"
@@ -223,6 +224,7 @@ export const ERA_IDS: EraId[] = [
   "rap-charts",
   "mix",
   "playlist",
+  "likes",
 ];
 
 export const ERA_LABELS: Record<EraId, string> = {
@@ -248,6 +250,7 @@ export const ERA_LABELS: Record<EraId, string> = {
   "rap-charts": "Rap Charts",
   mix: "Mix",
   playlist: "Playlist",
+  likes: "Meine Titel",
 };
 
 export const ERA_BLURBS: Record<EraId, string> = {
@@ -273,6 +276,7 @@ export const ERA_BLURBS: Record<EraId, string> = {
   "rap-charts": "Hip-Hop-Hits der letzten Jahre.",
   mix: "Zeitraum und Genre selbst wählen.",
   playlist: "Öffentliche Spotify- oder Deezer-Playlist, oder eine Titelliste.",
+  likes: "Likes und Playlists von deinem Spotify-Konto. Ohne Login läuft der Katalog.",
 };
 
 export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [
@@ -290,7 +294,7 @@ export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [
   },
   {
     title: "Eigene",
-    ids: ["mix", "playlist"],
+    ids: ["mix", "playlist", "likes"],
   },
 ];
 

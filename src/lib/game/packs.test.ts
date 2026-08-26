@@ -5,7 +5,7 @@ import { ERA_IDS, GENRE_IDS } from "./types.ts";
 
 test("each playable pack has enough songs for a round", () => {
   for (const id of ERA_IDS) {
-    if (id === "playlist") continue;
+    if (id === "playlist" || id === "likes") continue;
     const mix = { from: 1980, to: 2020, genre: "all" as const };
     const n = songsForPack(id, mix).length;
     const min = ["soul", "metal", "indie", "latin", "schlager"].includes(id) ? 8 : 12;

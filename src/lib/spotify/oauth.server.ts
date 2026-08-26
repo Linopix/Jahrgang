@@ -11,6 +11,8 @@ const SCOPES = [
   "user-read-playback-state",
   "playlist-read-private",
   "playlist-read-collaborative",
+  "user-library-read",
+  "user-top-read",
 ].join(" ");
 
 export type SpotifySession = {

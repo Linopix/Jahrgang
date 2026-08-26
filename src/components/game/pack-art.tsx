@@ -24,6 +24,7 @@ const PACK_INK: Record<EraId, { a: string; b: string; c: string; mark: string }>
   "rap-charts": { a: "#14100c", b: "#e8c060", c: "#48a0e0", mark: "HH" },
   mix: { a: "#181410", b: "#d8b898", c: "#7090a8", mark: "MIX" },
   playlist: { a: "#12161c", b: "#a8d0a0", c: "#d8c8a8", mark: "LIST" },
+  likes: { a: "#081810", b: "#1db954", c: "#d8c8a8", mark: "ME" },
 };
 
 const GENRE_INK: Record<GenreId, { a: string; b: string; c: string; mark: string }> = {

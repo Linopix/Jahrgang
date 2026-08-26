@@ -3,6 +3,7 @@ import { songsForPack, songsForPacks } from "./packs";
 import { canPlace, cardsNeeded, decadeLabel, fisherYates, insertSong, mergeSeries, tallySeries, winner } from "./engine";
 import { scoreForVariant } from "./guess";
 import { loadPlaylistSongs, type PlaylistTrack } from "./playlist";
+import { loadSpotifyLibrary } from "@/lib/spotify/library";
 import { resolvePreviews } from "./preview";
 import {
   pausePreview,
@@ -335,18 +336,35 @@ export const useGame = create<GameStore>((set, get) => ({
           imported = [];
         }
       }
+      const extra = parseExtraEra(config.extraEra, config.era);
+      if (config.era === "likes" || extra === "likes") {
+        try {
+          const lib = await loadSpotifyLibrary();
+          imported = [...imported, ...lib];
+        } catch {
+          /* stay with what we have */
+        }
+      }
+      if (config.era === "likes" && imported.length === 0) {
+        set({
+          phase: "setup",
+          loadError: "Bei Spotify anmelden, dann liegen deine Titel bereit. Oder ein anderes Pack wählen.",
+        });
+        return false;
+      }
+      const mix = {
+        from: config.mixFrom ?? DEFAULT_MIX_FROM,
+        to: config.mixTo ?? DEFAULT_MIX_TO,
+        genre: config.mixGenre ?? "all",
+      };
       const catalogPool = fisherYates(
-        config.era === "playlist"
-          ? songsForPack(parseExtraEra(config.extraEra, config.era) ?? "all", {
-              from: config.mixFrom ?? DEFAULT_MIX_FROM,
-              to: config.mixTo ?? DEFAULT_MIX_TO,
-              genre: config.mixGenre ?? "all",
-            })
-          : songsForPacks(config.era, parseExtraEra(config.extraEra, config.era), {
-              from: config.mixFrom ?? DEFAULT_MIX_FROM,
-              to: config.mixTo ?? DEFAULT_MIX_TO,
-              genre: config.mixGenre ?? "all",
-            }),
+        config.era === "likes"
+          ? extra && extra !== "likes"
+            ? songsForPack(extra, mix)
+            : []
+          : config.era === "playlist"
+            ? songsForPack(extra && extra !== "likes" ? extra : "all", mix)
+            : songsForPacks(config.era, extra !== "likes" ? extra : null, mix),
       );
       const pool: Array<CatalogSong | PlaylistTrack> = imported.length
         ? [...fisherYates(imported), ...catalogPool]

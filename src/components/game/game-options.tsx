@@ -7,6 +7,9 @@ import { sfxHover, sfxSlide, sfxTick } from "@/lib/game/audio";
 import { GenreArt, PackArt } from "@/components/game/pack-art";
 import { MenuSelect } from "@/components/game/menu-select";
 import { noteMixYears, notePack, noteVariant } from "@/lib/gags";
+import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
+import { useSpotify } from "@/lib/spotify/session";
+import { SpotifyConnect, useSpotifyConnected } from "./spotify-connect";
 import {
   DEFAULT_CUSTOM,
   ERA_BLURBS,
@@ -46,7 +49,7 @@ const CHIP =
 
 const PACK_MENU = PACK_GROUPS.filter((group) => group.title !== "Eigene");
 const PACK_IDS = PACK_MENU.flatMap((group) => group.ids);
-const OWN_PACKS = ["mix", "playlist"] as const satisfies readonly EraId[];
+const OWN_PACKS = ["mix", "playlist", "likes"] as const satisfies readonly EraId[];
 
 function SleeveChip({
   selected,
@@ -442,7 +445,8 @@ function mixOf(value: RoomConfig) {
   return { from: value.mixFrom, to: value.mixTo, genre: value.mixGenre };
 }
 
-function primaryPile(value: RoomConfig) {
+function primaryPile(value: RoomConfig, libraryCount: number | null = null) {
+  if (value.era === "likes") return libraryCount ?? 0;
   if (value.era === "playlist") {
     const match = value.playlistLabel.match(/(\d+)\s*Titel/);
     return match ? Number(match[1]) : null;
@@ -450,16 +454,22 @@ function primaryPile(value: RoomConfig) {
   return packSize(value.era, mixOf(value));
 }
 
-function pileCount(value: RoomConfig) {
+function pileCount(value: RoomConfig, libraryCount: number | null = null) {
   const extra = parseExtraEra(value.extraEra, value.era);
+  const lib = extra === "likes" || value.era === "likes" ? libraryCount ?? 0 : 0;
+  if (value.era === "likes") {
+    if (!extra || extra === "likes") return lib;
+    return lib + packSize(extra, mixOf(value));
+  }
   if (value.era === "playlist") {
-    const base = primaryPile(value);
+    const base = primaryPile(value, libraryCount);
     if (!extra) return base;
-    const added = packSize(extra, mixOf(value));
+    const added = extra === "likes" ? lib : packSize(extra, mixOf(value));
     if (base === null) return added || null;
     return base + added;
   }
-  return songsForPacks(value.era, extra, mixOf(value)).length;
+  const catalog = songsForPacks(value.era, extra === "likes" ? null : extra, mixOf(value)).length;
+  return extra === "likes" ? catalog + lib : catalog;
 }
 
 function eraPatch(value: RoomConfig, era: EraId): Partial<RoomConfig> {
@@ -479,10 +489,32 @@ function ExtraPack({
   players: number;
 }) {
   const extra = parseExtraEra(value.extraEra, value.era);
+  const spotifyUser = useSpotifyConnected();
+  const libraryCount = useSpotify((s) => s.libraryCount);
   const without = optionsPile({ ...value, extraEra: null }, players);
   const show =
     Boolean(extra) || without.status === "short" || without.status === "tight" || without.status === "empty";
   if (!show || value.era === "all") return null;
+  const extraItems = PACK_MENU.flatMap((group) =>
+    group.ids
+      .filter((id) => id !== value.era)
+      .map((id) => ({
+        id,
+        group: group.title,
+        label: ERA_LABELS[id],
+        blurb: `${ERA_BLURBS[id]} ${packSize(id)} Titel.`,
+        art: <PackArt id={id} className="size-7" />,
+      })),
+  );
+  if (SPOTIFY_LIVE && spotifyUser && value.era !== "likes") {
+    extraItems.push({
+      id: "likes" as EraId,
+      group: "Eigene",
+      label: ERA_LABELS.likes,
+      blurb: `${ERA_BLURBS.likes} ${libraryCount ?? 0} Titel.`,
+      art: <PackArt id="likes" className="size-7" />,
+    });
+  }
   return (
     <div className="mt-4" data-extra-pack>
       <h3 className="text-sm font-medium text-fg">Zweites Repertoire</h3>
@@ -498,17 +530,7 @@ function ExtraPack({
           placeholder="Pack oder Stil dazu"
           value={extra ?? undefined}
           onChange={(next) => onChange({ extraEra: next })}
-          items={PACK_MENU.flatMap((group) =>
-            group.ids
-              .filter((id) => id !== value.era)
-              .map((id) => ({
-                id,
-                group: group.title,
-                label: ERA_LABELS[id],
-                blurb: `${ERA_BLURBS[id]} ${packSize(id)} Titel.`,
-                art: <PackArt id={id} className="size-7" />,
-              })),
-          )}
+          items={extraItems}
         />
       </div>
       {extra ? (
@@ -530,7 +552,7 @@ function isOpenPlay(value: RoomConfig) {
 }
 
 export function optionsPile(value: RoomConfig, players: number) {
-  const pile = pileCount(value);
+  const pile = pileCount(value, useSpotify.getState().libraryCount);
   const open = isOpenPlay(value);
   return {
     pile,
@@ -580,9 +602,13 @@ function PileNote({
 export function GameOptions({ value, onChange, online, players = 2 }: GameOptionsProps) {
   const custom = value.custom ?? DEFAULT_CUSTOM;
   const showTarget = value.variant !== "custom" || !custom.open;
-  const pile = pileCount(value);
+  const libraryCount = useSpotify((s) => s.libraryCount);
+  const spotifyUser = useSpotifyConnected();
+  const login = useSpotify((s) => s.login);
+  const pile = pileCount(value, libraryCount);
   const extra = parseExtraEra(value.extraEra, value.era);
-  const base = primaryPile(value);
+  const base = primaryPile(value, libraryCount);
+  const ownPacks = OWN_PACKS.filter((id) => id !== "likes" || SPOTIFY_LIVE);
   return (
     <div>
       <div className="mt-8 grid gap-8 lg:mt-0 lg:grid-cols-2">
@@ -720,14 +746,18 @@ export function GameOptions({ value, onChange, online, players = 2 }: GameOption
             )}
           />
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {OWN_PACKS.map((id) => (
+            {ownPacks.map((id) => (
               <SleeveChip
                 key={id}
                 packId={id}
                 selected={value.era === id}
-                label={ERA_LABELS[id]}
+                label={id === "likes" && !spotifyUser ? "Meine Titel" : ERA_LABELS[id]}
                 art={<PackArt id={id} />}
                 onSelect={() => {
+                  if (id === "likes" && !spotifyUser) {
+                    login();
+                    return;
+                  }
                   notePack(id);
                   onChange(eraPatch(value, id));
                 }}
@@ -737,6 +767,11 @@ export function GameOptions({ value, onChange, online, players = 2 }: GameOption
         </div>
         {value.era === "playlist" ? <PlaylistField value={value} onChange={onChange} /> : null}
         {value.era === "mix" ? <MixField value={value} onChange={onChange} /> : null}
+        {SPOTIFY_LIVE ? (
+          <div className="mt-4">
+            <SpotifyConnect compact />
+          </div>
+        ) : null}
         <ExtraPack value={value} onChange={onChange} players={players} />
         <PileNote value={value} players={players} />
       </section>
