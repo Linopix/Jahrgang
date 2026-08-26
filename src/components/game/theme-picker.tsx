@@ -96,7 +96,9 @@ export function ThemePicker() {
   const [paperWarn, setPaperWarn] = useState(false);
   const [signed, setSigned] = useState(false);
   const root = useRef<HTMLDivElement>(null);
-  const onHome = useGame((s) => s.phase === "home") && useOnline((s) => s.status === "off");
+  const home = useGame((s) => s.phase === "home");
+  const onlineOff = useOnline((s) => s.status === "off");
+  const onHome = home && onlineOff;
 
   const [palette, setPalette] = useState(() =>
     typeof window === "undefined" ? THEMES.filter((row) => !row.secret) : visibleThemes(),
