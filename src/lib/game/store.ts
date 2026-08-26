@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { songsForPack } from "./packs";
+import { songsForPack, songsForPacks } from "./packs";
 import { canPlace, cardsNeeded, decadeLabel, fisherYates, insertSong, mergeSeries, tallySeries, winner } from "./engine";
 import { scoreForVariant } from "./guess";
 import { loadPlaylistSongs, type PlaylistTrack } from "./playlist";
@@ -29,6 +29,7 @@ import {
   SOLO_LIVES,
   emptyStats,
   parseCustom,
+  parseExtraEra,
   rulesFor,
   type CatalogSong,
   type CustomRules,
@@ -335,11 +336,17 @@ export const useGame = create<GameStore>((set, get) => ({
         }
       }
       const catalogPool = fisherYates(
-        songsForPack(config.era === "playlist" ? "all" : config.era, {
-          from: config.mixFrom ?? DEFAULT_MIX_FROM,
-          to: config.mixTo ?? DEFAULT_MIX_TO,
-          genre: config.mixGenre ?? "all",
-        }),
+        config.era === "playlist"
+          ? songsForPack(parseExtraEra(config.extraEra, config.era) ?? "all", {
+              from: config.mixFrom ?? DEFAULT_MIX_FROM,
+              to: config.mixTo ?? DEFAULT_MIX_TO,
+              genre: config.mixGenre ?? "all",
+            })
+          : songsForPacks(config.era, parseExtraEra(config.extraEra, config.era), {
+              from: config.mixFrom ?? DEFAULT_MIX_FROM,
+              to: config.mixTo ?? DEFAULT_MIX_TO,
+              genre: config.mixGenre ?? "all",
+            }),
       );
       const pool: Array<CatalogSong | PlaylistTrack> = imported.length
         ? [...fisherYates(imported), ...catalogPool]

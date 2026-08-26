@@ -504,6 +504,13 @@ export function songsForPack(pack: EraId, mix?: MixFilter): CatalogSong[] {
   });
 }
 
+export function songsForPacks(pack: EraId, extra?: EraId | null, mix?: MixFilter): CatalogSong[] {
+  const primary = songsForPack(pack, mix);
+  if (!extra || extra === pack || extra === "playlist") return primary;
+  const seen = new Set(primary.map((song) => song.id));
+  return primary.concat(songsForPack(extra, mix).filter((song) => !seen.has(song.id)));
+}
+
 export function packSize(pack: EraId, mix?: MixFilter): number {
   if (pack === "playlist") return 0;
   return songsForPack(pack, mix).length;

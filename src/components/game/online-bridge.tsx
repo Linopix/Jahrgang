@@ -44,6 +44,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   const mixTo = useOnline((s) => s.mixTo);
   const mixGenre = useOnline((s) => s.mixGenre);
   const custom = useOnline((s) => s.custom);
+  const extraEra = useOnline((s) => s.extraEra);
   const emoji = useOnline((s) => s.emoji);
   const chat = useOnline((s) => s.chat);
   const tv = useOnline((s) => s.tv);
@@ -131,12 +132,13 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       mixTo,
       mixGenre,
       custom,
+      extraEra,
       emoji,
       chat,
       tv,
     };
     p2p.send(msg);
-  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, emoji, chat, tv, members]);
+  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, extraEra, emoji, chat, tv, members]);
 
   useEffect(() => {
     return p2p.onMessage((from, data, channel) => {
@@ -219,6 +221,7 @@ function handleMessage(
       mixTo: msg.mixTo ?? DEFAULT_ROOM_CONFIG.mixTo,
       mixGenre: msg.mixGenre ?? "all",
       custom: parseCustom(msg.custom),
+      extraEra: msg.extraEra ?? null,
       emoji: msg.emoji !== false,
       chat: msg.chat !== false,
       tv: Boolean(msg.tv),
@@ -243,6 +246,7 @@ function handleMessage(
       mixTo: msg.mixTo ?? DEFAULT_ROOM_CONFIG.mixTo,
       mixGenre: msg.mixGenre ?? "all",
       custom: parseCustom(msg.custom),
+      extraEra: msg.extraEra ?? null,
       emoji: msg.emoji !== false,
       chat: msg.chat !== false,
       tv: Boolean(msg.tv),

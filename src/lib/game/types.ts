@@ -118,6 +118,7 @@ export interface SetupConfig {
   mixTo?: number;
   mixGenre?: GenreId;
   custom?: CustomRules;
+  extraEra?: EraId | null;
 }
 
 export interface SeriesStanding {
@@ -193,6 +194,7 @@ export interface RoomConfig {
   mixTo: number;
   mixGenre: GenreId;
   custom: CustomRules;
+  extraEra: EraId | null;
   emoji: boolean;
   chat: boolean;
   tv: boolean;
@@ -465,6 +467,7 @@ export const DEFAULT_ROOM_CONFIG: RoomConfig = {
   mixTo: DEFAULT_MIX_TO,
   mixGenre: "all",
   custom: DEFAULT_CUSTOM,
+  extraEra: null,
   emoji: true,
   chat: true,
   tv: false,
@@ -484,6 +487,12 @@ export function isNextRoundPolicy(value: unknown): value is NextRoundPolicy {
 
 export function isEraId(value: unknown): value is EraId {
   return typeof value === "string" && (ERA_IDS as string[]).includes(value);
+}
+
+export function parseExtraEra(value: unknown, era?: EraId): EraId | null {
+  if (!isEraId(value) || value === "playlist") return null;
+  if (era && value === era) return null;
+  return value;
 }
 
 export function isGenreId(value: unknown): value is GenreId {

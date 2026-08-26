@@ -25,6 +25,7 @@ export function OnlineLobbyScreen() {
   const mixTo = useOnline((s) => s.mixTo);
   const mixGenre = useOnline((s) => s.mixGenre);
   const custom = useOnline((s) => s.custom);
+  const extraEra = useOnline((s) => s.extraEra);
   const emoji = useOnline((s) => s.emoji);
   const chat = useOnline((s) => s.chat);
   const tv = useOnline((s) => s.tv);
@@ -47,6 +48,7 @@ export function OnlineLobbyScreen() {
     mixTo,
     mixGenre,
     custom,
+    extraEra,
     emoji,
     chat,
     tv,

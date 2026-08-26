@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { inferGenre, songsForPack } from "./packs.ts";
+import { inferGenre, songsForPack, songsForPacks } from "./packs.ts";
 import { ERA_IDS, GENRE_IDS } from "./types.ts";
 
 test("each playable pack has enough songs for a round", () => {
@@ -41,4 +41,11 @@ test("inferGenre splits metal soul and schlager", () => {
   assert.equal(inferGenre("Shakira"), "latin");
   assert.equal(inferGenre("The Killers"), "indie");
   assert.equal(inferGenre("Usher"), "soul");
+});
+
+test("second pack adds unique titles", () => {
+  const metal = songsForPack("metal");
+  const both = songsForPacks("metal", "all");
+  assert.ok(both.length > metal.length);
+  assert.equal(both.length, new Set(both.map((song) => song.id)).size);
 });

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { peekPlaylist } from "@/lib/game/playlist";
-import { packSize } from "@/lib/game/packs";
+import { packSize, songsForPacks } from "@/lib/game/packs";
 import { cardsNeeded, pileStatus, type PileStatus } from "@/lib/game/engine";
 import { sfxHover, sfxSlide, sfxTick } from "@/lib/game/audio";
 import { GenreArt, PackArt } from "@/components/game/pack-art";
@@ -18,6 +18,7 @@ import {
   NEXT_ROUND_LABELS,
   NEXT_ROUND_OPTIONS,
   PACK_GROUPS,
+  parseExtraEra,
   VARIANT_BLURBS,
   VARIANT_IDS,
   VARIANT_LABELS,
@@ -437,16 +438,90 @@ function CustomTune({
   );
 }
 
-function pileCount(value: RoomConfig) {
+function mixOf(value: RoomConfig) {
+  return { from: value.mixFrom, to: value.mixTo, genre: value.mixGenre };
+}
+
+function primaryPile(value: RoomConfig) {
   if (value.era === "playlist") {
     const match = value.playlistLabel.match(/(\d+)\s*Titel/);
     return match ? Number(match[1]) : null;
   }
-  return packSize(value.era, {
-    from: value.mixFrom,
-    to: value.mixTo,
-    genre: value.mixGenre,
-  });
+  return packSize(value.era, mixOf(value));
+}
+
+function pileCount(value: RoomConfig) {
+  const extra = parseExtraEra(value.extraEra, value.era);
+  if (value.era === "playlist") {
+    const base = primaryPile(value);
+    if (!extra) return base;
+    const added = packSize(extra, mixOf(value));
+    if (base === null) return added || null;
+    return base + added;
+  }
+  return songsForPacks(value.era, extra, mixOf(value)).length;
+}
+
+function eraPatch(value: RoomConfig, era: EraId): Partial<RoomConfig> {
+  return {
+    era,
+    extraEra: era === "all" ? null : parseExtraEra(value.extraEra, era),
+  };
+}
+
+function ExtraPack({
+  value,
+  onChange,
+  players,
+}: {
+  value: RoomConfig;
+  onChange: (patch: Partial<RoomConfig>) => void;
+  players: number;
+}) {
+  const extra = parseExtraEra(value.extraEra, value.era);
+  const without = optionsPile({ ...value, extraEra: null }, players);
+  const show =
+    Boolean(extra) || without.status === "short" || without.status === "tight" || without.status === "empty";
+  if (!show || value.era === "all") return null;
+  return (
+    <div className="mt-4" data-extra-pack>
+      <h3 className="text-sm font-medium text-fg">Zweites Repertoire</h3>
+      <p className="mt-1 text-sm text-muted">
+        {extra
+          ? `${ERA_LABELS[value.era]} plus ${ERA_LABELS[extra]}. Doppelte Titel einmal.`
+          : "Das Pack reicht nicht. Ein zweites dazu, der Stapel mischt beide."}
+      </p>
+      <div className="mt-3">
+        <MenuSelect
+          ariaLabel="Zweites Repertoire"
+          name="extra-repertoire"
+          placeholder="Pack oder Stil dazu"
+          value={extra ?? undefined}
+          onChange={(next) => onChange({ extraEra: next })}
+          items={PACK_MENU.flatMap((group) =>
+            group.ids
+              .filter((id) => id !== value.era)
+              .map((id) => ({
+                id,
+                group: group.title,
+                label: ERA_LABELS[id],
+                blurb: `${ERA_BLURBS[id]} ${packSize(id)} Titel.`,
+                art: <PackArt id={id} className="size-7" />,
+              })),
+          )}
+        />
+      </div>
+      {extra ? (
+        <button
+          type="button"
+          className="mt-2 text-sm text-muted transition-colors hover:text-fg"
+          onClick={() => onChange({ extraEra: null })}
+        >
+          Nur {ERA_LABELS[value.era]}
+        </button>
+      ) : null}
+    </div>
+  );
 }
 
 function isOpenPlay(value: RoomConfig) {
@@ -506,6 +581,8 @@ export function GameOptions({ value, onChange, online, players = 2 }: GameOption
   const custom = value.custom ?? DEFAULT_CUSTOM;
   const showTarget = value.variant !== "custom" || !custom.open;
   const pile = pileCount(value);
+  const extra = parseExtraEra(value.extraEra, value.era);
+  const base = primaryPile(value);
   return (
     <div>
       <div className="mt-8 grid gap-8 lg:mt-0 lg:grid-cols-2">
@@ -616,7 +693,9 @@ export function GameOptions({ value, onChange, online, players = 2 }: GameOption
               ? "Stapel offen"
               : pile === 0
                 ? "Kein Titel"
-                : `${pile} Titel im Stapel`}
+                : extra && base !== null && pile > base
+                  ? `${pile} Titel (${base} + ${pile - base})`
+                  : `${pile} Titel im Stapel`}
           </p>
         </div>
         <p className="mt-1 text-sm text-muted">{ERA_BLURBS[value.era]}</p>
@@ -628,7 +707,7 @@ export function GameOptions({ value, onChange, online, players = 2 }: GameOption
             value={PACK_IDS.includes(value.era) ? value.era : undefined}
             onChange={(era) => {
               notePack(era);
-              onChange({ era });
+              onChange(eraPatch(value, era));
             }}
             items={PACK_MENU.flatMap((group) =>
               group.ids.map((id) => ({
@@ -650,7 +729,7 @@ export function GameOptions({ value, onChange, online, players = 2 }: GameOption
                 art={<PackArt id={id} />}
                 onSelect={() => {
                   notePack(id);
-                  onChange({ era: id });
+                  onChange(eraPatch(value, id));
                 }}
               />
             ))}
@@ -658,6 +737,7 @@ export function GameOptions({ value, onChange, online, players = 2 }: GameOption
         </div>
         {value.era === "playlist" ? <PlaylistField value={value} onChange={onChange} /> : null}
         {value.era === "mix" ? <MixField value={value} onChange={onChange} /> : null}
+        <ExtraPack value={value} onChange={onChange} players={players} />
         <PileNote value={value} players={players} />
       </section>
     </div>
@@ -676,11 +756,15 @@ export function roomConfigSummary(config: RoomConfig) {
           ? "ohne Chat"
           : null;
   const extra = social ? ` · ${social}` : "";
+  const extraPack = parseExtraEra(config.extraEra, config.era);
+  const packLabel = extraPack
+    ? `${ERA_LABELS[config.era]} + ${ERA_LABELS[extraPack]}`
+    : ERA_LABELS[config.era];
   if (config.era === "playlist" && config.playlistLabel) {
-    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · ${config.playlistLabel}${extra}`;
+    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · ${config.playlistLabel}${extraPack ? ` + ${ERA_LABELS[extraPack]}` : ""}${extra}`;
   }
   if (config.era === "mix") {
-    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · Mix ${config.mixFrom}–${config.mixTo} · ${GENRE_LABELS[config.mixGenre]}${extra}`;
+    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · Mix ${config.mixFrom}–${config.mixTo} · ${GENRE_LABELS[config.mixGenre]}${extraPack ? ` + ${ERA_LABELS[extraPack]}` : ""}${extra}`;
   }
-  return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · ${ERA_LABELS[config.era]}${extra}`;
+  return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · ${packLabel}${extra}`;
 }

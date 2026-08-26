@@ -25,6 +25,7 @@ export type RoomConfigWire = {
   mixTo?: number;
   mixGenre?: GenreId;
   custom?: CustomRules;
+  extraEra?: EraId | null;
   emoji?: boolean;
   chat?: boolean;
   tv?: boolean;

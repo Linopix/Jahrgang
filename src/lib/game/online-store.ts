@@ -14,6 +14,7 @@ import {
   isPlayVariant,
   isTokenCount,
   parseCustom,
+  parseExtraEra,
   type CustomRules,
   type EraId,
   type GenreId,
@@ -73,6 +74,7 @@ type OnlineStore = {
   mixTo: number;
   mixGenre: GenreId;
   custom: CustomRules;
+  extraEra: EraId | null;
   emoji: boolean;
   chat: boolean;
   tv: boolean;
@@ -114,6 +116,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   mixTo: DEFAULT_MIX_TO,
   mixGenre: "all",
   custom: DEFAULT_CUSTOM,
+  extraEra: null,
   emoji: true,
   chat: true,
   tv: false,
@@ -236,6 +239,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       mixTo: typeof config.mixTo === "number" ? config.mixTo : DEFAULT_MIX_TO,
       mixGenre: isGenreId(config.mixGenre) ? config.mixGenre : "all",
       custom: parseCustom(config.custom),
+      extraEra: parseExtraEra(config.extraEra, isEraId(config.era) ? config.era : undefined),
       emoji: config.emoji !== false,
       chat: config.chat !== false,
       tv: TV_LIVE && Boolean(config.tv),
@@ -260,6 +264,7 @@ export function roomConfigFrom(
     | "mixTo"
     | "mixGenre"
     | "custom"
+    | "extraEra"
     | "emoji"
     | "chat"
     | "tv"
@@ -277,6 +282,7 @@ export function roomConfigFrom(
     mixTo: state.mixTo,
     mixGenre: state.mixGenre,
     custom: parseCustom(state.custom),
+    extraEra: parseExtraEra(state.extraEra, state.era),
     emoji: state.emoji !== false,
     chat: state.chat !== false,
     tv: TV_LIVE && Boolean(state.tv),
