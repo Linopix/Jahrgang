@@ -11,6 +11,7 @@ import { SpotifyConnect } from "./spotify-connect";
 import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
 import { TOURNAMENT_LIVE } from "@/lib/tournament/flags";
 import { cn } from "@/lib/utils";
+import { POOL_MAX } from "@/lib/game/types";
 
 export function HomeScreen() {
   const openSetup = useGame((s) => s.openSetup);
@@ -112,7 +113,15 @@ export function HomeScreen() {
         <Vinyl size="lg" spinning />
       </div>
       </div>
-      <p className="mt-6 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-subtle lg:mt-10 lg:justify-start lg:text-left">
+      <p className="mt-6 text-center text-xs leading-relaxed text-subtle lg:mt-10 lg:text-left">
+        Eine Runde nimmt höchstens {POOL_MAX} Titel. Im Turnier kommt das ganze Pack in den Stapel.
+        Ohne Hörprobe fällt ein Titel beim Start weg.{" "}
+        <Link to="/hinweise" hash="stapel" className="text-muted transition-colors duration-150 ease-out hover:text-fg">
+          Mehr unter Hinweise
+        </Link>
+        .
+      </p>
+      <p className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-subtle lg:justify-start lg:text-left">
         <Link to="/hinweise" className="transition-colors duration-150 ease-out hover:text-fg">
           Hinweise
         </Link>

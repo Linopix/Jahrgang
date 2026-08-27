@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { POOL_MAX } from "@/lib/game/types";
 
 const CONTACT = "jahrgang.game@icloud.com";
 
@@ -59,6 +60,20 @@ function HinweisePage() {
         <p className="text-sm leading-relaxed text-muted">
           Sprecht ruhig weiter in Discord, das Spiel läuft im Browser. Einen
           Status im Profil setzt Jahrgang von hier aus nicht.
+        </p>
+      </section>
+
+      <section className="mt-10 space-y-3" id="stapel">
+        <h2 className="font-display text-2xl font-medium text-fg">Stapel</h2>
+        <p className="text-sm leading-relaxed text-muted">
+          In Solo, am einen Bildschirm und im normalen Online-Abend liegen höchstens {POOL_MAX}{" "}
+          Titel auf dem Stapel. Das gilt auch, wenn das Pack mehr Titel hat. Im Turnier kommt das
+          ganze Pack in den Stapel.
+        </p>
+        <p className="text-sm leading-relaxed text-muted">
+          Es werden nur Titel gespielt, für die eine kurze Hörprobe gefunden wird, in der Regel 30
+          Sekunden bei iTunes oder Deezer. Fehlt die Hörprobe, fällt der Titel beim Start weg und
+          liegt nicht auf dem Stapel.
         </p>
       </section>
 
