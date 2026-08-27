@@ -88,6 +88,14 @@ Node 22, dann [localhost:8080](http://localhost:8080). Ohne Netz keine Vorschau 
 
 Kleine Tippfehler beim Raten sind in Ordnung. „Beatles“ zählt für The Beatles.
 
+## Musikdienste
+
+Spielen braucht kein Konto. iTunes und Deezer liefern die kurze Vorschau, eine öffentliche Playlist reicht als extra Stapel.
+
+Spotify ist optional: Likes als Pack, mit Premium volle Titel auf dem Gerät das spielt. Free reicht für Online, Wohnzimmer und Discord — nur der volle Player will Premium, und nur dort wo der Ton rauskommt.
+
+Einrichtung, Flag, Redirects, und warum Apple Music kein kleiner Schalter ist: **[docs/musikdienste.md](docs/musikdienste.md)**.
+
 ## Hinweise
 
 Jahrgang ist ein eigenes Spiel, keine Lizenz von irgendwem, und verdient nichts. Der Code steht unter MIT. Fragen an [jahrgang.game@icloud.com](mailto:jahrgang.game@icloud.com).
