@@ -71,7 +71,7 @@ export function createTournament(
 }
 
 export function currentMatch(t: Tournament | null): CupMatch | null {
-  if (!t) return null;
+  if (!t?.matches?.length) return null;
   const live = t.matches.find((row) => row.status === "live");
   if (live) return live;
   if (!t.currentMatchId) return null;
@@ -79,20 +79,21 @@ export function currentMatch(t: Tournament | null): CupMatch | null {
 }
 
 export function liveMatches(t: Tournament | null): CupMatch[] {
-  if (!t) return [];
+  if (!t?.matches?.length) return [];
   return t.matches.filter((row) => row.status === "live");
 }
 
 export function matchOfPlayer(t: Tournament | null, playerId: string): CupMatch | null {
-  if (!t || !playerId) return null;
+  if (!t?.matches?.length || !playerId) return null;
   return (
-    t.matches.find((row) => row.status === "live" && row.playerIds.includes(playerId)) ??
-    t.matches.find((row) => row.playerIds.includes(playerId) && row.status !== "done") ??
+    t.matches.find((row) => row.status === "live" && row.playerIds?.includes(playerId)) ??
+    t.matches.find((row) => row.playerIds?.includes(playerId) && row.status !== "done") ??
     null
   );
 }
 
 export function nextPending(t: Tournament): CupMatch | null {
+  if (!t?.matches?.length) return null;
   const live = t.matches.find((row) => row.status === "live");
   if (live) return live;
   const groupOpen = t.matches.find((row) => row.kind === "group" && row.status !== "done");
@@ -103,6 +104,7 @@ export function nextPending(t: Tournament): CupMatch | null {
 }
 
 export function pendingBatch(t: Tournament): CupMatch[] {
+  if (!t?.matches?.length) return [];
   const groups = t.matches.filter((row) => row.kind === "group" && row.status !== "done");
   if (groups.length) return groups.filter((row) => !row.bye);
   for (const round of ["r16", "qf", "sf", "final"] as const) {

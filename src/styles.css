@@ -412,27 +412,40 @@
 
 .qr-frame {
   background: #ffffff;
-  aspect-ratio: 1 / 1;
-  width: 100%;
-  min-width: 13rem;
-  min-height: 13rem;
-  max-width: min(28rem, 100%);
+  width: min(22rem, calc(100vw - 2.5rem));
+  max-width: 100%;
+  padding: 0.85rem;
   border-radius: 12px;
-  overflow: hidden;
   flex-shrink: 0;
+  line-height: 0;
   box-shadow: var(--shadow-lift);
+}
+
+.qr-frame-empty {
+  line-height: 1.4;
+  min-height: 8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-fallback {
+  margin: 0;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  color: #333;
+  text-align: center;
 }
 
 .qr-svg {
   display: block;
   width: 100%;
-  height: 100%;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
+  height: auto;
+  aspect-ratio: 1 / 1;
 }
 
 .qr-slot {
-  width: min(24rem, 100%);
+  width: min(22rem, 100%);
   margin-inline: auto;
   flex-shrink: 0;
 }

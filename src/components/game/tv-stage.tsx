@@ -271,7 +271,7 @@ export function TvWinnerScreen() {
 }
 
 export function TvCupGridScreen() {
-  const boards = useOnline((s) => s.cupBoards);
+  const boards = useOnline((s) => s.cupBoards) ?? [];
   const tournament = useOnline((s) => s.tournament);
   const roomCode = useOnline((s) => s.roomCode);
   const pending = useOnline((s) => s.pending);

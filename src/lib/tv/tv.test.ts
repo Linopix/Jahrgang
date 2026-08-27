@@ -135,3 +135,9 @@ test("qr path sits inside a quiet zone, viewBox origin is zero", () => {
   const box = matrix.length + pad * 2;
   assert.ok(box > matrix.length);
 });
+
+test("qr encode and path tolerate empty input", () => {
+  assert.deepEqual(encodeQr(""), []);
+  assert.equal(qrPath(undefined), "");
+  assert.equal(qrPath([]), "");
+});

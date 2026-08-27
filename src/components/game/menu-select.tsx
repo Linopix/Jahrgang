@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronDown, X } from "lucide-react";
 import { sfxHover, sfxTick } from "@/lib/game/audio";
@@ -34,6 +34,23 @@ type PanelBox = {
   maxHeight: number;
 };
 
+function measurePanel(el: HTMLElement | null): PanelBox | null {
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  const gap = 8;
+  const gutter = 12;
+  const reserve = window.innerWidth < 1024 ? 96 : 16;
+  const below = window.innerHeight - r.bottom - gap - reserve;
+  const above = r.top - gap - gutter;
+  const openUp = below < 180 && above > below;
+  const maxHeight = Math.min(28 * 16, Math.max(openUp ? above : below, 140));
+  const width = Math.min(Math.max(r.width, 200), window.innerWidth - gutter * 2);
+  const left = Math.min(Math.max(gutter, r.left), window.innerWidth - width - gutter);
+  return openUp
+    ? { bottom: window.innerHeight - r.top + gap, left, width, maxHeight }
+    : { top: r.bottom + gap, left, width, maxHeight };
+}
+
 export function MenuSelect<T extends string>({
   value,
   items,
@@ -44,48 +61,42 @@ export function MenuSelect<T extends string>({
   defaultOpen = false,
   onDismiss,
 }: MenuSelectProps<T>) {
-  const [open, setOpen] = useState(defaultOpen);
-  const [box, setBox] = useState<PanelBox>({ left: 0, width: 320, maxHeight: 352 });
+  const [open, setOpen] = useState(false);
+  const [box, setBox] = useState<PanelBox | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const current = items.find((item) => item.id === value);
+  const list = Array.isArray(items) ? items : [];
+  const current = list.find((item) => item.id === value);
 
   function place() {
-    const el = triggerRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const gap = 8;
-    const gutter = 12;
-    const reserve = window.innerWidth < 1024 ? 96 : 16;
-    const below = window.innerHeight - r.bottom - gap - reserve;
-    const above = r.top - gap - gutter;
-    const openUp = below < 180 && above > below;
-    const maxHeight = Math.min(28 * 16, Math.max(openUp ? above : below, 140));
-    const width = Math.min(Math.max(r.width, 200), window.innerWidth - gutter * 2);
-    const left = Math.min(Math.max(gutter, r.left), window.innerWidth - width - gutter);
-    setBox(
-      openUp
-        ? { bottom: window.innerHeight - r.top + gap, left, width, maxHeight }
-        : { top: r.bottom + gap, left, width, maxHeight },
-    );
+    const next = measurePanel(triggerRef.current);
+    if (next) setBox(next);
+    return next;
   }
 
   function close() {
-    if (!open) return;
     setOpen(false);
+    setBox(null);
     sfxTick();
     onDismiss?.();
   }
 
   function openMenu() {
-    triggerRef.current?.scrollIntoView({ block: "center", behavior: "auto" });
-    window.requestAnimationFrame(() => {
-      place();
-      setOpen(true);
-      sfxTick();
-    });
+    triggerRef.current?.scrollIntoView({ block: "nearest", behavior: "auto" });
+    const next = measurePanel(triggerRef.current);
+    if (!next) return;
+    setBox(next);
+    setOpen(true);
+    sfxTick();
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (!defaultOpen) return;
+    openMenu();
+    // einmal beim Einsetzen, wenn defaultOpen gesetzt ist
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultOpen]);
+
+  useLayoutEffect(() => {
     if (!open) return;
     place();
     const onKey = (event: KeyboardEvent) => {
@@ -107,6 +118,8 @@ export function MenuSelect<T extends string>({
       window.removeEventListener("scroll", onReposition, true);
       html.style.overflow = prev;
     };
+    // close/place are stable enough for this overlay
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const trigger = (
@@ -124,6 +137,8 @@ export function MenuSelect<T extends string>({
     </>
   );
 
+  const show = open && box !== null;
+
   return (
     <div>
       <button
@@ -139,7 +154,7 @@ export function MenuSelect<T extends string>({
       >
         {trigger}
       </button>
-      {open
+      {show
         ? createPortal(
             <div className="fixed inset-0 z-50" role="presentation">
               <button
@@ -178,9 +193,9 @@ export function MenuSelect<T extends string>({
                   className="overflow-y-auto p-1.5"
                   style={{ maxHeight: Math.max(box.maxHeight - 48, 120) }}
                 >
-                  {items.map((item, index) => {
+                  {list.map((item, index) => {
                     const selected = item.id === value;
-                    const showGroup = Boolean(item.group && item.group !== items[index - 1]?.group);
+                    const showGroup = Boolean(item.group && item.group !== list[index - 1]?.group);
                     return (
                       <div key={item.id}>
                         {showGroup ? (

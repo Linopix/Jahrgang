@@ -310,7 +310,8 @@ function interleave(version: Version, data: number[]) {
 }
 
 export function encodeQr(text: string): boolean[][] {
-  const payload = text.slice(0, 180);
+  const payload = String(text ?? "").slice(0, 180);
+  if (!payload) return [];
   const bits = bytesToBits(payload);
   const index = pickVersion(Math.ceil(bits.length / 8));
   const version = VERSIONS[index]!;
@@ -358,10 +359,12 @@ export function encodeQr(text: string): boolean[][] {
   return matrix;
 }
 
-export function qrPath(matrix: boolean[][], pad = 0) {
+export function qrPath(matrix: boolean[][] | undefined, pad = 0) {
+  if (!matrix || !matrix.length) return "";
   let d = "";
   for (let y = 0; y < matrix.length; y += 1) {
-    const row = matrix[y]!;
+    const row = matrix[y];
+    if (!row) continue;
     for (let x = 0; x < row.length; x += 1) {
       if (row[x]) d += `M${x + pad} ${y + pad}h1v1h-1z`;
     }

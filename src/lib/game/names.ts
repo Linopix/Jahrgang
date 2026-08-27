@@ -182,8 +182,8 @@ export async function refreshNames(force = false) {
     memory = stored;
     return stored.songs;
   }
-  const songs = await loadNameIndex();
-  if (songs.length === 0) {
+  const songs = (await loadNameIndex()) ?? [];
+  if (!Array.isArray(songs) || songs.length === 0) {
     if (stored) memory = stored;
     return stored?.songs ?? seedPairs();
   }
