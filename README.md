@@ -86,6 +86,8 @@ npm run dev
 
 Node 22, dann [localhost:8080](http://localhost:8080). Ohne Netz keine Vorschau und keine Online-Runde.
 
+Am Code arbeiten, auch ohne viel Vorwissen: **[docs/entwicklung.md](docs/entwicklung.md)** — Ordner, Spielrunde, Online, Packs, Tests.
+
 Kleine Tippfehler beim Raten sind in Ordnung. „Beatles“ zählt für The Beatles.
 
 ## Musikdienste
