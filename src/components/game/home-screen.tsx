@@ -116,7 +116,7 @@ export function HomeScreen() {
       <p className="mt-6 text-center text-xs leading-relaxed text-subtle lg:mt-10 lg:text-left">
         Eine Runde nimmt höchstens {POOL_MAX} Titel. Im Turnier kommt das ganze Pack in den Stapel.
         Ohne Hörprobe fällt ein Titel beim Start weg.{" "}
-        <Link to="/hinweise" hash="stapel" className="text-muted transition-colors duration-150 ease-out hover:text-fg">
+        <Link to="/hinweise" hash="hoerproben" className="text-muted transition-colors duration-150 ease-out hover:text-fg">
           Mehr unter Hinweise
         </Link>
         .

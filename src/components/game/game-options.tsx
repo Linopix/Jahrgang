@@ -112,6 +112,16 @@ function PreviewHintDialog({
             oder Regionalversionen ohne passenden Store-Eintrag. Die übrigen Titel der Liste bleiben
             spielbar.
           </p>
+          <p className="mt-3 text-sm leading-relaxed text-muted">
+            Den gleichen Text zum Weiterleiten gibt es unter{" "}
+            <a
+              href="/hinweise#hoerproben"
+              className="text-fg underline decoration-border underline-offset-4 hover:decoration-fg"
+            >
+              Hinweise, Fehlende Hörproben
+            </a>
+            .
+          </p>
           <div className="mt-5 flex justify-end">
             <Dialog.Close asChild>
               <Button type="button">Verstanden</Button>
