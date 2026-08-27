@@ -18,20 +18,29 @@ export function p2pRoomId(code: string): string {
   return `jg${normalizeRoomCode(code)}`;
 }
 
-export function shareUrl(code: string): string {
-  if (typeof window === "undefined") return `/?room=${code}`;
+export function shareUrl(code: string, opts?: { host?: boolean }): string {
+  if (typeof window === "undefined") {
+    return opts?.host ? `/?room=${code}&host=1` : `/?room=${code}`;
+  }
   const url = new URL(window.location.href);
   url.search = "";
   url.hash = "";
   url.searchParams.set("room", code);
+  if (opts?.host) url.searchParams.set("host", "1");
   return url.toString();
+}
+
+export function wantsHostClaim(raw?: string | null): boolean {
+  if (!raw) return false;
+  return /(?:[?&]host=1(?:&|$))|(?:[?&]host=1$)/i.test(raw) || raw === "1";
 }
 
 export function clearRoomFromUrl() {
   if (typeof window === "undefined") return;
   const url = new URL(window.location.href);
-  if (!url.searchParams.has("room")) return;
+  if (!url.searchParams.has("room") && !url.searchParams.has("host")) return;
   url.searchParams.delete("room");
+  url.searchParams.delete("host");
   const search = url.searchParams.toString();
   window.history.replaceState(null, "", `${url.pathname}${search ? `?${search}` : ""}${url.hash}`);
 }

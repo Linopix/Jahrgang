@@ -24,6 +24,7 @@ import {
 import { recordLocalScore } from "@/lib/game/local-scores";
 import { ACCOUNT_LIVE } from "@/lib/account/flags";
 import { submitBoard, useAccount } from "@/lib/account/client";
+import { useIsAdmin } from "@/lib/tv/mode";
 import { cn } from "@/lib/utils";
 
 function formatDuration(ms: number) {
@@ -121,7 +122,7 @@ export function WinnerScreen() {
   const openSetup = useGame((s) => s.openSetup);
   const openHome = useGame((s) => s.openHome);
   const online = isOnlinePlay();
-  const isHost = useOnline((s) => s.role) === "host";
+  const isHost = useIsAdmin();
   const nextRound = useOnline((s) => s.nextRound);
   const pending = useOnline((s) => s.pending);
   const selfId = useOnline((s) => s.selfId);

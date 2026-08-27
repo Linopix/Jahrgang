@@ -4,7 +4,8 @@ import { roomConfigFrom, useOnline } from "./online-store";
 import { clearRoomFromUrl } from "./room-code";
 import type { RoomConfig } from "./types";
 import type { OnlineMessage } from "./protocol";
-import { isTvRoom, isTvScreen, playerSeats } from "@/lib/tv/mode";
+import { isAdmin, isTvRoom, isTvScreen, playerSeats } from "@/lib/tv/mode";
+import type { TvStep } from "@/lib/tv/names";
 
 function skipIds() {
   return useOnline
@@ -32,20 +33,20 @@ export function canControlTurn() {
 export function canSeeCue() {
   const online = useOnline.getState();
   if (online.status !== "playing") return true;
-  return online.role === "host";
+  return isAdmin();
 }
 
 export function canStartNextRound() {
   const online = useOnline.getState();
   if (online.status !== "playing") return true;
-  if (online.role === "host") return true;
+  if (isAdmin()) return true;
   return online.nextRound === "all";
 }
 
 export function canEndGame() {
   const online = useOnline.getState();
   if (online.status !== "playing") return true;
-  return online.role === "host";
+  return isAdmin();
 }
 
 export function requestEnd() {
@@ -140,16 +141,25 @@ export function requestNext() {
 
 export function requestConfig(patch: Partial<RoomConfig>) {
   const online = useOnline.getState();
+  if (!isAdmin() && online.role !== "host") return;
   const next: RoomConfig = { ...roomConfigFrom(online), ...patch };
   online.setConfig(next);
-  if (online.role === "host") {
-    netSend({ t: "config", ...next } satisfies OnlineMessage);
-  }
+  netSend({ t: "config", ...next } satisfies OnlineMessage);
 }
 
 export async function requestStartOnline() {
   const online = useOnline.getState();
-  if (online.role !== "host") return;
+  if (!isAdmin() && online.role !== "host") return;
+  if (online.role !== "host") {
+    if (!isAdmin()) return;
+    const seats = playerSeats(online.members, online.hostId, online.tv);
+    const need = isTvRoom(online.tv) ? 1 : 2;
+    if (seats.length < need) return;
+    online.setPending(true);
+    online.setError(null);
+    netSend({ t: "admin-start" } satisfies OnlineMessage);
+    return;
+  }
   const seats = playerSeats(online.members, online.hostId, online.tv);
   const need = isTvRoom(online.tv) ? 1 : 2;
   if (seats.length < need) return;
@@ -209,6 +219,7 @@ export function requestBackToLobby() {
   useGame.getState().resetBoard();
   if (online.status === "off") return;
   online.markLobby();
+  if (online.tv) online.setTvStep("invite");
   netSend({ t: "back-lobby" } satisfies OnlineMessage);
 }
 
@@ -224,13 +235,32 @@ export function requestLeave() {
 
 export function requestKick(peerId: string) {
   const online = useOnline.getState();
-  if (online.role !== "host") return;
+  if (!isAdmin()) return;
   if (online.status === "playing") return;
-  if (!peerId || peerId === online.selfId) return;
-  netSend({ t: "kick" } satisfies OnlineMessage, peerId);
-  useOnline.setState({
-    kickedIds: [...new Set([...online.kickedIds, peerId])],
-    members: online.members.filter((row) => row.id !== peerId),
-  });
-  window.setTimeout(() => netDrop(peerId), 80);
+  if (!peerId || peerId === online.selfId || peerId === online.hostId) return;
+  if (online.role === "host") {
+    netSend({ t: "kick" } satisfies OnlineMessage, peerId);
+    useOnline.setState({
+      kickedIds: [...new Set([...online.kickedIds, peerId])],
+      members: online.members.filter((row) => row.id !== peerId),
+    });
+    window.setTimeout(() => netDrop(peerId), 80);
+    return;
+  }
+  netSend({ t: "admin-kick", id: peerId } satisfies OnlineMessage);
 }
+
+export function requestTvStep(step: TvStep) {
+  const online = useOnline.getState();
+  if (!isAdmin()) return;
+  if (!online.tv) return;
+  online.setTvStep(step);
+  netSend({ t: "tv-step", step } satisfies OnlineMessage);
+}
+
+export function requestSkipTvClaim() {
+  const online = useOnline.getState();
+  if (online.role !== "host" || !online.tv) return;
+  online.skipTvClaim();
+}
+

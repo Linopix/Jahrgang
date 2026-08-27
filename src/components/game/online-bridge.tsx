@@ -2,13 +2,14 @@ import { useEffect, useRef } from "react";
 import { useP2PRoom } from "@/lib/multiplayer";
 import { clearRoomFromUrl, p2pRoomId } from "@/lib/game/room-code";
 import { isOnlineMessage, type MemberWire, type OnlineMessage } from "@/lib/game/protocol";
-import { bindNet } from "@/lib/game/net";
+import { bindNet, netDrop } from "@/lib/game/net";
 import { useGame } from "@/lib/game/store";
 import { useOnline, type OnlineMember } from "@/lib/game/online-store";
 import { requestStartOnline } from "@/lib/game/online-actions";
 import { DEFAULT_NEXT_ROUND, DEFAULT_ROOM_CONFIG, DEFAULT_TOKENS, DEFAULT_VARIANT, isNextRoundPolicy, isPlayVariant, isTokenCount, parseCustom } from "@/lib/game/types";
 import { receiveReaction } from "@/lib/game/reactions";
 import { receiveChat } from "@/lib/game/chat";
+import { takeClaim } from "@/lib/tv/names";
 import type { PeerInfo } from "@/lib/multiplayer";
 
 const JOIN_TIMEOUT_MS = 14000;
@@ -48,6 +49,8 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   const emoji = useOnline((s) => s.emoji);
   const chat = useOnline((s) => s.chat);
   const tv = useOnline((s) => s.tv);
+  const adminId = useOnline((s) => s.adminId);
+  const tvStep = useOnline((s) => s.tvStep);
   const status = useOnline((s) => s.status);
   const sendRef = useRef(p2p.send);
   sendRef.current = p2p.send;
@@ -67,7 +70,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   useEffect(() => {
     if (!p2p.joined) return;
     if (role === "guest") {
-      p2p.send({ t: "hello", name });
+      p2p.send({ t: "hello", name, claim: useOnline.getState().claimIntent });
     }
   }, [p2p.joined, p2p.send, role, name]);
 
@@ -120,6 +123,8 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
     const msg: OnlineMessage = {
       t: "lobby",
       hostId: p2p.selfId,
+      adminId: useOnline.getState().adminId || p2p.selfId,
+      tvStep: useOnline.getState().tvStep,
       members: wire,
       era,
       target,
@@ -138,7 +143,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       tv,
     };
     p2p.send(msg);
-  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, extraEra, emoji, chat, tv, members]);
+  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, extraEra, emoji, chat, tv, members, adminId, tvStep]);
 
   useEffect(() => {
     return p2p.onMessage((from, data, channel) => {
@@ -198,6 +203,18 @@ function handleMessage(
       members.push({ id: from, name: msg.name || "Gast", connectionState: "connecting" });
     }
     online.setMembers(members);
+    if (online.tv && msg.claim) {
+      const claimed = takeClaim({
+        claimOpen: online.claimOpen,
+        wantsClaim: true,
+        tvId: ctx.selfId,
+        adminId: online.adminId || ctx.selfId,
+        from,
+      });
+      if (claimed) {
+        useOnline.setState(claimed);
+      }
+    }
     return;
   }
 
@@ -226,31 +243,57 @@ function handleMessage(
       chat: msg.chat !== false,
       tv: Boolean(msg.tv),
     });
-    useOnline.setState({ hostId: msg.hostId });
+    useOnline.setState({
+      hostId: msg.hostId,
+      adminId: msg.adminId || msg.hostId,
+      tvStep: msg.tvStep ?? (msg.tv ? "invite" : "invite"),
+    });
     if (online.status === "connecting" || online.status === "entry") {
       online.markLobby();
     }
     return;
   }
 
-  if (msg.t === "config" && online.role === "guest") {
-    online.setConfig({
-      era: msg.era,
-      target: msg.target,
-      variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
-      tokens: isTokenCount(msg.tokens) ? msg.tokens : DEFAULT_TOKENS,
-      nextRound: isNextRoundPolicy(msg.nextRound) ? msg.nextRound : DEFAULT_NEXT_ROUND,
-      playlistUrl: msg.playlistUrl ?? "",
-      playlistLabel: msg.playlistLabel ?? "",
-      mixFrom: msg.mixFrom ?? DEFAULT_ROOM_CONFIG.mixFrom,
-      mixTo: msg.mixTo ?? DEFAULT_ROOM_CONFIG.mixTo,
-      mixGenre: msg.mixGenre ?? "all",
-      custom: parseCustom(msg.custom),
-      extraEra: msg.extraEra ?? null,
-      emoji: msg.emoji !== false,
-      chat: msg.chat !== false,
-      tv: Boolean(msg.tv),
-    });
+  if (msg.t === "config") {
+    if (online.role === "guest") {
+      online.setConfig({
+        era: msg.era,
+        target: msg.target,
+        variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
+        tokens: isTokenCount(msg.tokens) ? msg.tokens : DEFAULT_TOKENS,
+        nextRound: isNextRoundPolicy(msg.nextRound) ? msg.nextRound : DEFAULT_NEXT_ROUND,
+        playlistUrl: msg.playlistUrl ?? "",
+        playlistLabel: msg.playlistLabel ?? "",
+        mixFrom: msg.mixFrom ?? DEFAULT_ROOM_CONFIG.mixFrom,
+        mixTo: msg.mixTo ?? DEFAULT_ROOM_CONFIG.mixTo,
+        mixGenre: msg.mixGenre ?? "all",
+        custom: parseCustom(msg.custom),
+        extraEra: msg.extraEra ?? null,
+        emoji: msg.emoji !== false,
+        chat: msg.chat !== false,
+        tv: Boolean(msg.tv),
+      });
+      return;
+    }
+    if (from === online.adminId) {
+      online.setConfig({
+        era: msg.era,
+        target: msg.target,
+        variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
+        tokens: isTokenCount(msg.tokens) ? msg.tokens : DEFAULT_TOKENS,
+        nextRound: isNextRoundPolicy(msg.nextRound) ? msg.nextRound : DEFAULT_NEXT_ROUND,
+        playlistUrl: msg.playlistUrl ?? "",
+        playlistLabel: msg.playlistLabel ?? "",
+        mixFrom: msg.mixFrom ?? DEFAULT_ROOM_CONFIG.mixFrom,
+        mixTo: msg.mixTo ?? DEFAULT_ROOM_CONFIG.mixTo,
+        mixGenre: msg.mixGenre ?? "all",
+        custom: parseCustom(msg.custom),
+        extraEra: msg.extraEra ?? null,
+        emoji: msg.emoji !== false,
+        chat: msg.chat !== false,
+        tv: Boolean(msg.tv),
+      });
+    }
     return;
   }
 
@@ -283,21 +326,23 @@ function handleMessage(
   if (msg.t === "back-lobby") {
     if (online.role === "host") {
       if (from === ctx.selfId) return;
-      if (online.nextRound !== "all") return;
+      if (from !== online.adminId && online.nextRound !== "all") return;
       game.resetBoard();
       online.markLobby();
+      if (online.tv) online.setTvStep("invite");
       ctx.send({ t: "back-lobby" });
       return;
     }
-    if (from !== online.hostId) return;
+    if (from !== online.hostId && from !== online.adminId) return;
     game.resetBoard();
     online.markLobby();
+    if (online.tv) online.setTvStep("invite");
     return;
   }
 
   if (msg.t === "again") {
     if (online.role !== "host") return;
-    if (online.nextRound !== "all") return;
+    if (from !== online.adminId && online.nextRound !== "all") return;
     void requestStartOnline();
     return;
   }
@@ -335,8 +380,39 @@ function handleMessage(
   }
 
   if (msg.t === "action" && msg.kind === "end" && online.role === "host") {
+    if (from !== online.adminId && from !== ctx.selfId) return;
     game.endGame();
     ctx.send({ t: "state", snapshot: useGame.getState().snapshot() });
+    return;
+  }
+
+  if (msg.t === "admin-start" && online.role === "host") {
+    if (from !== online.adminId) return;
+    void requestStartOnline();
+    return;
+  }
+
+  if (msg.t === "admin-kick" && online.role === "host") {
+    if (from !== online.adminId) return;
+    const peerId = msg.id;
+    if (!peerId || peerId === ctx.selfId || peerId === from) return;
+    ctx.send({ t: "kick" }, peerId);
+    useOnline.setState({
+      kickedIds: [...new Set([...online.kickedIds, peerId])],
+      members: online.members.filter((row) => row.id !== peerId),
+    });
+    window.setTimeout(() => netDrop(peerId), 80);
+    return;
+  }
+
+  if (msg.t === "tv-step") {
+    if (online.role === "host") {
+      if (from !== online.adminId) return;
+      online.setTvStep(msg.step);
+      return;
+    }
+    if (from !== online.hostId && from !== online.adminId) return;
+    online.setTvStep(msg.step);
     return;
   }
 

@@ -1,5 +1,4 @@
 /**
- * TV-Abend: Fernseher zeigt die Platte, Handys spielen.
- * Host kann das beim Online-Abend einschalten.
+ * Wohnzimmer: Fernseher oder Discord-Stream zeigt die Platte, Handys spielen.
  */
 export const TV_LIVE = true;

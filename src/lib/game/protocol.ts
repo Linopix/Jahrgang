@@ -1,3 +1,4 @@
+import type { TvStep } from "@/lib/tv/names";
 import type {
   CustomRules,
   EraId,
@@ -35,8 +36,9 @@ export type OnlineMessage =
   | {
       t: "hello";
       name: string;
+      claim?: boolean;
     }
-  | ({ t: "lobby"; hostId: string; members: MemberWire[] } & RoomConfigWire)
+  | ({ t: "lobby"; hostId: string; adminId?: string; tvStep?: TvStep; members: MemberWire[] } & RoomConfigWire)
   | ({ t: "config" } & RoomConfigWire)
   | { t: "loading" }
   | { t: "start-failed"; error: string }
@@ -53,24 +55,31 @@ export type OnlineMessage =
   | { t: "host-left" }
   | { t: "react"; emoji: string }
   | { t: "chat"; text: string }
-  | { t: "kick" };
+  | { t: "kick" }
+  | { t: "admin-start" }
+  | { t: "admin-kick"; id: string }
+  | { t: "tv-step"; step: TvStep };
+
+const KINDS = new Set([
+  "hello",
+  "lobby",
+  "config",
+  "loading",
+  "start-failed",
+  "state",
+  "action",
+  "again",
+  "back-lobby",
+  "host-left",
+  "react",
+  "chat",
+  "kick",
+  "admin-start",
+  "admin-kick",
+  "tv-step",
+]);
 
 export function isOnlineMessage(data: unknown): data is OnlineMessage {
   if (!data || typeof data !== "object" || !("t" in data)) return false;
-  const t = (data as { t: unknown }).t;
-  return (
-    t === "hello" ||
-    t === "lobby" ||
-    t === "config" ||
-    t === "loading" ||
-    t === "start-failed" ||
-    t === "state" ||
-    t === "action" ||
-    t === "again" ||
-    t === "back-lobby" ||
-    t === "host-left" ||
-    t === "react" ||
-    t === "chat" ||
-    t === "kick"
-  );
+  return KINDS.has((data as { t: unknown }).t as string);
 }

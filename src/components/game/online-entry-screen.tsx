@@ -6,6 +6,7 @@ import { sfxTick, unlockAudio } from "@/lib/game/audio";
 import { useOnline } from "@/lib/game/online-store";
 import { notePlayerName, noteRoomCode } from "@/lib/gags";
 import { TV_LIVE } from "@/lib/tv/flags";
+import { TV_MODE_NAME, TV_STAGE_NAME } from "@/lib/tv/names";
 import { cn } from "@/lib/utils";
 
 export function OnlineEntryScreen() {
@@ -17,13 +18,21 @@ export function OnlineEntryScreen() {
   const createRoom = useOnline((s) => s.createRoom);
   const joinRoom = useOnline((s) => s.joinRoom);
   const leaveRoom = useOnline((s) => s.leaveRoom);
+  const claimIntent = useOnline((s) => s.claimIntent);
   const [tv, setTv] = useState(false);
 
   const named = selfName.trim().length > 0;
+  const canOpenTv = TV_LIVE && tv;
+  const canOpenRoom = canOpenTv || named;
 
   function openRoom() {
     unlockAudio();
-    createRoom(TV_LIVE && tv ? { tv: true } : undefined);
+    createRoom(canOpenTv ? { tv: true } : undefined);
+  }
+
+  function join() {
+    unlockAudio();
+    joinRoom(undefined, claimIntent ? { claim: true } : undefined);
   }
 
   return (
@@ -41,10 +50,13 @@ export function OnlineEntryScreen() {
       <div>
       <header className="mt-6 lg:mt-0">
         <p className="text-xs font-medium tracking-[0.24em] text-muted uppercase">Mehrspieler</p>
-        <h1 className="mt-2 font-display text-4xl font-medium text-fg">Online-Abend</h1>
+        <h1 className="mt-2 font-display text-4xl font-medium text-fg">
+          {claimIntent ? "Host-Handy" : "Online-Abend"}
+        </h1>
         <p className="mt-3 max-w-md text-sm text-muted">
-          Ein Host öffnet den Raum. Mitspieler treten mit Code oder Einladungslink bei, jedes Gerät
-          für sich.
+          {claimIntent
+            ? "Name eintragen und beitreten. Du steuerst Pack und Start, der Fernseher bleibt die Bühne."
+            : "Ein Host öffnet den Raum. Mitspieler treten mit Code oder Einladungslink bei, jedes Gerät für sich."}
         </p>
       </header>
 
@@ -52,6 +64,7 @@ export function OnlineEntryScreen() {
         <Vinyl size="sm" spinning />
       </div>
 
+      {tv && inviteCode.length < 4 ? null : (
       <label className="mt-6 block">
         <span className="text-sm font-medium text-fg">Dein Name</span>
         <input
@@ -65,14 +78,16 @@ export function OnlineEntryScreen() {
           autoComplete="nickname"
           className="mt-2 h-12 w-full rounded-md bg-raised px-4 text-sm text-fg shadow-border outline-none transition-[box-shadow] focus:ring-2 focus:ring-primary/70"
           onKeyDown={(event) => {
-            if (event.key !== "Enter" || !named) return;
+            if (event.key !== "Enter") return;
             event.preventDefault();
-            openRoom();
+            if (inviteCode.length >= 4 && named) join();
+            else if (canOpenRoom) openRoom();
           }}
         />
       </label>
+      )}
 
-      {TV_LIVE ? (
+      {TV_LIVE && !claimIntent ? (
         <button
           type="button"
           role="switch"
@@ -86,10 +101,11 @@ export function OnlineEntryScreen() {
           <span className="min-w-0">
             <span className="flex items-center gap-2 text-sm text-fg">
               <Monitor className="size-4" />
-              TV-Abend
+              {TV_MODE_NAME}
             </span>
             <span className="mt-0.5 block text-xs text-muted">
-              Dieser Bildschirm ist der Fernseher. Geraten wird auf den Handys.
+              Dieser Bildschirm ist die Bühne — Fernseher oder Discord-Stream. Geraten wird auf den
+              Handys. Der {TV_STAGE_NAME} braucht keinen Namen.
             </span>
           </span>
           <span
@@ -111,21 +127,25 @@ export function OnlineEntryScreen() {
 
       {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
 
+      {claimIntent ? null : (
       <Button
         size="lg"
         className="mt-6 w-full"
-        disabled={!named}
+        disabled={!canOpenRoom}
         onClick={openRoom}
       >
         {tv ? <Monitor className="size-4" /> : <Radio className="size-4" />}
-        {tv ? "Fernseher öffnen" : "Raum öffnen"}
+        {tv ? `${TV_MODE_NAME} öffnen` : "Raum öffnen"}
       </Button>
+      )}
 
+      {claimIntent ? null : (
       <div className="mt-8 flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />
         <span className="text-xs tracking-[0.18em] text-subtle uppercase">oder beitreten</span>
         <span className="h-px flex-1 bg-border" />
       </div>
+      )}
 
       <label className="mt-6 block">
         <span className="text-sm font-medium text-fg">Code oder Link</span>
@@ -143,23 +163,19 @@ export function OnlineEntryScreen() {
           onKeyDown={(event) => {
             if (event.key !== "Enter" || !named || inviteCode.length < 4) return;
             event.preventDefault();
-            unlockAudio();
-            joinRoom();
+            join();
           }}
         />
       </label>
 
       <Button
         size="lg"
-        variant="secondary"
+        variant={claimIntent ? undefined : "secondary"}
         className="mt-4 w-full"
         disabled={!named || inviteCode.length < 4}
-        onClick={() => {
-          unlockAudio();
-          joinRoom();
-        }}
+        onClick={join}
       >
-        Beitreten
+        {claimIntent ? "Host werden" : "Beitreten"}
       </Button>
       </div>
 

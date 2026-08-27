@@ -23,8 +23,9 @@ import {
   type RoomConfig,
   type TokenCount,
 } from "./types";
-import { makeRoomCode, normalizeRoomCode } from "./room-code";
 import { TV_LIVE } from "@/lib/tv/flags";
+import { TV_STAGE_NAME, type TvStep } from "@/lib/tv/names";
+import { makeRoomCode, normalizeRoomCode } from "./room-code";
 
 export type OnlineStatus = "off" | "entry" | "connecting" | "lobby" | "playing";
 export type OnlineRole = "host" | "guest";
@@ -78,19 +79,26 @@ type OnlineStore = {
   emoji: boolean;
   chat: boolean;
   tv: boolean;
+  adminId: string;
+  tvStep: TvStep;
+  claimOpen: boolean;
+  claimIntent: boolean;
   error: string | null;
   pending: boolean;
   inviteCode: string;
   kickedIds: string[];
-  openEntry: (invite?: string) => void;
+  openEntry: (invite?: string, opts?: { claim?: boolean }) => void;
   setSelfName: (name: string) => void;
   setInviteCode: (code: string) => void;
   createRoom: (opts?: { tv?: boolean }) => void;
-  joinRoom: (code?: string) => void;
+  joinRoom: (code?: string, opts?: { claim?: boolean }) => void;
   leaveRoom: () => void;
   setIdentity: (selfId: string, hostIfCreator: boolean) => void;
   setMembers: (members: OnlineMember[]) => void;
   setConfig: (config: RoomConfig) => void;
+  setTvStep: (step: TvStep) => void;
+  skipTvClaim: () => void;
+  setAdminId: (id: string) => void;
   setError: (error: string | null) => void;
   setPending: (pending: boolean) => void;
   markPlaying: () => void;
@@ -120,12 +128,16 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   emoji: true,
   chat: true,
   tv: false,
+  adminId: "",
+  tvStep: "invite",
+  claimOpen: false,
+  claimIntent: false,
   error: null,
   pending: false,
   inviteCode: "",
   kickedIds: [],
 
-  openEntry: (invite) => {
+  openEntry: (invite, opts) => {
     const code = invite ? normalizeRoomCode(invite) : get().inviteCode;
     set({
       status: "entry",
@@ -139,6 +151,10 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       inviteCode: code,
       selfName: get().selfName.trim() || readStoredName(),
       tv: false,
+      adminId: "",
+      tvStep: "invite",
+      claimOpen: false,
+      claimIntent: Boolean(opts?.claim) && code.length === 4,
     });
   },
 
@@ -150,12 +166,13 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   setInviteCode: (code) => set({ inviteCode: normalizeRoomCode(code) }),
 
   createRoom: (opts) => {
-    const name = get().selfName.trim() || readStoredName();
+    const tv = TV_LIVE && Boolean(opts?.tv);
+    const name = tv ? TV_STAGE_NAME : get().selfName.trim() || readStoredName();
     if (!name) {
       set({ error: "Bitte zuerst einen Namen eintragen." });
       return;
     }
-    writeStoredName(name);
+    if (!tv) writeStoredName(name);
     set({
       status: "connecting",
       role: "host",
@@ -166,11 +183,15 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       error: null,
       pending: false,
       kickedIds: [],
-      tv: TV_LIVE && Boolean(opts?.tv),
+      tv,
+      adminId: "",
+      tvStep: tv ? "claim" : "invite",
+      claimOpen: tv,
+      claimIntent: false,
     });
   },
 
-  joinRoom: (code) => {
+  joinRoom: (code, opts) => {
     const raw = code ?? get().inviteCode;
     const roomCode = normalizeRoomCode(raw);
     if (roomCode.length < 4) {
@@ -193,6 +214,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       error: null,
       pending: false,
       inviteCode: roomCode,
+      claimIntent: Boolean(opts?.claim) || get().claimIntent,
     });
   },
 
@@ -208,19 +230,30 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       pending: false,
       kickedIds: [],
       tv: false,
+      adminId: "",
+      tvStep: "invite",
+      claimOpen: false,
+      claimIntent: false,
     });
   },
 
   setIdentity: (selfId, hostIfCreator) => {
-    const { role, selfName } = get();
+    const { role, selfName, tv, adminId } = get();
     const hostId = hostIfCreator && role === "host" ? selfId : get().hostId;
+    const nextAdmin =
+      adminId && adminId !== get().selfId && adminId !== selfId
+        ? adminId
+        : hostIfCreator && role === "host"
+          ? selfId
+          : adminId;
     set({
       selfId,
       hostId: hostId || get().hostId,
+      adminId: nextAdmin,
       status: role === "host" ? "lobby" : get().status,
       members:
         role === "host"
-          ? [{ id: selfId, name: selfName, connectionState: "self" }]
+          ? [{ id: selfId, name: tv ? TV_STAGE_NAME : selfName, connectionState: "self" }]
           : get().members,
     });
   },
@@ -244,6 +277,13 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       chat: config.chat !== false,
       tv: TV_LIVE && Boolean(config.tv),
     }),
+  setTvStep: (step) => set({ tvStep: step }),
+  skipTvClaim: () => {
+    if (!get().claimOpen) return;
+    const selfId = get().selfId;
+    set({ claimOpen: false, tvStep: "setup", adminId: selfId || get().adminId });
+  },
+  setAdminId: (id) => set({ adminId: id, claimOpen: false }),
   setError: (error) => set({ error, pending: false }),
   setPending: (pending) => set({ pending }),
   markPlaying: () => set({ status: "playing", pending: false, error: null }),

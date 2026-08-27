@@ -5,8 +5,9 @@ import { GameOptions, optionsPile, roomConfigSummary } from "./game-options";
 import { shareUrl } from "@/lib/game/room-code";
 import { requestConfig, requestKick, requestLeave, requestStartOnline } from "@/lib/game/online-actions";
 import { roomConfigFrom, useOnline } from "@/lib/game/online-store";
-import { playerSeats } from "@/lib/tv/mode";
+import { playerSeats, useIsAdmin } from "@/lib/tv/mode";
 import { TV_LIVE } from "@/lib/tv/flags";
+import { TvLobbyScreen } from "./tv-lobby";
 import { cn } from "@/lib/utils";
 
 export function OnlineLobbyScreen() {
@@ -33,6 +34,7 @@ export function OnlineLobbyScreen() {
   const hostId = useOnline((s) => s.hostId);
   const pending = useOnline((s) => s.pending);
   const isHost = role === "host";
+  const isAdmin = useIsAdmin();
   const connecting = status === "connecting";
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
   const link = shareUrl(roomCode);
@@ -78,7 +80,9 @@ export function OnlineLobbyScreen() {
   const need = TV_LIVE && tv ? 1 : 2;
   const pile = optionsPile(config, Math.max(seats.length, need));
   const pileBlocked = pile.status === "short" || pile.status === "empty";
-  const canStart = !connecting && !pending && seats.length >= need && !pileBlocked;
+  const canStart = isAdmin && !connecting && !pending && seats.length >= need && !pileBlocked;
+
+  if (TV_LIVE && tv) return <TvLobbyScreen />;
 
   return (
     <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pb-28 pt-8 lg:max-w-6xl lg:px-8 lg:pb-8">
@@ -188,7 +192,7 @@ export function OnlineLobbyScreen() {
                       ? "verbindet…"
                       : "verbunden"}
               </span>
-              {isHost && member.id !== hostId ? (
+              {isAdmin && member.id !== hostId ? (
                 <button
                   type="button"
                   aria-label={`${member.name} rauswerfen`}
@@ -204,7 +208,7 @@ export function OnlineLobbyScreen() {
       </section>
       </div>
 
-      {isHost ? (
+      {isAdmin ? (
         <div>
           <GameOptions value={config} onChange={requestConfig} online players={Math.max(seats.length, need)} />
           <div className="fixed inset-x-0 bottom-0 z-20 bg-bg/90 px-16 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:static lg:inset-auto lg:bg-transparent lg:px-0 lg:pt-8 lg:pb-0 lg:backdrop-blur-none">

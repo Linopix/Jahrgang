@@ -34,6 +34,7 @@ export function GameApp() {
   const onlineRole = useOnline((s) => s.role);
   const roomCode = useOnline((s) => s.roomCode);
   const members = useOnline((s) => s.members);
+  const tv = useOnline((s) => s.tv);
   const variant = useGame((s) => s.variant);
   const hydrateAccount = useAccount((s) => s.hydrate);
   const account = useAccount((s) => s.user);
@@ -57,8 +58,8 @@ export function GameApp() {
     const size = Math.max(1, members.filter((m) => m.connectionState !== "failed").length);
     if (onlineStatus === "lobby" || onlineStatus === "connecting") {
       void setDiscordPresence({
-        details: "Lobby",
-        state: roomCode ? `Raum ${roomCode}` : "Raum öffnen",
+        details: tv ? "Wohnzimmer" : "Lobby",
+        state: roomCode ? `Raum ${roomCode}` : tv ? "Bühne öffnen" : "Raum öffnen",
         size,
         max: 8,
         join: roomCode ? shareUrl(roomCode) : undefined,
@@ -83,7 +84,7 @@ export function GameApp() {
         max: 8,
       });
     }
-  }, [onlineStatus, phase, roomCode, members, variant]);
+  }, [onlineStatus, phase, roomCode, members, variant, tv]);
 
   const playing =
     (onlineStatus === "off" || onlineStatus === "playing") &&
