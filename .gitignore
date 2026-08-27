@@ -7,3 +7,10 @@ node_modules/
 .output
 dist
 *.log
+AGENTS.md
+.node_modules.lock
+screenshots/
+artifacts/
+attachments/
+.grok/*
+!.grok/app-env.json

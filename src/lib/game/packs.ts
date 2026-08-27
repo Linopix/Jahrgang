@@ -1,4 +1,4 @@
-import { CATALOG } from "./catalog";
+import { CATALOG } from "./catalog.ts";
 import type { CatalogSong, EraId, Genre, GenreId, MixFilter } from "./types";
 
 function fold(value: string) {

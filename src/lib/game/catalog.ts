@@ -1,5 +1,5 @@
-import type { CatalogSong, EraId } from "./types";
-import { guessMatches } from "./guess";
+import type { CatalogSong, EraId } from "./types.ts";
+import { guessMatches } from "./guess.ts";
 
 type Row = [title: string, artist: string, year: number, german?: 1];
 

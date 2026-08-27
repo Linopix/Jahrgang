@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { matchCatalogSong, songId } from "./catalog";
+import { matchCatalogSong, songId } from "./catalog.ts";
 import { lookupPreview, type PreviewResult } from "./preview";
 import { parsePlaylistInput, type ListedTrack, type PlaylistRef } from "./playlist-url";
 import type { CatalogSong } from "./types";

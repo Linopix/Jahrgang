@@ -1,5 +1,5 @@
-import { songFitsPack } from "./packs";
-import type { CatalogSong, EraId, MixFilter } from "./types";
+import { songFitsPack } from "./packs.ts";
+import type { CatalogSong, EraId, MixFilter } from "./types.ts";
 
 export type ExtraSong = CatalogSong & {
   previewUrl?: string;

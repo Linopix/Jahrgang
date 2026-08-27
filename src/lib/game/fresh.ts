@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { matchCatalogSong, songId } from "./catalog";
+import { matchCatalogSong, songId } from "./catalog.ts";
 import type { CatalogSong } from "./types";
 
 const KEY = "jg-fresh-v1";

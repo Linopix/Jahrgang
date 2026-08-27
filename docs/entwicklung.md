@@ -6,7 +6,7 @@ Jahrgang ist ein Musik-Jahr-Quiz im Browser: einen Hit hören, auf die Zeitlinie
 
 Keine Anmeldung nötig. Kein Backend für den Spielstand. Online läuft **Gerät zu Gerät** (WebRTC). Der Server kennt nur den Raumcode, damit sich die Browser finden.
 
-Der Rest dieser Datei ist für Menschen, die TypeScript schon mal gesehen haben. Du musst kein React-Profi sein.
+Der Rest dieser Datei ist für Menschen, die TypeScript schon mal gesehen haben. Du musst kein React-Profi sein. Was du können solltest, steht getrennt in **[voraussetzungen.md](voraussetzungen.md)**.
 
 ---
 
@@ -25,7 +25,8 @@ Node 22. Dann [http://127.0.0.1:8080](http://127.0.0.1:8080) — nicht `localhos
 | --- | --- |
 | `npm run dev` | Spiel lokal, lädt bei Dateiänderung neu |
 | `npx tsc --noEmit` | Typen prüfen, schnellster Smoke-Test |
-| `node --experimental-strip-types --test src/lib/game/*.test.ts src/lib/tv/tv.test.ts src/lib/spotify/spotify.test.ts` | Spielregeln und Online-Logik |
+| `node --experimental-strip-types --test src/lib/game/*.test.ts src/lib/tv/tv.test.ts src/lib/spotify/spotify.test.ts src/lib/og/invite.test.ts` | Spielregeln, Packs, Online, Einladungsbild |
+| `npm test` | Dieselben Spiele-Tests plus ein paar Gerüst-Checks |
 | `npm run build` | Produktionsbuild |
 
 UI-Texte sind Deutsch. Variablen und Dateinamen sind Englisch. Keine Emojis im Produkttext (Reaktionen im Spiel sind Absicht).
@@ -123,10 +124,28 @@ src/
   styles.css              Farben, Themes, Bewegung
 docs/
   entwicklung.md          diese Datei
+  voraussetzungen.md      was du können solltest
   musikdienste.md         Spotify und andere Dienste
 ```
 
-`src/lib/auth`, `src/lib/account`, `migrations/` gehören zum App-Gerüst. Konten sind **aus** (`ACCOUNT_LIVE = false`). Daran musst du fürs Spiel nicht arbeiten.
+`src/lib/auth`, `src/lib/account`, `migrations/` gehören zum App-Gerüst. Konten sind **aus** (`ACCOUNT_LIVE = false`). Daran musst du fürs Spiel nicht arbeiten. Spotify-Dateien bleiben, auch wenn `SPOTIFY_LIVE` gerade `false` ist — das Feature ist nur zugeklappt.
+
+Ein paar Dateien (`PreviewHostBridge`, `scripts/with-app-env.mjs`) kommen noch aus der Vorschau-Umgebung. Außerhalb davon tun sie nichts Böses. Nicht löschen, nur weil der Name fremd klingt. Die Grok-Install-Seite und die Skills-Ordner gehören nicht zum Spiel und sind nicht im Repo.
+
+---
+
+## Audio, Raten, Reaktionen
+
+| Thema | Datei | Kurz |
+| --- | --- | --- |
+| Nadel und UI-Klänge | [`audio.ts`](../src/lib/game/audio.ts), [`public/sfx/`](../public/sfx/) | Preview ist ein `HTMLAudioElement`. Vinyl-Start, falsch, Joker liegen als mp3. Lobby-Musik ist synthetisch (Web Audio), kein Streaming. |
+| Tipp vergleichen | [`guess.ts`](../src/lib/game/guess.ts) | Kleine Tippfehler, „The Beatles“ / „Beatles“, Klammern. Kenner darf leer lassen (überspringen). |
+| Autocomplete | [`guess-field.tsx`](../src/components/game/guess-field.tsx) | Vorschläge aus dem Katalog. Steht ein Interpret, zeigt der Titel nur Songs **dieses** Interpreten. |
+| Reaktionen | [`reactions.ts`](../src/lib/game/reactions.ts), [`reaction-dock.tsx`](../src/components/game/reaction-dock.tsx) | `{ t: "react" }`. Host kann Emoji in der Lobby aus. |
+| Chat | [`chat.ts`](../src/lib/game/chat.ts) | `{ t: "chat" }` / `chat-del`. Filter: `moderation.ts`. |
+| Raumcode | [`room-code.ts`](../src/lib/game/room-code.ts) | Vier Zeichen, ohne 0/O/1/I. Link `/i/AB12`. `?host=1` ist der Claim fürs Wohnzimmer-Handy. |
+| Einladungsbild | [`src/lib/og/`](../src/lib/og/) | Startseite ≠ Raum.link. Discord/WhatsApp holen `/api/og`. |
+| Discord-Overlay | [`discord/presence.ts`](../src/lib/discord/presence.ts) | Nur wenn das Spiel in Discord steckt. Setzt Rich Presence, ändert keine Regeln. |
 
 ---
 
@@ -312,20 +331,11 @@ Bestehende Komponenten anfassen (`button.tsx`, `menu-select.tsx`). Keine neue Fa
 
 ## Tests, die wirklich das Spiel treffen
 
-`npm test` im `package.json` prüft vor allem Gerüst-Skripte. Für Jahrgang:
+`npm test` prüft Spiel und ein paar Gerüst-Dateien. Explizit:
 
 ```bash
 npx tsc --noEmit
-
-node --experimental-strip-types --test \
-  src/lib/game/engine.test.ts \
-  src/lib/game/protocol.test.ts \
-  src/lib/game/hosting.test.ts \
-  src/lib/game/moderation.test.ts \
-  src/lib/game/packs.test.ts \
-  src/lib/game/guess.test.ts \
-  src/lib/tv/tv.test.ts \
-  src/lib/spotify/spotify.test.ts
+npm test
 ```
 
 Datei neben der Logik: `engine.ts` → `engine.test.ts`. Kein extra Runner, kein Vitest.

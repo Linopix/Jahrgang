@@ -1,5 +1,5 @@
-import type { CustomRules, PlayVariant } from "./types";
-import { guessKind } from "./types";
+import type { CustomRules, PlayVariant } from "./types.ts";
+import { guessKind } from "./types.ts";
 
 function stripMarks(input: string) {
   return input.normalize("NFD").replace(/\p{M}/gu, "");
