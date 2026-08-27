@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { inviteCode, invitePng, inviteSvg } from "@/lib/og/invite";
+import { inviteCode, invitePng, inviteSvg, SITE } from "@/lib/og/invite";
 
 export const Route = createFileRoute("/api/og")({
   server: {
@@ -7,6 +7,10 @@ export const Route = createFileRoute("/api/og")({
       GET: async ({ request }) => {
         const url = new URL(request.url);
         const code = inviteCode(url.searchParams.get("room"));
+        if (!code) {
+          const origin = url.origin.includes("localhost") ? SITE : url.origin;
+          return Response.redirect(`${origin}/og.jpg`, 302);
+        }
         if (url.searchParams.get("fmt") === "svg") {
           return new Response(inviteSvg(code), {
             headers: {

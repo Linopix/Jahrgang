@@ -16,8 +16,6 @@ const SHARE_META_KEYS = new Set([
   "og:image",
   "og:image:width",
   "og:image:height",
-  "og:image:secure_url",
-  "og:image:type",
   "og:type",
   "og:url",
   "og:site_name",
@@ -273,7 +271,7 @@ export function snapshotOgIdentity(cwd = process.cwd()) {
   const disk = ogCardPublicPath(cwd);
   if (disk) {
     site.card = "custom";
-    if (!/^https?:\/\//i.test(String(site.image ?? ""))) site.image = disk;
+    site.image = disk;
   } else {
     // site.json `card=custom` without a file must not bake a 404 /og.jpg URL.
     if (siteHasCustomCard(site)) delete site.card;
@@ -358,36 +356,20 @@ export function grokOgHeadTags({
   if (publicHost) {
     const asset = resolveOgCardAsset(site, cwd);
     const custom = Boolean(asset);
-    const baked = String(site.image ?? "").trim();
-    let image = /^https?:\/\//i.test(baked)
-      ? baked
-      : custom
-        ? `https://${publicHost}${asset.startsWith("/") ? asset : `/${asset}`}`
-        : `${ogServiceUrl()}/v1/card.png?host=${encodeURIComponent(publicHost)}&title=${encodeURIComponent(title)}`;
-    const color = !custom && !/^https?:\/\//i.test(baked) ? placeholderCardColor(site) : "";
+    let image = custom
+      ? `https://${publicHost}${asset.startsWith("/") ? asset : `/${asset}`}`
+      : `${ogServiceUrl()}/v1/card.png?host=${encodeURIComponent(publicHost)}&title=${encodeURIComponent(title)}`;
+    const color = !custom ? placeholderCardColor(site) : "";
     if (color) image += `&color=${encodeURIComponent(color)}`;
     tags.push(`<meta property="og:image" content="${escapeHtml(image)}">`);
-    tags.push(`<meta property="og:image:secure_url" content="${escapeHtml(image)}">`);
     tags.push(`<meta property="og:image:width" content="1200">`);
     tags.push(`<meta property="og:image:height" content="630">`);
-    tags.push(`<meta property="og:image:type" content="image/jpeg">`);
     const banner = String(site.banner ?? "").trim();
     if (banner) {
-      const bannerUrl = /^https?:\/\//i.test(banner)
-        ? banner
-        : `https://${publicHost}${banner.startsWith("/") ? banner : `/${banner}`}`;
+      const bannerUrl = `https://${publicHost}${banner.startsWith("/") ? banner : `/${banner}`}`;
       tags.push(`<meta property="x:game:image" content="${escapeHtml(bannerUrl)}">`);
       tags.push(`<meta property="x:game:image:width" content="1200">`);
       tags.push(`<meta property="x:game:image:height" content="264">`);
-    }
-  } else {
-    const image = String(site.image ?? "").trim();
-    if (/^https?:\/\//i.test(image)) {
-      tags.push(`<meta property="og:image" content="${escapeHtml(image)}">`);
-      tags.push(`<meta property="og:image:secure_url" content="${escapeHtml(image)}">`);
-      tags.push(`<meta property="og:image:width" content="1200">`);
-      tags.push(`<meta property="og:image:height" content="630">`);
-      tags.push(`<meta property="og:image:type" content="image/jpeg">`);
     }
   }
   return tags;
@@ -450,7 +432,8 @@ export function injectGrokPwaHead(html, ctx = {}) {
     host,
     documentTitle,
   );
-  let next = stripShareMetaTags(html);
+  const ownInviteCard = /\/api\/og\?room=/i.test(html);
+  let next = ownInviteCard ? html : stripShareMetaTags(html);
 
   const missing = grokPwaHeadTags(appName)
     .filter(([key]) => {
@@ -460,10 +443,12 @@ export function injectGrokPwaHead(html, ctx = {}) {
     })
     .map(([, tag]) => tag);
 
-  next = insertAfterHeadOpen(
-    next,
-    grokOgHeadTags({ host, appName, site, documentTitle, cwd }).join(""),
-  );
+  if (!ownInviteCard) {
+    next = insertAfterHeadOpen(
+      next,
+      grokOgHeadTags({ host, appName, site, documentTitle, cwd }).join(""),
+    );
+  }
 
   if (!next.includes("/grok-app-builder/extensions.js")) {
     missing.push(...grokExtensionsHeadTags(projectId));

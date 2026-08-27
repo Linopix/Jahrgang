@@ -44,6 +44,7 @@ test("host link is marked", () => {
   assert.equal(wantsHostClaim("https://x.test/?room=K7P2&host=1"), true);
   assert.equal(wantsHostClaim("https://x.test/?room=K7P2"), false);
   assert.equal(shareUrl("K7P2", { host: true }).includes("host=1"), true);
+  assert.equal(shareUrl("K7P2").includes("/i/K7P2"), true);
   assert.equal(shareUrl("K7P2").includes("host="), false);
 });
 

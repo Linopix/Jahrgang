@@ -115,6 +115,15 @@ test("platform chrome overwrites share-card metas and always sets og:title", () 
   assert.doesNotMatch(out, /property="og:image"/);
 });
 
+test("keeps a room invite share card", () => {
+  const html =
+    '<html><head><title>Jahrgang · Einladung K7P2</title><meta property="og:title" content="Jahrgang · Einladung K7P2"><meta property="og:image" content="https://jahrgang.vercel.app/api/og?room=K7P2"></head></html>';
+  const out = injectGrokPwaHead(html, { host: "jahrgang.vercel.app", appName: "Jahrgang" });
+  assert.match(out, /api\/og\?room=K7P2/);
+  assert.match(out, /Einladung K7P2/);
+  assert.doesNotMatch(out, /\/og\.jpg"/);
+});
+
 test("does not duplicate twitter:card or og:title", () => {
   const once = injectGrokPwaHead("<html><head><title>Hello World</title></head></html>");
   const twice = injectGrokPwaHead(once);

@@ -18,6 +18,7 @@ import { Route as ApiOgRouteImport } from './routes/api/og'
 import { Route as ApiRtcRouteImport } from './routes/api/rtc'
 import { Route as ApiScoresRouteImport } from './routes/api/scores'
 import { Route as ApiSpotifyRouteImport } from './routes/api/spotify'
+import { Route as ICodeRouteImport } from './routes/i.$code'
 import { Route as ApiSpotifyCallbackRouteImport } from './routes/api/spotify.callback'
 import { Route as ApiSpotifyLoginRouteImport } from './routes/api/spotify.login'
 import { Route as ApiSpotifyTokenRouteImport } from './routes/api/spotify.token'
@@ -67,6 +68,11 @@ const ApiSpotifyRoute = ApiSpotifyRouteImport.update({
   path: '/api/spotify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ICodeRoute = ICodeRouteImport.update({
+  id: '/i/$code',
+  path: '/i/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiSpotifyCallbackRoute = ApiSpotifyCallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/api/rtc': typeof ApiRtcRoute
   '/api/scores': typeof ApiScoresRoute
   '/api/spotify': typeof ApiSpotifyRouteWithChildren
+  '/i/$code': typeof ICodeRoute
   '/api/spotify/callback': typeof ApiSpotifyCallbackRoute
   '/api/spotify/login': typeof ApiSpotifyLoginRoute
   '/api/spotify/token': typeof ApiSpotifyTokenRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/api/rtc': typeof ApiRtcRoute
   '/api/scores': typeof ApiScoresRoute
   '/api/spotify': typeof ApiSpotifyRouteWithChildren
+  '/i/$code': typeof ICodeRoute
   '/api/spotify/callback': typeof ApiSpotifyCallbackRoute
   '/api/spotify/login': typeof ApiSpotifyLoginRoute
   '/api/spotify/token': typeof ApiSpotifyTokenRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/api/rtc': typeof ApiRtcRoute
   '/api/scores': typeof ApiScoresRoute
   '/api/spotify': typeof ApiSpotifyRouteWithChildren
+  '/i/$code': typeof ICodeRoute
   '/api/spotify/callback': typeof ApiSpotifyCallbackRoute
   '/api/spotify/login': typeof ApiSpotifyLoginRoute
   '/api/spotify/token': typeof ApiSpotifyTokenRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/api/rtc'
     | '/api/scores'
     | '/api/spotify'
+    | '/i/$code'
     | '/api/spotify/callback'
     | '/api/spotify/login'
     | '/api/spotify/token'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/api/rtc'
     | '/api/scores'
     | '/api/spotify'
+    | '/i/$code'
     | '/api/spotify/callback'
     | '/api/spotify/login'
     | '/api/spotify/token'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/api/rtc'
     | '/api/scores'
     | '/api/spotify'
+    | '/i/$code'
     | '/api/spotify/callback'
     | '/api/spotify/login'
     | '/api/spotify/token'
@@ -181,6 +193,7 @@ export interface RootRouteChildren {
   ApiRtcRoute: typeof ApiRtcRoute
   ApiScoresRoute: typeof ApiScoresRoute
   ApiSpotifyRoute: typeof ApiSpotifyRouteWithChildren
+  ICodeRoute: typeof ICodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -248,6 +261,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSpotifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/i/$code': {
+      id: '/i/$code'
+      path: '/i/$code'
+      fullPath: '/i/$code'
+      preLoaderRoute: typeof ICodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/spotify/callback': {
       id: '/api/spotify/callback'
       path: '/callback'
@@ -298,6 +318,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRtcRoute: ApiRtcRoute,
   ApiScoresRoute: ApiScoresRoute,
   ApiSpotifyRoute: ApiSpotifyRouteWithChildren,
+  ICodeRoute: ICodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -7,12 +7,15 @@ import appCss from "../styles.css?url";
 
 const THEME_BOOT = `(function(){try{var t=localStorage.getItem("jahrgang-theme");var u=[];try{u=JSON.parse(localStorage.getItem("jahrgang-theme-unlocks")||"[]")}catch(e){}var ok=t==="night"||t==="paper"||t==="ink"||t==="ember"||t==="glass"||t==="retro"||(t==="disco"&&u.indexOf("disco")>=0);if(ok)document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`;
 
-function roomFromLocation(location: { href?: string; search?: unknown; searchStr?: string }) {
+function roomFromLocation(location: { href?: string; pathname?: string; search?: unknown; searchStr?: string }) {
+  const path = location.pathname || "";
+  const href = location.href || "";
+  const fromPath = `${path} ${href}`.match(/\/i\/([A-Za-z0-9]+)/i);
+  if (fromPath) return inviteCode(fromPath[1]);
   if (typeof location.search === "object" && location.search && "room" in location.search) {
     const value = (location.search as { room?: unknown }).room;
     if (typeof value === "string") return inviteCode(value);
   }
-  const href = location.href || "";
   try {
     const url = href.includes("://") ? new URL(href) : new URL(href, "https://jahrgang.vercel.app");
     return inviteCode(url.searchParams.get("room"));
