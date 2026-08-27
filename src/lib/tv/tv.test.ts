@@ -5,10 +5,10 @@ import { pickSuccessor, skipClaim, takeClaim, TV_MODE_NAME, TV_STAGE_NAME } from
 import { encodeQr } from "../qr.ts";
 import { shareUrl, wantsHostClaim } from "../game/room-code.ts";
 
-test("wohnzimmer is live", () => {
+test("bigscreen is live", () => {
   assert.equal(TV_LIVE, true);
-  assert.equal(TV_MODE_NAME, "Wohnzimmer");
-  assert.equal(TV_STAGE_NAME, "Fernseher");
+  assert.equal(TV_MODE_NAME, "Bigscreen");
+  assert.equal(TV_STAGE_NAME, "Bühne");
 });
 
 test("first phone can claim host", () => {

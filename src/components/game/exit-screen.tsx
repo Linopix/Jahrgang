@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { rankSeries } from "@/lib/game/engine";
+import { finishEvening } from "@/lib/game/online-actions";
 import { useSessionExit } from "@/lib/game/session-exit";
 import { ConfettiBurst, Podium } from "./podium";
 
@@ -57,8 +58,8 @@ export function ExitScreen() {
             </li>
           ))}
         </ol>
-        <Button size="lg" className="mt-10 min-w-48" onClick={clear}>
-          Weiter
+        <Button size="lg" className="mt-10 min-w-48" onClick={finishEvening}>
+          Zum Start
         </Button>
       </main>
     );

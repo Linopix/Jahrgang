@@ -1,5 +1,5 @@
-export const TV_STAGE_NAME = "Fernseher";
-export const TV_MODE_NAME = "Wohnzimmer";
+export const TV_STAGE_NAME = "Bühne";
+export const TV_MODE_NAME = "Bigscreen";
 
 export type TvStep = "claim" | "setup" | "invite";
 

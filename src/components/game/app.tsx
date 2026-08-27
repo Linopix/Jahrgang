@@ -13,7 +13,7 @@ import { RevealScreen } from "./reveal-screen";
 import { RulesDialog } from "./rules-dialog";
 import { SetupScreen } from "./setup-screen";
 import { WinnerScreen } from "./winner-screen";
-import { TvPlayScreen, TvRevealScreen, TvWinnerScreen } from "./tv-stage";
+import { TvPlayScreen, TvRevealScreen, TvWinnerScreen, BigscreenPrompt } from "./tv-stage";
 import { ExitScreen } from "./exit-screen";
 import { DebugOverlay } from "./debug-overlay";
 import { useTvScreen } from "@/lib/tv/mode";
@@ -26,6 +26,8 @@ import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
 import { useSpotify } from "@/lib/spotify/session";
 import { useAccount } from "@/lib/account/client";
 import { refreshFreshSongs } from "@/lib/game/fresh";
+import { refreshNames } from "@/lib/game/names";
+import { enterBigscreen } from "@/lib/tv/fullscreen";
 import { VARIANT_LABELS } from "@/lib/game/types";
 import { shareUrl } from "@/lib/game/room-code";
 import { useSessionExit } from "@/lib/game/session-exit";
@@ -66,6 +68,12 @@ export function GameApp() {
   }, []);
 
   useEffect(() => {
+    void refreshNames();
+    const id = window.setInterval(() => void refreshNames(), 24 * 60 * 60 * 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
     if (ACCOUNT_LIVE && account && !useOnline.getState().selfName.trim()) {
       useOnline.getState().setSelfName(account.name);
     }
@@ -75,7 +83,7 @@ export function GameApp() {
     const size = Math.max(1, members.filter((m) => m.connectionState !== "failed").length);
     if (onlineStatus === "lobby" || onlineStatus === "connecting") {
       void setDiscordPresence({
-        details: tv ? "Wohnzimmer" : "Lobby",
+        details: tv ? "Bigscreen" : "Lobby",
         state: roomCode ? `Raum ${roomCode}` : tv ? "Bühne öffnen" : "Raum öffnen",
         size,
         max: 8,
@@ -134,6 +142,11 @@ export function GameApp() {
   const tvMyTurn = Boolean(tvScreen && stagePlays && selfId && players[currentPlayerIndex]?.id === selfId);
   const localPhase = onlineStatus === "off" || onlineStatus === "playing";
 
+  useEffect(() => {
+    if (!tvScreen) return;
+    if (phase === "loading" || phase === "listen") enterBigscreen();
+  }, [tvScreen, phase]);
+
   return (
     <>
       <OnlineBridge />
@@ -154,6 +167,7 @@ export function GameApp() {
       <ChatDock />
       <GagLayer />
       <DebugOverlay />
+      {tvScreen ? <BigscreenPrompt /> : null}
       <RulesDialog open={rulesOpen} onOpenChange={setRulesOpen} />
     </>
   );

@@ -6,6 +6,8 @@ import type {
   GenreId,
   NextRoundPolicy,
   PlayVariant,
+  SeriesStanding,
+  SuggestMode,
   TokenCount,
 } from "./types";
 
@@ -33,6 +35,7 @@ export type RoomConfigWire = {
   chat?: boolean;
   tv?: boolean;
   stagePlays?: boolean;
+  suggest?: SuggestMode;
 };
 
 export type OnlineMessage =
@@ -54,7 +57,7 @@ export type OnlineMessage =
   | { t: "host-left" }
   | { t: "host-take"; hostId: string; adminId?: string }
   | { t: "sync-request" }
-  | { t: "evening" }
+  | { t: "evening"; series?: SeriesStanding[] }
   | { t: "aim"; slot: number | null }
   | { t: "react"; emoji: string }
   | { t: "chat"; text: string; id?: string }

@@ -58,7 +58,9 @@ Repertoire: Jahrzehnt, Stil, Party, Charts. Mix und Playlist liegen außerhalb d
 
 Eine Person öffnet den Raum, die anderen kommen mit Code oder Link. Bis zu acht Geräte. Nur wer am Zug ist, legt. Alle hören denselben Titel.
 
-Der Host stellt ein, wer die nächste Runde startet, und ob Chat und Emoji an sind.
+Der Host stellt ein, wer die nächste Runde startet, und ob Chat und Emoji an sind. Wenn Interpret und Titel geraten werden, stellt der Host Autocomplete auf An, Aus oder Schwach.
+
+**Bigscreen:** ein Gerät zeigt die Runde im Vollbild, etwa am Fernseher oder in einer Discord-Übertragung. Die anderen Geräte legen und raten. Beim Start einer Runde wechselt die Bühne in den Vollbildmodus.
 
 <table>
   <tr>
@@ -90,7 +92,7 @@ Kleine Tippfehler beim Raten sind in Ordnung. „Beatles“ zählt für The Beat
 
 Spielen braucht kein Konto. iTunes und Deezer liefern die Kurzvorschau. Eine öffentliche Playlist kann als zusätzlicher Stapel dienen; beim Einfügen wird gezählt, für wie viele Titel eine Hörprobe vorliegt. Alle zwölf Stunden werden aktuelle Charts ergänzt.
 
-Spotify ist optional und nutzt das Konto der spielenden Person: Likes, Playlists und Top-Titel werden den passenden Packs zugeordnet. Mit Premium laufen volle Titel auf dem Gerät, das gerade spielt. Ohne Premium bleibt Online, Wohnzimmer und Discord nutzbar.
+Spotify ist optional und nutzt das Konto der spielenden Person: Likes, Playlists und Top-Titel werden den passenden Packs zugeordnet. Mit Premium laufen volle Titel auf dem Gerät, das gerade spielt. Ohne Premium bleibt Online, Bigscreen und Discord nutzbar.
 
 Einrichtung, Flag, Redirects, und warum Apple Music kein kleiner Schalter ist: **[docs/musikdienste.md](docs/musikdienste.md)**.
 

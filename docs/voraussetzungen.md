@@ -40,7 +40,7 @@ React kann parallel gelernt werden. Online-Protokoll nicht als erste Aufgabe.
 | Spielregel (legen, Stapel, Ziel) | `canPlace` in `engine.ts` und Tests. Kein React. |
 | Bildschirm, Slider, Menü | React und vorhandene Tailwind-Klassen (`bg-raised`, `text-muted`). Keine neuen Farben. |
 | Online-Zug, Chat, Host-Wechsel | Host rechnet, Gäste senden Nachrichten. Vertrag: `protocol.ts`. |
-| Wohnzimmer | `hostId` ist die Bühne, `adminId` das steuernde Gerät. |
+| Bigscreen | `hostId` ist die Bühne, `adminId` das steuernde Gerät. |
 | Spotify | OAuth (Redirect, Code, Token). Anleitung: [musikdienste.md](musikdienste.md). `SPOTIFY_LIVE` ist oft `false`. |
 | Einladungsbild | `og:`-Tags, `src/lib/og/`. |
 

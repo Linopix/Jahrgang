@@ -6,8 +6,9 @@ import { sfxTick, unlockAudio } from "@/lib/game/audio";
 import { useOnline } from "@/lib/game/online-store";
 import { notePlayerName, noteRoomCode } from "@/lib/gags";
 import { TV_LIVE } from "@/lib/tv/flags";
-import { TV_MODE_NAME, TV_STAGE_NAME } from "@/lib/tv/names";
+import { TV_MODE_NAME } from "@/lib/tv/names";
 import { isBlocked } from "@/lib/game/moderation";
+import { enterBigscreen } from "@/lib/tv/fullscreen";
 import { cn } from "@/lib/utils";
 
 export function OnlineEntryScreen() {
@@ -29,6 +30,7 @@ export function OnlineEntryScreen() {
   function openRoom() {
     unlockAudio();
     createRoom(canOpenTv ? { tv: true } : undefined);
+    if (canOpenTv) enterBigscreen();
   }
 
   function join() {
@@ -56,7 +58,7 @@ export function OnlineEntryScreen() {
         </h1>
         <p className="mt-3 max-w-md text-sm text-muted">
           {claimIntent
-            ? "Name eintragen und beitreten. Du steuerst Pack und Start, der Fernseher bleibt die Bühne."
+            ? "Name eintragen und beitreten. Du stellst Pack und Start ein. Die Bühne bleibt das Übertragungsgerät."
             : "Ein Host öffnet den Raum. Mitspieler treten mit Code oder Einladungslink bei, jedes Gerät für sich."}
         </p>
       </header>
@@ -108,8 +110,8 @@ export function OnlineEntryScreen() {
               {TV_MODE_NAME}
             </span>
             <span className="mt-0.5 block text-xs text-muted">
-              Dieser Bildschirm ist die Bühne — Fernseher oder Discord-Stream. Geraten wird auf den
-              Handys. Der {TV_STAGE_NAME} braucht keinen Namen.
+              Dieser Bildschirm zeigt die Runde im Vollbild. Legen und Raten passieren auf den anderen
+              Geräten. Die Bühne braucht keinen Spielernamen. Geeignet für Fernseher und Discord-Übertragung.
             </span>
           </span>
           <span

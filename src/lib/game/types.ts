@@ -65,6 +65,7 @@ export const DEFAULT_CUSTOM: CustomRules = {
 export type TokenCount = 0 | 1 | 2;
 
 export type NextRoundPolicy = "host" | "all";
+export type SuggestMode = "on" | "off" | "loose";
 
 export type Phase =
   | "home"
@@ -122,6 +123,7 @@ export interface SetupConfig {
   extraEra?: EraId | null;
   eras?: EraId[];
   pool?: number;
+  suggest?: SuggestMode;
 }
 
 export interface SeriesStanding {
@@ -204,6 +206,7 @@ export interface RoomConfig {
   emoji: boolean;
   chat: boolean;
   tv: boolean;
+  suggest: SuggestMode;
 }
 
 export const ERA_IDS: EraId[] = [
@@ -436,11 +439,27 @@ export const GENRE_BLURBS: Record<GenreId, string> = {
   dance: "Dance, Disco, elektronische Hits.",
   soul: "Soul, R&B, Funk.",
   metal: "Metal und härterer Rock.",
-  indie: "Indie und das, was nicht ins Stadion passt.",
-  latin: "Latin, Reggaeton und tropische Hits.",
+  indie: "Indie.",
+  latin: "Latin und Reggaeton.",
   schlager: "Schlager und Deutschpop.",
   german: "Deutschsprachige Titel.",
 };
+
+export const SUGGEST_IDS: SuggestMode[] = ["on", "off", "loose"];
+export const SUGGEST_LABELS: Record<SuggestMode, string> = {
+  on: "An",
+  off: "Aus",
+  loose: "Schwach",
+};
+export const DEFAULT_SUGGEST: SuggestMode = "on";
+
+export function isSuggestMode(value: unknown): value is SuggestMode {
+  return value === "on" || value === "off" || value === "loose";
+}
+
+export function parseSuggest(value: unknown): SuggestMode {
+  return isSuggestMode(value) ? value : DEFAULT_SUGGEST;
+}
 
 export const NEXT_ROUND_OPTIONS = ["host", "all"] as const;
 export const NEXT_ROUND_LABELS: Record<NextRoundPolicy, string> = {
@@ -493,6 +512,7 @@ export const DEFAULT_ROOM_CONFIG: RoomConfig = {
   emoji: true,
   chat: true,
   tv: false,
+  suggest: DEFAULT_SUGGEST,
 };
 
 export function isPlayVariant(value: unknown): value is PlayVariant {

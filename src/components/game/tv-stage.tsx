@@ -22,6 +22,7 @@ import { currentPlayer, useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { rankPlayers } from "@/lib/game/engine";
 import { guessKind, rulesFor, VARIANT_LABELS } from "@/lib/game/types";
+import { enterBigscreen } from "@/lib/tv/fullscreen";
 import { useIsAdmin } from "@/lib/tv/mode";
 import { cn } from "@/lib/utils";
 
@@ -98,7 +99,7 @@ export function TvPlayScreen() {
         <div className="flex flex-1 flex-col items-center text-center">
           <p className="text-sm tracking-[0.2em] text-muted uppercase">Am Zug</p>
           <h2 className="mt-2 font-display text-6xl font-medium text-fg">{player.name}</h2>
-          <p className="mt-3 text-lg text-muted">Handys raten. Der Ton kommt aus dem Wohnzimmer.</p>
+          <p className="mt-3 text-lg text-muted">Eingabe auf den anderen Geräten. Ton von diesem Bildschirm.</p>
           <div className="mt-8">
             <Vinyl
               spinning={playing}
@@ -234,7 +235,30 @@ export function TvWinnerScreen() {
 export function TvListenBanner() {
   return (
     <p className="rounded-md bg-raised px-3 py-2 text-center text-xs text-muted">
-      Ton kommt aus dem Wohnzimmer. Du spielst hier auf dem Handy.
+      Ton kommt von der Bühne. Eingabe auf diesem Gerät.
     </p>
+  );
+}
+
+export function BigscreenPrompt() {
+  const [need, setNeed] = useState(
+    () => typeof document !== "undefined" && !document.fullscreenElement,
+  );
+  useEffect(() => {
+    const sync = () => setNeed(!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", sync);
+    return () => document.removeEventListener("fullscreenchange", sync);
+  }, []);
+  if (!need) return null;
+  return (
+    <button
+      type="button"
+      className="fixed inset-x-0 bottom-0 z-40 bg-bg/90 px-5 py-4 text-center text-sm text-fg backdrop-blur-md"
+      onClick={() => {
+        enterBigscreen();
+      }}
+    >
+      Tippen für Vollbild
+    </button>
   );
 }

@@ -25,6 +25,7 @@
     "typecheck": "tsc --noEmit",
     "check:auth": "node scripts/check-auth-invariant.mjs",
     "test": "node --test scripts/with-app-env.test.mjs scripts/migration-plan.test.mjs scripts/check-auth-invariant.test.mjs scripts/sign-out-plan.test.mjs && node --experimental-strip-types --test src/lib/game/*.test.ts src/lib/tv/tv.test.ts src/lib/spotify/spotify.test.ts src/lib/og/invite.test.ts src/lib/auth/gate-identity.test.ts",
+    "sync:names": "node scripts/sync-names.mjs",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

@@ -7,6 +7,7 @@ import { requestConfig, requestKick, requestLeave, requestPassAdmin, requestStar
 import { roomConfigFrom, useOnline } from "@/lib/game/online-store";
 import { playerSeats, useIsAdmin } from "@/lib/tv/mode";
 import { TV_LIVE } from "@/lib/tv/flags";
+import { TV_MODE_NAME } from "@/lib/tv/names";
 import { TvLobbyScreen } from "./tv-lobby";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +33,7 @@ export function OnlineLobbyScreen() {
   const emoji = useOnline((s) => s.emoji);
   const chat = useOnline((s) => s.chat);
   const tv = useOnline((s) => s.tv);
+  const suggest = useOnline((s) => s.suggest);
   const error = useOnline((s) => s.error);
   const hostId = useOnline((s) => s.hostId);
   const adminId = useOnline((s) => s.adminId);
@@ -60,6 +62,7 @@ export function OnlineLobbyScreen() {
     emoji,
     chat,
     tv,
+    suggest,
   });
 
   useEffect(() => {
@@ -103,16 +106,16 @@ export function OnlineLobbyScreen() {
       </button>
 
       <p className="mt-6 text-xs font-medium tracking-[0.24em] text-muted uppercase">
-        {isHost ? (tv ? "Fernseher" : "Du hostest") : "Du bist dabei"}
+        {isHost ? (tv ? TV_MODE_NAME : "Du hostest") : "Du bist dabei"}
       </p>
-      <h1 className="mt-2 font-display text-4xl font-medium text-fg">{tv ? "TV-Abend" : "Lobby"}</h1>
+      <h1 className="mt-2 font-display text-4xl font-medium text-fg">{tv ? TV_MODE_NAME : "Lobby"}</h1>
       <p className="mt-2 max-w-xl text-sm text-muted">
         {connecting
           ? isHost
             ? "Raum wird geöffnet…"
             : `Verbinde mit ${roomCode}…`
           : tv
-            ? "Code aufs Handy. Der Fernseher spielt, die Handys raten."
+            ? "Code auf das Steuergerät. Dieser Bildschirm zeigt die Runde, die anderen Geräte legen und raten."
             : "Code oder Link teilen. Der Host startet, sobald alle verbunden sind."}
       </p>
 
@@ -175,10 +178,10 @@ export function OnlineLobbyScreen() {
                 {member.name}
                 {member.connectionState === "self" ? (
                   <span className="ml-2 text-xs font-normal text-muted">
-                    {tv && member.id === hostId ? "Fernseher" : "du"}
+                    {tv && member.id === hostId ? "Bühne" : "du"}
                   </span>
                 ) : member.id === hostId && tv ? (
-                  <span className="ml-2 text-xs font-normal text-muted">Fernseher</span>
+                  <span className="ml-2 text-xs font-normal text-muted">Bühne</span>
                 ) : member.id === currentAdmin ? (
                   <span className="ml-2 text-xs font-normal text-muted">Host</span>
                 ) : null}

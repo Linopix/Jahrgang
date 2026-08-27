@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { guessMatches, kennerBonus, normalizeGuess, scoreGuesses, suggestNames, suggestTitles, titlesForArtist } from "./guess.ts";
+import { guessMatches, kennerBonus, normalizeGuess, scoreGuesses, suggestNames, suggestTitles, titlesForArtist, uniqueArtists } from "./guess.ts";
 
 test("normalize strips punctuation, articles and featuring", () => {
   assert.equal(normalizeGuess("Y.M.C.A."), "y m c a");
@@ -71,6 +71,11 @@ test("title suggestions follow the typed artist even if it is wrong", () => {
   const idle = suggestTitles("", "michael jackson", songs);
   assert.ok(idle.includes("Beat It"));
   assert.ok(titlesForArtist("", songs).includes("Obscure Cut"));
+  assert.deepEqual(suggestTitles("boh", "Queen", songs, 8, "loose"), ["Bohemian Rhapsody"]);
+  assert.deepEqual(suggestTitles("boh", "Queen", songs, 8, "off"), []);
+  const extra = uniqueArtists(songs, ["Queen", "Daft Punk"]);
+  assert.ok(extra.includes("Daft Punk"));
+  assert.equal(extra.filter((name) => name === "Queen").length, 1);
 });
 
 test("kenner bonus needs both hits", () => {

@@ -129,7 +129,7 @@ export function RevealScreen() {
           className="mt-4 h-11 text-sm text-muted transition-colors duration-150 ease-out hover:text-fg"
           onClick={requestEnd}
         >
-          Abend beenden
+          Runde beenden
         </button>
       ) : null}
     </main>

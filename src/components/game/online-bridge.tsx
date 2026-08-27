@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 import { useP2PRoom } from "@/lib/multiplayer";
 import { p2pRoomId } from "@/lib/game/room-code";
-import { isOnlineMessage, type MemberWire, type OnlineMessage } from "@/lib/game/protocol";
+import { isOnlineMessage, type MemberWire, type OnlineMessage, type RoomConfigWire } from "@/lib/game/protocol";
 import { bindNet, netDrop } from "@/lib/game/net";
 import { useGame } from "@/lib/game/store";
 import { useOnline, type OnlineMember } from "@/lib/game/online-store";
 import { requestStartOnline } from "@/lib/game/online-actions";
-import { DEFAULT_NEXT_ROUND, DEFAULT_ROOM_CONFIG, DEFAULT_VARIANT, defaultTokensFor, isNextRoundPolicy, isPlayVariant, isTokenCount, parseCustom } from "@/lib/game/types";
+import { DEFAULT_NEXT_ROUND, DEFAULT_ROOM_CONFIG, DEFAULT_VARIANT, defaultTokensFor, isNextRoundPolicy, isPlayVariant, isTokenCount, parseCustom, parseSuggest } from "@/lib/game/types";
 import { receiveReaction } from "@/lib/game/reactions";
 import { applyChatDelete, receiveChat } from "@/lib/game/chat";
 import { takeClaim, pickSuccessor } from "@/lib/tv/names";
@@ -55,6 +55,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   const emoji = useOnline((s) => s.emoji);
   const chat = useOnline((s) => s.chat);
   const tv = useOnline((s) => s.tv);
+  const suggest = useOnline((s) => s.suggest);
   const adminId = useOnline((s) => s.adminId);
   const tvStep = useOnline((s) => s.tvStep);
   const stagePlays = useOnline((s) => s.stagePlays);
@@ -267,9 +268,10 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       chat,
       tv,
       stagePlays: useOnline.getState().stagePlays,
+      suggest,
     };
     p2p.send(msg);
-  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, extraEra, eras, pool, emoji, chat, tv, members, adminId, tvStep, stagePlays]);
+  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, extraEra, eras, pool, emoji, chat, tv, members, adminId, tvStep, stagePlays, suggest]);
 
   useEffect(() => {
     return p2p.onMessage((from, data, channel) => {
@@ -294,6 +296,31 @@ function disconnectedIds(peers: PeerInfo[], selfId: string) {
     .getState()
     .members.filter((m) => m.id !== selfId && !live.has(m.id))
     .map((m) => m.id);
+}
+
+function roomConfigFromWire(msg: RoomConfigWire) {
+  return {
+    era: msg.era,
+    target: msg.target,
+    variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
+    tokens: isTokenCount(msg.tokens)
+      ? msg.tokens
+      : defaultTokensFor(isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT),
+    nextRound: isNextRoundPolicy(msg.nextRound) ? msg.nextRound : DEFAULT_NEXT_ROUND,
+    playlistUrl: msg.playlistUrl ?? "",
+    playlistLabel: msg.playlistLabel ?? "",
+    mixFrom: msg.mixFrom ?? DEFAULT_ROOM_CONFIG.mixFrom,
+    mixTo: msg.mixTo ?? DEFAULT_ROOM_CONFIG.mixTo,
+    mixGenre: msg.mixGenre ?? "all",
+    custom: parseCustom(msg.custom),
+    extraEra: msg.extraEra ?? null,
+    eras: msg.eras ?? [],
+    pool: msg.pool ?? DEFAULT_ROOM_CONFIG.pool,
+    emoji: msg.emoji !== false,
+    chat: msg.chat !== false,
+    tv: Boolean(msg.tv),
+    suggest: parseSuggest(msg.suggest),
+  };
 }
 
 function handleMessage(
@@ -354,25 +381,7 @@ function handleMessage(
         connectionState: m.id === ctx.selfId ? "self" : "connected",
       })),
     );
-    online.setConfig({
-      era: msg.era,
-      target: msg.target,
-      variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
-      tokens: isTokenCount(msg.tokens) ? msg.tokens : defaultTokensFor(isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT),
-      nextRound: isNextRoundPolicy(msg.nextRound) ? msg.nextRound : DEFAULT_NEXT_ROUND,
-      playlistUrl: msg.playlistUrl ?? "",
-      playlistLabel: msg.playlistLabel ?? "",
-      mixFrom: msg.mixFrom ?? DEFAULT_ROOM_CONFIG.mixFrom,
-      mixTo: msg.mixTo ?? DEFAULT_ROOM_CONFIG.mixTo,
-      mixGenre: msg.mixGenre ?? "all",
-      custom: parseCustom(msg.custom),
-      extraEra: msg.extraEra ?? null,
-      eras: msg.eras ?? [],
-      pool: msg.pool ?? DEFAULT_ROOM_CONFIG.pool,
-      emoji: msg.emoji !== false,
-      chat: msg.chat !== false,
-      tv: Boolean(msg.tv),
-    });
+    online.setConfig(roomConfigFromWire(msg));
     useOnline.setState({
       hostId: msg.hostId,
       adminId: msg.adminId || msg.hostId,
@@ -388,48 +397,12 @@ function handleMessage(
 
   if (msg.t === "config") {
     if (online.role === "guest") {
-      online.setConfig({
-        era: msg.era,
-        target: msg.target,
-        variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
-        tokens: isTokenCount(msg.tokens) ? msg.tokens : defaultTokensFor(isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT),
-        nextRound: isNextRoundPolicy(msg.nextRound) ? msg.nextRound : DEFAULT_NEXT_ROUND,
-        playlistUrl: msg.playlistUrl ?? "",
-        playlistLabel: msg.playlistLabel ?? "",
-        mixFrom: msg.mixFrom ?? DEFAULT_ROOM_CONFIG.mixFrom,
-        mixTo: msg.mixTo ?? DEFAULT_ROOM_CONFIG.mixTo,
-        mixGenre: msg.mixGenre ?? "all",
-        custom: parseCustom(msg.custom),
-        extraEra: msg.extraEra ?? null,
-        eras: msg.eras ?? [],
-        pool: msg.pool ?? DEFAULT_ROOM_CONFIG.pool,
-        emoji: msg.emoji !== false,
-        chat: msg.chat !== false,
-        tv: Boolean(msg.tv),
-      });
+      online.setConfig(roomConfigFromWire(msg));
       if (typeof msg.stagePlays === "boolean") useOnline.setState({ stagePlays: msg.stagePlays });
       return;
     }
     if (from === online.adminId) {
-      online.setConfig({
-        era: msg.era,
-        target: msg.target,
-        variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
-        tokens: isTokenCount(msg.tokens) ? msg.tokens : defaultTokensFor(isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT),
-        nextRound: isNextRoundPolicy(msg.nextRound) ? msg.nextRound : DEFAULT_NEXT_ROUND,
-        playlistUrl: msg.playlistUrl ?? "",
-        playlistLabel: msg.playlistLabel ?? "",
-        mixFrom: msg.mixFrom ?? DEFAULT_ROOM_CONFIG.mixFrom,
-        mixTo: msg.mixTo ?? DEFAULT_ROOM_CONFIG.mixTo,
-        mixGenre: msg.mixGenre ?? "all",
-        custom: parseCustom(msg.custom),
-        extraEra: msg.extraEra ?? null,
-        eras: msg.eras ?? [],
-        pool: msg.pool ?? DEFAULT_ROOM_CONFIG.pool,
-        emoji: msg.emoji !== false,
-        chat: msg.chat !== false,
-        tv: Boolean(msg.tv),
-      });
+      online.setConfig(roomConfigFromWire(msg));
       if (typeof msg.stagePlays === "boolean") online.setStagePlays(msg.stagePlays);
     }
     return;
@@ -571,8 +544,10 @@ function handleMessage(
   }
 
   if (msg.t === "evening") {
-    if (from !== online.hostId && from !== online.adminId) return;
-    useSessionExit.getState().showEvening(game.series);
+    if (from !== online.hostId && from !== online.adminId && from !== ctx.selfId) return;
+    const series = msg.series?.length ? msg.series : game.series;
+    if (!series.length) return;
+    useSessionExit.getState().showEvening(series);
     return;
   }
 

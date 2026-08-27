@@ -17,6 +17,7 @@ import {
 } from "@/lib/game/online-actions";
 import { roomConfigFrom, useOnline } from "@/lib/game/online-store";
 import { playerSeats, useIsAdmin } from "@/lib/tv/mode";
+import { enterBigscreen } from "@/lib/tv/fullscreen";
 import { TV_MODE_NAME } from "@/lib/tv/names";
 import { cn } from "@/lib/utils";
 
@@ -110,7 +111,7 @@ export function TvLobbyScreen() {
         className="back-link"
       >
         <ChevronLeft className="size-4" />
-        Wohnzimmer schließen
+        Bigscreen schließen
       </button>
       {tvStep === "claim" && role === "host" ? <ClaimStep connecting={connecting} /> : null}
       {tvStep === "claim" && role !== "host" ? (
@@ -138,12 +139,12 @@ function ClaimStep({ connecting }: { connecting: boolean }) {
         <p className="text-xs font-medium tracking-[0.24em] text-muted uppercase">Bühne</p>
         <h1 className="mt-2 font-display text-5xl font-medium text-fg">{TV_MODE_NAME}</h1>
         <p className="mt-4 max-w-xl text-lg text-muted">
-          Zuerst das Host-Handy. QR scannen, Namen eintragen — du wirst Host. Pack und Start liegen
-          bei dir, dieser Bildschirm bleibt die Bühne.
+          Zuerst das Steuergerät. QR scannen und Namen eintragen. Pack und Start liegen dort, dieser
+          Bildschirm bleibt die Bühne.
         </p>
         <p className="mt-3 max-w-xl text-sm text-muted">
-          Discord: Bildschirm teilen, den Host-Link in den Chat. Danach kommt der Gäste-QR für alle
-          im Call. Wenn du selbst mitspielst, einfach überspringen.
+          Für eine Übertragung (zum Beispiel Discord) diesen Bildschirm teilen und den Host-Link in
+          den Chat legen. Danach erscheint der Gäste-QR. Mitspielen auf der Bühne: überspringen.
         </p>
         <p className="mt-6 font-mono text-5xl tracking-[0.28em] text-fg">{roomCode || "····"}</p>
         <CopyRow code={roomCode} link={link} />
@@ -152,7 +153,10 @@ function ClaimStep({ connecting }: { connecting: boolean }) {
           variant="secondary"
           className="mt-8 w-full max-w-md"
           disabled={connecting}
-          onClick={() => requestSkipTvClaim()}
+          onClick={() => {
+            enterBigscreen();
+            requestSkipTvClaim();
+          }}
         >
           Überspringen — ich spiele hier mit
         </Button>
@@ -183,6 +187,7 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
   const emoji = useOnline((s) => s.emoji);
   const chat = useOnline((s) => s.chat);
   const tv = useOnline((s) => s.tv);
+  const suggest = useOnline((s) => s.suggest);
   const members = useOnline((s) => s.members);
   const hostId = useOnline((s) => s.hostId);
   const adminId = useOnline((s) => s.adminId);
@@ -206,6 +211,7 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
     emoji,
     chat,
     tv,
+    suggest,
   });
   const pile = optionsPile(config, Math.max(seats.length, 1));
   const pileBlocked = pile.status === "short" || pile.status === "empty";
@@ -244,7 +250,7 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
         <p className="text-xs tracking-[0.24em] text-muted uppercase">{TV_MODE_NAME}</p>
         <h1 className="mt-2 font-display text-4xl text-fg">Abend einstellen</h1>
         <p className="mt-3 max-w-xl text-sm text-muted">
-          Pack, Stil, Karten. Danach der Gäste-QR — fürs Wohnzimmer und fürs Discord-Streaming.
+          Pack, Stil, Karten. Danach der Gäste-QR auf diesem Bildschirm.
         </p>
         <PlayAlongSwitch />
         <GameOptions value={config} onChange={requestConfig} online players={Math.max(seats.length, 1)} />
@@ -259,7 +265,7 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
           {pileBlocked ? "Zu wenig Titel" : "Gäste einladen"}
         </Button>
         <p className="mt-3 text-xs text-subtle">
-          QR und Code kommen groß auf den Fernseher. Im Stream reicht der Code im Chat.
+          QR und Code erscheinen auf der Bühne. Im Stream kann der Code im Chat stehen.
         </p>
       </div>
     </div>
@@ -291,6 +297,7 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
   const pool = useOnline((s) => s.pool);
   const emoji = useOnline((s) => s.emoji);
   const chat = useOnline((s) => s.chat);
+  const suggest = useOnline((s) => s.suggest);
   const seats = playerSeats(members, hostId, tv, stagePlays);
   const need = 1;
   const currentAdmin = adminId || hostId;
@@ -312,6 +319,7 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
     emoji,
     chat,
     tv,
+    suggest,
   });
   const pile = optionsPile(config, Math.max(seats.length, need));
   const pileBlocked = pile.status === "short" || pile.status === "empty";

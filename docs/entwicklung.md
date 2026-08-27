@@ -2,7 +2,7 @@
 
 Du willst am Code arbeiten und weißt noch nicht, wo was liegt. Das hier ist die Landkarte.
 
-Jahrgang ist ein Musik-Jahr-Quiz im Browser: einen Hit hören, auf die Zeitlinie legen. Links früher, rechts später. Es gibt Solo, einen Tisch (ein Gerät) und Online (jedes Gerät ein Spieler). Optional ein Wohnzimmer: Fernseher oder Discord-Stream als Bühne, Handys als Controller.
+Jahrgang ist ein Musik-Jahr-Quiz im Browser: einen Hit hören, auf die Zeitlinie legen. Links früher, rechts später. Es gibt Solo, einen Tisch (ein Gerät) und Online (jedes Gerät ein Spieler). Optional Bigscreen: ein Gerät zeigt die Runde im Vollbild, die anderen Geräte legen und raten.
 
 Keine Anmeldung nötig. Kein Backend für den Spielstand. Online läuft **Gerät zu Gerät** (WebRTC). Der Server kennt nur den Raumcode, damit sich die Browser finden.
 
@@ -80,7 +80,7 @@ flowchart LR
 
 | Phase | Screen | Was passiert |
 | --- | --- | --- |
-| `home` | `home-screen.tsx` | Start, Online, Wohnzimmer, Regeln, Theme |
+| `home` | `home-screen.tsx` | Start, Online, Bigscreen, Regeln, Theme |
 | `setup` | `setup-screen.tsx` | Namen, Modus, Karten, Packs |
 | `loading` | `loading-screen.tsx` | 30-Sekunden-Vorschau bei iTunes/Deezer suchen |
 | `listen` | `play-screen.tsx` | Aktueller Titel, Zeitlinie, Joker, Raten |
@@ -107,7 +107,7 @@ src/
   components/game/        Alles was du siehst
   lib/game/               Spielkern (Start hier)
   lib/multiplayer/        WebRTC-Mesh
-  lib/tv/                 Wohnzimmer / Discord-Bühne
+  lib/tv/                 Bigscreen / Discord-Bühne
   lib/spotify/            Optional, hinter SPOTIFY_LIVE
   lib/og/                 Einladungsbilder
   styles.css              Farben, Themes, Bewegung
@@ -129,10 +129,10 @@ Ein paar Dateien (`PreviewHostBridge`, `scripts/with-app-env.mjs`) kommen noch a
 | --- | --- | --- |
 | Nadel und UI-Klänge | [`audio.ts`](../src/lib/game/audio.ts), [`public/sfx/`](../public/sfx/) | Preview ist ein `HTMLAudioElement`. Vinyl-Start, falsch, Joker liegen als mp3. Lobby-Musik ist synthetisch (Web Audio), kein Streaming. |
 | Tipp vergleichen | [`guess.ts`](../src/lib/game/guess.ts) | Kleine Tippfehler, „The Beatles“ / „Beatles“, Klammern. Kenner darf leer lassen (überspringen). |
-| Autocomplete | [`guess-field.tsx`](../src/components/game/guess-field.tsx) | Vorschläge aus dem Katalog. Steht ein Interpret, zeigt der Titel nur Songs **dieses** Interpreten. |
+| Autocomplete | [`guess.ts`](../src/lib/game/guess.ts), [`names.ts`](../src/lib/game/names.ts) | Host-Option `suggest`: an / aus / schwach, nur wenn Interpret und Titel geraten werden. Extra-Namen: Katalog, `names-data.json`, MusicBrainz (`searchNameHints`, `refreshNames` alle 24 h). `npm run sync:names` schreibt die JSON-Datei. |
 | Reaktionen | [`reactions.ts`](../src/lib/game/reactions.ts), [`reaction-dock.tsx`](../src/components/game/reaction-dock.tsx) | `{ t: "react" }`. Host kann Emoji in der Lobby aus. |
 | Chat | [`chat.ts`](../src/lib/game/chat.ts) | `{ t: "chat" }` / `chat-del`. Filter: `moderation.ts`. |
-| Raumcode | [`room-code.ts`](../src/lib/game/room-code.ts) | Vier Zeichen, ohne 0/O/1/I. Link `/i/AB12`. `?host=1` ist der Claim fürs Wohnzimmer-Handy. |
+| Raumcode | [`room-code.ts`](../src/lib/game/room-code.ts) | Vier Zeichen, ohne 0/O/1/I. Link `/i/AB12`. `?host=1` ist der Claim für das Steuergerät im Bigscreen. |
 | Einladungsbild | [`src/lib/og/`](../src/lib/og/) | Startseite ≠ Raum.link. Discord/WhatsApp holen `/api/og`. |
 | Discord-Overlay | [`discord/presence.ts`](../src/lib/discord/presence.ts) | Rich Presence, wenn das Spiel in Discord eingebettet läuft. |
 
@@ -225,19 +225,19 @@ TV wird nie Host-Nachfolger, außer niemand anderes lebt.
 
 ---
 
-## Wohnzimmer / Discord
+## Bigscreen
 
-`TV_LIVE` ist an. „Wohnzimmer“ auf der Startseite: dieses Gerät ist die **Bühne** (`role: "host"`, Name „Fernseher“).
+`TV_LIVE` ist an. Bigscreen: dieses Gerät ist die Bühne (`role: "host"`, Anzeigename „Bühne“). Beim Start einer Runde wird Vollbild angefordert (`requestFullscreen`). Fehlt die Geste auf diesem Gerät, erscheint „Tippen für Vollbild“.
 
 | Schritt | Bedeutung |
 | --- | --- |
-| `claim` | Kurzer QR: erstes Handy wird Admin |
-| `setup` | Pack und Regeln (am Handy, oder an der Bühne wenn übersprungen) |
+| `claim` | Kurzer QR: erstes Steuergerät wird Admin |
+| `setup` | Pack und Regeln |
 | `invite` | Gäste-QR |
 
-`adminId` ≠ `hostId` ist normal: der Fernseher hält den Mesh, das Handy stellt ein. `stagePlays`: Bühne sitzt mit am Tisch. Sonst zählt der Fernseher nicht als Spieler (`playerSeats`).
+`adminId` ≠ `hostId` ist normal: die Bühne hält den Mesh, das Steuergerät stellt ein. `stagePlays`: die Bühne spielt mit. Sonst zählt sie nicht als Spieler (`playerSeats`).
 
-Auf der Bühne: `tv-stage.tsx` (große Platte, fremde Linie). Am Handy: normales Play, ohne dass du deine eigene Linie als „Zuschauer“ siehst.
+Auf der Bühne: `tv-stage.tsx`. Am Steuergerät: normales Play.
 
 ---
 
@@ -258,7 +258,7 @@ Kleine Dateien, große Wirkung. Nicht „heimlich“ im UI verstecken.
 | Flag | Datei | Default | Bedeutung |
 | --- | --- | --- | --- |
 | `SPOTIFY_LIVE` | `src/lib/spotify/flags.ts` | `false` | Login, Likes-Pack, Premium-Wiedergabe |
-| `TV_LIVE` | `src/lib/tv/flags.ts` | `true` | Wohnzimmer |
+| `TV_LIVE` | `src/lib/tv/flags.ts` | `true` | Bigscreen |
 | `ACCOUNT_LIVE` | `src/lib/account/flags.ts` | `false` | Konto / Rangliste |
 
 Spotify einrichten: **[musikdienste.md](musikdienste.md)**. Ohne Flag bleibt der Abend gleich (iTunes + Deezer).
@@ -303,6 +303,15 @@ UI: Katalog-Packs aus `PACK_GROUPS`. Mix und Playlist über die Schalter unter d
 3. Zweig in `rulesFor`.
 4. Kenner-Extras (Joker verdienen, Cover nach richtigem Tipp) liegen in `store.ts` / `guess.ts`, nicht in der UI.
 
+### Autocomplete und MusicBrainz
+
+Host-Option `suggest` (`an` / `aus` / `schwach`) nur wenn Interpret **und** Titel geraten werden (Kenner, Verrückter, Custom mit „Beides“). Nicht bei Star oder nur Titel.
+
+1. `SUGGEST_IDS` / `parseSuggest` in `types.ts`, Feld `RoomConfig.suggest`.
+2. Vorschläge lokal: `suggestNames` / `suggestTitles` in `guess.ts` (`off` = leer, `loose` = Interpret filtert Titel nicht).
+3. Extra-Namen: `src/lib/game/names-data.json` plus `refreshNames` (24 h, MusicBrainz über `loadNameIndex`). Live-Tippen: `searchNameHints`.
+4. Katalog aktualisieren: `npm run sync:names` (1 Anfrage/s, schreibt die JSON-Datei).
+
 ### Netz-Nachricht
 
 1. Variante in `OnlineMessage` (`protocol.ts`) und `KINDS`.
@@ -339,7 +348,7 @@ Wenn du `canPlace`, Zielkarten oder Host-Nachfolge anfasst: Test zuerst oder dir
 Deck zu klein. `dealCount` braucht grob `Spieler × (Ziel + 1)`. Packs mischen oder Custom-Stapel größer stellen — nicht „einfach weiterziehen“.
 
 **„Host am Handy ist nicht Host.“**  
-Im Wohnzimmer ist der Fernseher Mesh-Host. Admin ist das erste Handy (`adminId`). Rechte übergeben: `pass-admin`.
+Im Bigscreen ist die Bühne Mesh-Host. Admin ist das erste Steuergerät (`adminId`). Rechte übergeben: `pass-admin`.
 
 **„Nach Reload bin ich ein neuer Spieler.“**  
 `selfId` sitzt in `sessionStorage` (`jahrgang-seat`), 45 Minuten. Anderer Browser / privates Fenster = neuer Platz.

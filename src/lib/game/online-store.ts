@@ -19,12 +19,14 @@ import {
   parseCustom,
   parseEras,
   parseExtraEra,
+  parseSuggest,
   type CustomRules,
   type EraId,
   type GenreId,
   type NextRoundPolicy,
   type PlayVariant,
   type RoomConfig,
+  type SuggestMode,
   type TokenCount,
 } from "./types";
 import { isBlocked, stripControls, cleanName, safeName } from "./moderation";
@@ -133,6 +135,7 @@ type OnlineStore = {
   emoji: boolean;
   chat: boolean;
   tv: boolean;
+  suggest: SuggestMode;
   stagePlays: boolean;
   adminId: string;
   tvStep: TvStep;
@@ -191,6 +194,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   emoji: true,
   chat: true,
   tv: false,
+  suggest: DEFAULT_ROOM_CONFIG.suggest,
   stagePlays: false,
   adminId: "",
   tvStep: "invite",
@@ -394,6 +398,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       emoji: config.emoji !== false,
       chat: config.chat !== false,
       tv: TV_LIVE && Boolean(config.tv),
+      suggest: parseSuggest(config.suggest),
     });
   },
   setTvStep: (step) => set({ tvStep: step }),
@@ -435,6 +440,7 @@ export function roomConfigFrom(
     | "emoji"
     | "chat"
     | "tv"
+    | "suggest"
   >,
 ): RoomConfig {
   return {
@@ -455,6 +461,7 @@ export function roomConfigFrom(
     emoji: state.emoji !== false,
     chat: state.chat !== false,
     tv: TV_LIVE && Boolean(state.tv),
+    suggest: parseSuggest(state.suggest),
   };
 }
 

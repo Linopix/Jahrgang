@@ -16,8 +16,9 @@ import { canControlTurn, canEndGame, isOnlinePlay, requestDecade, requestEnd, re
 import { currentPlayer, useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { CATALOG } from "@/lib/game/catalog";
-import { guessMatches, mergeNamePairs, titlesForArtist, uniqueArtists } from "@/lib/game/guess";
-import { rulesFor, VARIANT_LABELS } from "@/lib/game/types";
+import { guessMatches, mergeNamePairs, titlesForArtist, uniqueArtists, type NamePair } from "@/lib/game/guess";
+import { getExtraNames, searchNameHints, subscribeNames } from "@/lib/game/names";
+import { parseSuggest, rulesFor, VARIANT_LABELS } from "@/lib/game/types";
 import { TvListenBanner } from "./tv-stage";
 import { useTvRemote } from "@/lib/tv/mode";
 import { cn } from "@/lib/utils";
@@ -79,6 +80,26 @@ export function PlayScreen() {
   const deck = useGame((s) => s.deck);
   const original = rules.guess !== "none";
   const kind = rules.guess;
+  const lastSetup = useGame((s) => s.lastSetup);
+  const onlineSuggest = useOnline((s) => s.suggest);
+  const suggestMode = kind === "both" ? parseSuggest(online ? onlineSuggest : lastSetup?.suggest) : "on";
+  const [extra, setExtra] = useState(getExtraNames);
+  const [playing, setPlaying] = useState(true);
+  const [muted, setMutedState] = useState(isMuted);
+  const [progress, setProgress] = useState(0);
+  const [titleGuess, setTitleGuess] = useState("");
+  const [artistGuess, setArtistGuess] = useState("");
+  useEffect(() => subscribeNames(() => setExtra(getExtraNames())), []);
+  const remoteArtists = useRemoteHints(
+    artistGuess,
+    "artist",
+    suggestMode !== "off" && (kind === "both" || kind === "artist"),
+  );
+  const remoteTitles = useRemoteHints(
+    titleGuess,
+    "title",
+    suggestMode !== "off" && (kind === "both" || kind === "title"),
+  );
   const songs = useMemo(
     () =>
       mergeNamePairs([
@@ -86,18 +107,27 @@ export function PlayScreen() {
         deck,
         players.flatMap((row) => row.timeline),
         CATALOG,
+        extra,
+        remoteTitles,
       ]),
-    [deck, players, current],
+    [deck, players, current, extra, remoteTitles],
   );
-  const artists = useMemo(() => uniqueArtists(songs), [songs]);
+  const artists = useMemo(
+    () =>
+      suggestMode === "off"
+        ? []
+        : uniqueArtists(
+            songs,
+            remoteArtists.map((row) => row.artist),
+          ),
+    [songs, remoteArtists, suggestMode],
+  );
 
   const player = currentPlayer({ players, currentPlayerIndex });
-  const [playing, setPlaying] = useState(true);
-  const [muted, setMutedState] = useState(isMuted);
-  const [progress, setProgress] = useState(0);
-  const [titleGuess, setTitleGuess] = useState("");
-  const [artistGuess, setArtistGuess] = useState("");
-  const titles = useMemo(() => titlesForArtist(artistGuess, songs), [songs, artistGuess]);
+  const titles = useMemo(() => {
+    if (suggestMode === "off") return [];
+    return titlesForArtist(suggestMode === "loose" ? "" : artistGuess, songs);
+  }, [songs, artistGuess, suggestMode]);
 
   useEffect(() => {
     setTitleGuess("");
@@ -355,7 +385,7 @@ export function PlayScreen() {
                 value={titleGuess}
                 onChange={setTitleGuess}
                 pool={titles}
-                showWhenEmpty={Boolean(artistGuess.trim())}
+                showWhenEmpty={suggestMode === "on" && Boolean(artistGuess.trim())}
               />
             ) : null}
             {kind === "both" || kind === "artist" ? (
@@ -415,4 +445,25 @@ export function PlayScreen() {
       </div>
     </main>
   );
+}
+
+function useRemoteHints(query: string, kind: "artist" | "title", enabled: boolean) {
+  const [rows, setRows] = useState<NamePair[]>([]);
+  useEffect(() => {
+    if (!enabled || query.trim().length < 2) {
+      setRows([]);
+      return;
+    }
+    let cancel = false;
+    const timer = window.setTimeout(() => {
+      void searchNameHints({ data: { q: query, kind } }).then((next) => {
+        if (!cancel) setRows(next);
+      });
+    }, 350);
+    return () => {
+      cancel = true;
+      window.clearTimeout(timer);
+    };
+  }, [query, kind, enabled]);
+  return rows;
 }

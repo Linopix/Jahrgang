@@ -17,7 +17,7 @@ Diese Seite ist für dich, wenn du das Extra einschalten willst: eigene Likes, e
 | Deine Likes, Playlists, Top-Titel | — | ja, im passenden Pack | ja, im passenden Pack |
 | Pack „Meine Titel“ | — | ja | ja |
 | Volle Titel statt Vorschau | — | nein | ja, auf diesem Gerät |
-| Online / Wohnzimmer | ja | ja | ja, Audio am Gerät das spielt |
+| Online / Bigscreen | ja | ja | ja, Audio am Gerät das spielt |
 
 Ohne Premium geht also der ganze Abend. Premium ändert nur, *wie lang* der Titel auf dem Gerät läuft, das gerade hörbar ist.
 
@@ -53,21 +53,21 @@ Der feste Katalog altert. Deshalb holt Jahrgang alle zwölf Stunden die aktuelle
 
 Das läuft ohne Konto. Ein stiller Hinweis unter Repertoire sagt, wie viele extra Titel gerade dazukommen. Ohne Netz bleibt der letzte Stand im Browser liegen.
 
-### Online, Handy, Wohnzimmer, Discord
+### Online, Handy, Bigscreen, Discord
 
 Audio hängt immer am Gerät, das den Ton ausgibt — nicht am Raum.
 
 **Klassisch online (jedes Handy spielt selbst).**
 Jede Person hört lokal. Wer Premium verbunden hat, hört voll. Wer Free ist oder nicht verbunden, hört die Vorschau. Der Raum läuft trotzdem, weil die Vorschau der Standard ist.
 
-**Wohnzimmer (Fernseher + Handys).**
-Geraten wird auf den Handys, gehört wird am Fernseher. Deshalb reicht **ein** Premium-Konto am Fernseher bzw. am Gerät, das den Ton macht. Die Handys brauchen keins. Überspringt man den Host-Claim, bleibt der Fernseher Admin — dann muss Premium dort sitzen, nicht auf einem Handy.
+**Bigscreen (Bühne + Steuergeräte).**
+Geraten wird auf den Steuergeräten, gehört wird an der Bühne. Deshalb reicht **ein** Premium-Konto an der Bühne bzw. am Gerät, das den Ton macht. Die Steuergeräte brauchen keins. Überspringt man den Host-Claim, bleibt die Bühne Admin — dann muss Premium dort sitzen.
 
 **Discord-Übertragung.**
 Der Streamer teilt Bild und Ton. Nur dieses Gerät spielt Musik. Ein Premium am Streamer reicht für volle Titel im Call. Die Zuschauer brauchen weder Spotify noch Premium.
 
 **Remote ohne Premium.**
-Ja. Free reicht zum Mitspielen, zum Beitreten, zum Wohnzimmer und zum Stream. Free reicht auch, um Likes als extra Pack in den Stapel zu legen. Free reicht nicht für den Spotify-Player (volle Titel). Dafür fällt das Spiel auf die öffentliche Vorschau zurück — das ist Absicht, nicht ein Fehler.
+Ja. Free reicht zum Mitspielen, zum Beitreten, zum Bigscreen und zum Stream. Free reicht auch, um Likes als extra Pack in den Stapel zu legen. Free reicht nicht für den Spotify-Player (volle Titel). Dafür fällt das Spiel auf die öffentliche Vorschau zurück — das ist Absicht, nicht ein Fehler.
 
 ---
 

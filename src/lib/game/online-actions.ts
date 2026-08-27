@@ -195,6 +195,7 @@ export async function requestStartOnline() {
     extraEra: online.extraEra,
     eras: online.eras,
     pool: online.pool,
+    suggest: online.suggest,
   });
   if (!ok) {
     const error = useGame.getState().loadError ?? "Start fehlgeschlagen.";
@@ -304,13 +305,24 @@ export function requestLeave() {
 }
 
 export function requestEndEvening() {
+  if (useSessionExit.getState().kind === "evening") return;
   const series = useGame.getState().series;
   if (!series.length) return;
   useSessionExit.getState().showEvening(series);
   if (useOnline.getState().status !== "off") {
     noteDebug("out", "evening");
-    netSend({ t: "evening" } satisfies OnlineMessage);
+    netSend({ t: "evening", series } satisfies OnlineMessage);
   }
+}
+
+export function finishEvening() {
+  useGame.getState().openHome();
+  const online = useOnline.getState();
+  if (online.status !== "off") {
+    online.leaveRoom();
+    clearRoomFromUrl();
+  }
+  useSessionExit.getState().clear();
 }
 
 export function requestKick(peerId: string) {

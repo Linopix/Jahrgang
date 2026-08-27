@@ -1,4 +1,4 @@
-import type { CustomRules, PlayVariant } from "./types.ts";
+import type { CustomRules, PlayVariant, SuggestMode } from "./types.ts";
 import { guessKind } from "./types.ts";
 
 function stripMarks(input: string) {
@@ -124,7 +124,7 @@ export function mergeNamePairs(groups: readonly NamePair[][]): NamePair[] {
   return out;
 }
 
-export function uniqueArtists(songs: readonly NamePair[]): string[] {
+export function uniqueArtists(songs: readonly NamePair[], extra: readonly string[] = []): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
   for (const row of songs) {
@@ -132,6 +132,12 @@ export function uniqueArtists(songs: readonly NamePair[]): string[] {
     if (!key || seen.has(key)) continue;
     seen.add(key);
     out.push(row.artist);
+  }
+  for (const name of extra) {
+    const key = normalizeGuess(name);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(name);
   }
   return out;
 }
@@ -155,9 +161,11 @@ export function suggestTitles(
   artistHint: string,
   songs: readonly NamePair[],
   limit = 8,
+  mode: SuggestMode = "on",
 ): string[] {
-  const hint = artistHint.trim();
-  const titles = titlesForArtist(artistHint, songs);
+  if (mode === "off") return [];
+  const hint = mode === "loose" ? "" : artistHint;
+  const titles = titlesForArtist(hint, songs);
   const typed = normalizeGuess(query);
   if (!typed) return hint ? titles.slice(0, limit) : [];
   return suggestNames(query, titles, limit);

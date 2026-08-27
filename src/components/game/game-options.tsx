@@ -36,9 +36,13 @@ import {
   TARGET_STEP,
   clampPool,
   clampTarget,
+  guessKind,
   MAX_PACKS,
   packPatch,
   parseEras,
+  parseSuggest,
+  SUGGEST_IDS,
+  SUGGEST_LABELS,
   VARIANT_BLURBS,
   VARIANT_IDS,
   VARIANT_LABELS,
@@ -50,6 +54,7 @@ import {
   type LineRule,
   type NextRoundPolicy,
   type RoomConfig,
+  type SuggestMode,
   type TokenCount,
   type CatalogSong,
 } from "@/lib/game/types";
@@ -487,12 +492,44 @@ function MixField({
   );
 }
 
-function CustomTune({
+function SuggestTune({
   value,
   onChange,
 }: {
+  value: SuggestMode;
+  onChange: (next: SuggestMode) => void;
+}) {
+  const mode = parseSuggest(value);
+  return (
+    <div className="py-3">
+      <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Autocomplete</p>
+      <Segment
+        items={SUGGEST_IDS}
+        value={mode}
+        onChange={(suggest) => onChange(suggest as SuggestMode)}
+        label={(item) => SUGGEST_LABELS[item]}
+      />
+      <p className="mt-2 text-xs text-muted">
+        {mode === "off"
+          ? "Keine Vorschläge während der Eingabe."
+          : mode === "loose"
+            ? "Vorschläge aus Katalog und MusicBrainz. Der Interpret grenzt die Titel nicht ein."
+            : "Vorschläge aus Katalog und MusicBrainz. Der Interpret grenzt die Titel ein."}
+      </p>
+    </div>
+  );
+}
+
+function CustomTune({
+  value,
+  onChange,
+  suggest,
+  onSuggest,
+}: {
   value: CustomRules;
   onChange: (next: CustomRules) => void;
+  suggest: SuggestMode;
+  onSuggest: (next: SuggestMode) => void;
 }) {
   return (
     <div className="mt-4 divide-y divide-border rounded-xl bg-raised px-4 py-1 shadow-border" data-custom-tune>
@@ -507,6 +544,9 @@ function CustomTune({
           }
         />
       </div>
+      {value.guess === "both" ? (
+        <SuggestTune value={suggest} onChange={onSuggest} />
+      ) : null}
       <div className="py-3">
         <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Linie</p>
         <Segment
@@ -530,7 +570,7 @@ function CustomTune({
       />
       <SwitchRow
         label="Tempo verzogen"
-        hint={value.warp ? "Die Platte läuft verkehrt." : "Normales Tempo."}
+        hint={value.warp ? "Andere Geschwindigkeit." : "Normales Tempo."}
         on={value.warp}
         onChange={(warp) => onChange({ ...value, warp })}
       />
@@ -905,7 +945,20 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
           </div>
           <p className="mt-2 text-sm text-muted">{VARIANT_BLURBS[value.variant]}</p>
           {value.variant === "custom" ? (
-            <CustomTune value={custom} onChange={(next) => onChange({ custom: next })} />
+            <CustomTune
+              value={custom}
+              onChange={(next) => onChange({ custom: next })}
+              suggest={parseSuggest(value.suggest)}
+              onSuggest={(suggest) => onChange({ suggest })}
+            />
+          ) : null}
+          {guessKind(value.variant, custom) === "both" && value.variant !== "custom" ? (
+            <div className="mt-4 divide-y divide-border rounded-xl bg-raised px-4 py-1 shadow-border">
+              <SuggestTune
+                value={parseSuggest(value.suggest)}
+                onChange={(suggest) => onChange({ suggest })}
+              />
+            </div>
           ) : null}
         </section>
 

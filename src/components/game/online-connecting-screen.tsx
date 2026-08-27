@@ -16,7 +16,7 @@ export function OnlineConnectingScreen() {
       </h1>
       <p className="mt-2 max-w-sm text-sm text-muted">
         {claimIntent
-          ? "Du meldest dich als Host am Handy an. Der Fernseher bleibt die Bühne."
+          ? "Anmeldung als Host auf diesem Gerät. Die Bühne bleibt das Übertragungsgerät."
           : "Verbindung zum Host wird hergestellt."}
       </p>
       <Button variant="ghost" className="mt-8" onClick={() => requestLeave()}>
