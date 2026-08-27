@@ -14,10 +14,15 @@ import {
 } from "./engine.ts";
 import { planGroupSizes } from "./groups.ts";
 import { parseTournament } from "./wire.ts";
+import { TOURNAMENT_LIVE, TOURNAMENT_MODE_ENABLED } from "./flags.ts";
 
 function people(n: number) {
   return Array.from({ length: n }, (_, i) => ({ id: `p${i}`, name: `S${i}` }));
 }
+
+test("feature flag alias matches TOURNAMENT_LIVE", () => {
+  assert.equal(TOURNAMENT_MODE_ENABLED, TOURNAMENT_LIVE);
+});
 
 function scores(ids: string[]): MatchScore[] {
   return ids.map((id, i) => ({

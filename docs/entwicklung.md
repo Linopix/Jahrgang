@@ -117,6 +117,7 @@ docs/
   voraussetzungen.md      was du können solltest
   musikdienste.md         Spotify und andere Dienste
   turnier.md              Turnier-Modus, Flag, P2P-Failover
+  turnier-ui.md           Tafel, QR, CSS, Breakpoints
 ```
 
 `src/lib/auth`, `src/lib/account`, `migrations/` gehören zum App-Gerüst. Konten sind **aus** (`ACCOUNT_LIVE = false`). Daran musst du fürs Spiel nicht arbeiten. Spotify-Dateien bleiben, auch wenn `SPOTIFY_LIVE` gerade `false` ist — das Feature ist nur zugeklappt.
@@ -245,14 +246,18 @@ Auf der Bühne: `tv-stage.tsx`. Am Steuergerät: normales Play.
 
 ## Turnier
 
-`TOURNAMENT_LIVE` ist an. In der Online-Lobby erscheint der Schalter „Turnier“. Standard bleibt eine normale Runde (`RoomConfig.cup = false`).
+`TOURNAMENT_LIVE` ist an (`TOURNAMENT_MODE_ENABLED` ist derselbe Schalter). In der Online-Lobby erscheint der Schalter „Turnier“. Standard bleibt eine normale Runde (`RoomConfig.cup = false`).
 
-Ablauf und Datenmodell: **[turnier.md](turnier.md)**. Kurz:
+Ablauf und Datenmodell: **[turnier.md](turnier.md)**. Tafel, QR, CSS: **[turnier-ui.md](turnier-ui.md)**. Kurz:
 
 - Gruppen zu 3 oder 4, automatisch aus der Personenzahl. Eine Jahrgang-Runde pro Gruppe.
 - Qualifikation (Platz 1 oder 1+2) ins K.o., Freilose auf die nächste Zweierpotenz.
 - Der Host rechnet (`completeMatch`), alle Geräte bekommen `{ t: "cup", tournament }`.
 - Ab etwa 8 Personen im Turnier: Stern-Topologie (nur Verbindung zum Host). Host-Ausfall über Signaling-Roster und dieselbe Nachfolge wie bisher.
+
+UI: [`tournament-board.tsx`](../src/components/game/tournament-board.tsx) zeichnet Gruppen als Raster (`auto-fill`, Mindestbreite 14rem) und den K.o.-Baum als horizontal scrollbare Runden-Spalten (`.cup-bracket`). Bigscreen nutzt dieselben Klassen mit `.cup-board.is-tv`. QR-Codes liegen in `.qr-frame` (weißes Quadrat, Quiet Zone 4 Module, SVG mit ganzzahliger Modulgröße).
+
+Breakpoints, die die Tafel kennt: unter 640px eine Gruppenspalte; ab 1024px QR links fest (`.qr-slot`, min. 13rem), Text rechts (`min-w-0 flex-1`). Der Baum bricht nicht in die QR-Spalte.
 
 ---
 
@@ -275,7 +280,7 @@ Kleine Dateien, große Wirkung. Nicht „heimlich“ im UI verstecken.
 | `SPOTIFY_LIVE` | `src/lib/spotify/flags.ts` | `false` | Login, Likes-Pack, Premium-Wiedergabe |
 | `TV_LIVE` | `src/lib/tv/flags.ts` | `true` | Bigscreen |
 | `ACCOUNT_LIVE` | `src/lib/account/flags.ts` | `false` | Konto / Rangliste |
-| `TOURNAMENT_LIVE` | `src/lib/tournament/flags.ts` | `true` | Turnier in der Online-Lobby |
+| `TOURNAMENT_LIVE` | `src/lib/tournament/flags.ts` | `true` | Turnier in der Online-Lobby. Alias: `TOURNAMENT_MODE_ENABLED`. |
 
 Spotify einrichten: **[musikdienste.md](musikdienste.md)**. Ohne Flag bleibt der Abend gleich (iTunes + Deezer).
 

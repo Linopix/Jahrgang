@@ -98,8 +98,8 @@ export function TvPlayScreen() {
         </div>
       </header>
 
-      <div className="mt-6 flex min-h-0 flex-1 items-center gap-10 lg:gap-16">
-        <div className="flex flex-1 flex-col items-center text-center">
+      <div className="mt-6 flex min-h-0 min-w-0 flex-1 flex-col items-center gap-8 lg:flex-row lg:gap-16">
+        <div className="flex min-w-0 flex-1 flex-col items-center text-center">
           <p className="tv-kicker">Am Zug</p>
           <h2 className="mt-2 tv-name">{player.name}</h2>
           <p className="mt-3 text-lg text-muted lg:text-xl">Eingabe auf den anderen Geräten. Ton von diesem Bildschirm.</p>
@@ -112,7 +112,7 @@ export function TvPlayScreen() {
             />
           </div>
         </div>
-        <ol className="grid min-w-[22rem] max-w-lg flex-1 gap-3">
+        <ol className="grid min-w-0 w-full max-w-lg shrink-0 gap-3 sm:min-w-[18rem]">
           {players.map((row, i) => (
             <li
               key={row.id}
@@ -227,7 +227,7 @@ export function TvWinnerScreen() {
         ))}
       </ol>
       {cupOn && tournament ? (
-        <div className="mt-10 w-full text-left">
+        <div className="mt-10 w-full min-w-0 text-left">
           <TournamentBoard t={tournament} tv />
         </div>
       ) : null}

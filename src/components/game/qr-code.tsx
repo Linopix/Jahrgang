@@ -2,6 +2,11 @@ import { useMemo } from "react";
 import { encodeQr, qrPath } from "@/lib/qr";
 import { cn } from "@/lib/utils";
 
+/** Module in SVG-Einheiten. Quiet Zone um die Finder-Muster. */
+const QUIET = 4;
+/** Pixel pro Modul im intrinsischen SVG. Ganzzahlig, damit Kanten scharf bleiben. */
+const MODULE_PX = 8;
+
 export function QrCode({
   value,
   label,
@@ -13,19 +18,27 @@ export function QrCode({
 }) {
   const matrix = useMemo(() => (value ? encodeQr(value) : []), [value]);
   const n = matrix.length;
+  const d = useMemo(() => (n ? qrPath(matrix, QUIET) : ""), [matrix, n]);
   if (!n) return null;
-  const pad = 4;
-  const box = n + pad * 2;
+  const box = n + QUIET * 2;
+  const px = box * MODULE_PX;
   return (
-    <svg
-      viewBox={`${-pad} ${-pad} ${box} ${box}`}
-      role="img"
-      aria-label={label}
-      shapeRendering="crispEdges"
-      className={cn("rounded-lg shadow-lift", className)}
-    >
-      <rect x={-pad} y={-pad} width={box} height={box} fill="#fff" />
-      <path d={qrPath(matrix)} fill="#111" />
-    </svg>
+    <div className={cn("qr-frame", className)}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox={`0 0 ${box} ${box}`}
+        width={px}
+        height={px}
+        preserveAspectRatio="xMidYMid meet"
+        shapeRendering="crispEdges"
+        role="img"
+        aria-label={label}
+        className="qr-svg"
+      >
+        <title>{label}</title>
+        <rect width={box} height={box} fill="#ffffff" />
+        <path d={d} fill="#111111" />
+      </svg>
+    </div>
   );
 }

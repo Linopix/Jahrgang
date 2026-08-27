@@ -957,7 +957,7 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
             </div>
           ) : null}
           {online && TOURNAMENT_LIVE ? (
-            <div className="mt-5">
+            <div className="mt-5 min-w-0">
               <div className={SWITCH_PANEL}>
                 <SwitchRow
                   label="Turnier"

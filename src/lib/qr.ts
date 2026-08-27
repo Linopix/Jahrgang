@@ -358,12 +358,12 @@ export function encodeQr(text: string): boolean[][] {
   return matrix;
 }
 
-export function qrPath(matrix: boolean[][]) {
+export function qrPath(matrix: boolean[][], pad = 0) {
   let d = "";
   for (let y = 0; y < matrix.length; y += 1) {
     const row = matrix[y]!;
     for (let x = 0; x < row.length; x += 1) {
-      if (row[x]) d += `M${x} ${y}h1v1h-1z`;
+      if (row[x]) d += `M${x + pad} ${y + pad}h1v1h-1z`;
     }
   }
   return d;

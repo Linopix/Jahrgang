@@ -247,7 +247,7 @@ export function OnlineLobbyScreen() {
       {isAdmin ? (
         <div>
           {TOURNAMENT_LIVE && cup && tournament && tournament.status !== "idle" ? (
-            <div className="mb-6 rounded-xl bg-surface p-4 shadow-border">
+            <div className="mb-6 min-w-0 rounded-xl bg-surface p-4 shadow-border">
               <TournamentBoard t={tournament} compact />
             </div>
           ) : null}
@@ -280,7 +280,7 @@ export function OnlineLobbyScreen() {
       ) : (
         <div className="mt-8">
           {TOURNAMENT_LIVE && cup && tournament && tournament.status !== "idle" ? (
-            <div className="mb-4 rounded-xl bg-surface p-4 shadow-border">
+            <div className="mb-4 min-w-0 rounded-xl bg-surface p-4 shadow-border">
               <TournamentBoard t={tournament} compact />
             </div>
           ) : null}

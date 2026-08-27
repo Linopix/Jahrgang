@@ -205,7 +205,7 @@ export function WinnerScreen() {
       ) : null}
 
       {cupOn && tournament ? (
-        <div className="mt-8 rounded-xl bg-surface p-4 shadow-border">
+        <div className="mt-8 min-w-0 rounded-xl bg-surface p-4 shadow-border">
           <TournamentBoard t={tournament} compact />
         </div>
       ) : null}

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { TV_LIVE } from "./flags.ts";
 import { pickSuccessor, skipClaim, takeClaim, TV_MODE_NAME, TV_STAGE_NAME } from "./names.ts";
-import { encodeQr } from "../qr.ts";
+import { encodeQr, qrPath } from "../qr.ts";
 import { invitePath, shareOrigin, shareUrl, wantsHostClaim } from "../game/room-code.ts";
 
 test("bigscreen is live", () => {
@@ -124,4 +124,14 @@ test("qr encodes the full invite url", () => {
     JSON.stringify(encodeQr("https://jahrgang.vercel.app/i/AAAA")),
     JSON.stringify(encodeQr("https://jahrgang.vercel.app/i/BBBB")),
   );
+});
+
+test("qr path sits inside a quiet zone, viewBox origin is zero", () => {
+  const matrix = encodeQr("https://jahrgang.vercel.app/i/K7P2");
+  const pad = 4;
+  const d = qrPath(matrix, pad);
+  assert.match(d, /^M4 4h1v1h-1z/);
+  assert.equal(d.includes("M-"), false);
+  const box = matrix.length + pad * 2;
+  assert.ok(box > matrix.length);
 });

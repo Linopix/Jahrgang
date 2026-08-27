@@ -126,16 +126,16 @@ function ClaimStep({ connecting }: { connecting: boolean }) {
   const { roomCode, link } = useRoomLink(true);
 
   return (
-    <div className="mt-6 grid flex-1 items-center gap-10 lg:grid-cols-[minmax(16rem,28rem)_minmax(0,1fr)]">
-      <div className="mx-auto w-full max-w-sm">
-        <QrCode value={link} label="Host-QR" className="aspect-square w-full shadow-lift" />
+    <div className="mt-6 flex flex-1 flex-col gap-8 lg:flex-row lg:items-center lg:gap-12">
+      <div className="qr-slot">
+        <QrCode value={link} label="Host-QR" />
         {link ? (
           <p className="mt-3 break-all text-center text-xs text-muted" data-invite-url>
             {link}
           </p>
         ) : null}
       </div>
-      <div>
+      <div className="min-w-0 flex-1">
         <p className="tv-kicker">Bühne</p>
         <h1 className="mt-2 tv-title">{TV_MODE_NAME}</h1>
         <p className="mt-4 max-w-xl text-lg text-muted">
@@ -344,9 +344,10 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
   const canStart = isAdmin && !pending && seats.length >= need && !pileBlocked;
 
   return (
-    <div className={cn("mt-6 grid flex-1 gap-10", isTv && "lg:grid-cols-[minmax(16rem,28rem)_minmax(0,1fr)]")}>
-      <div className="mx-auto w-full max-w-sm">
-        <QrCode value={link} label="Gäste-QR" className="aspect-square w-full shadow-lift" />
+    <div className="mt-6 flex flex-1 flex-col gap-8">
+    <div className={cn(isTv && "flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12")}>
+      <div className="qr-slot">
+        <QrCode value={link} label="Gäste-QR" />
         {link ? (
           <p className="mt-3 break-all text-center text-xs text-muted" data-invite-url>
             {link}
@@ -357,7 +358,7 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
         </p>
         <CopyRow code={roomCode} link={link} />
       </div>
-      <div>
+      <div className="min-w-0 flex-1">
         <p className="tv-kicker">{TV_MODE_NAME}</p>
         <h1 className="mt-2 tv-title">Mitspielen</h1>
         <p className="mt-3 max-w-xl text-base text-muted">
@@ -439,11 +440,6 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
             </p>
           ) : null}
         </section>
-        {TOURNAMENT_LIVE && cup && tournament && tournament.status !== "idle" ? (
-          <div className="mt-8">
-            <TournamentBoard t={tournament} tv />
-          </div>
-        ) : null}
         {isAdmin ? (
           <div className="mt-8 flex flex-col gap-2 sm:flex-row">
             <Button
@@ -476,6 +472,12 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
           </p>
         )}
       </div>
+    </div>
+    {TOURNAMENT_LIVE && cup && tournament && tournament.status !== "idle" ? (
+      <div className="min-w-0">
+        <TournamentBoard t={tournament} tv={isTv} />
+      </div>
+    ) : null}
     </div>
   );
 }

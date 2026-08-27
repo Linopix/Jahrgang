@@ -2,7 +2,9 @@
 
 Jahrgang kann einen Abend als Turnier spielen: zuerst Gruppen, danach K.o. Das ist optional. Ohne den Schalter in der Lobby ändert sich nichts.
 
-Der Modus ist **eingebaut und an**. Wer ihn vollständig aus dem Produkt nehmen will, setzt in [`src/lib/tournament/flags.ts`](../src/lib/tournament/flags.ts) `TOURNAMENT_LIVE` auf `false`. Dann verschwinden Schalter, Tafel und Netz-Nachrichten. Die Dateien bleiben.
+Der Modus ist **eingebaut und an**. Wer ihn vollständig aus dem Produkt nehmen will, setzt in [`src/lib/tournament/flags.ts`](../src/lib/tournament/flags.ts) `TOURNAMENT_LIVE` auf `false` (gleicher Wert wie `TOURNAMENT_MODE_ENABLED`). Dann verschwinden Schalter, Tafel und Netz-Nachrichten. Die Dateien bleiben.
+
+Darstellung der Tafel, QR-Codes und CSS: **[turnier-ui.md](turnier-ui.md)**.
 
 ---
 
