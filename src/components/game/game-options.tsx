@@ -118,7 +118,7 @@ function Segment<T extends string | number>({
     <div className="relative flex rounded-md bg-raised p-0.5 shadow-border" role="group">
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-y-0.5 left-0.5 rounded-sm bg-primary transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+        className="pointer-events-none absolute inset-y-0.5 left-0.5 rounded-sm bg-primary transition-transform duration-200 ease-soft motion-reduce:transition-none"
         style={{
           width: `calc((100% - 0.25rem) / ${count})`,
           transform: `translateX(${index * 100}%)`,
@@ -138,7 +138,7 @@ function Segment<T extends string | number>({
               onChange(item);
             }}
             className={cn(
-              "relative z-10 h-8 min-w-0 flex-1 truncate rounded-sm px-2 text-xs font-medium transition-colors duration-200 motion-reduce:transition-none",
+              "relative z-10 h-8 min-w-0 flex-1 truncate rounded-sm px-2 text-xs font-medium transition-colors duration-200 ease-soft motion-reduce:transition-none",
               on ? "text-primary-fg" : "text-muted hover:text-fg",
             )}
           >
@@ -179,13 +179,13 @@ function SwitchRow({
       <span
         aria-hidden
         className={cn(
-          "relative h-7 w-11 shrink-0 overflow-hidden rounded-full transition-colors duration-150 ease-out",
+          "relative h-7 w-11 shrink-0 overflow-hidden rounded-full transition-colors duration-200 ease-soft motion-reduce:transition-none",
           on ? "bg-primary" : "bg-surface shadow-border",
         )}
       >
         <span
           className={cn(
-            "absolute top-0.5 left-0.5 size-6 rounded-full transition-transform duration-150 ease-out",
+            "absolute top-0.5 left-0.5 size-6 rounded-full transition-transform duration-200 ease-soft motion-reduce:transition-none",
             on ? "translate-x-4 bg-primary-fg" : "bg-fg",
           )}
         />
@@ -309,7 +309,7 @@ function SnapSlider({
           <div
             className={cn(
               "h-full rounded-full bg-primary",
-              slide && "transition-[width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+              slide && "transition-[width] duration-200 ease-soft motion-reduce:transition-none",
             )}
             style={{ width: `${pct}%` }}
           />
@@ -318,7 +318,7 @@ function SnapSlider({
           aria-hidden
           className={cn(
             "pointer-events-none absolute top-1/2 size-[1.375rem] -translate-y-1/2 rounded-full bg-primary shadow-[0_0_0_4px_var(--color-bg)]",
-            slide && "transition-[left] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+            slide && "transition-[left] duration-200 ease-soft motion-reduce:transition-none",
           )}
           style={{ left: `calc(0.6875rem + (100% - 1.375rem) * ${pct / 100})` }}
         />
@@ -607,7 +607,7 @@ function ExtraPack({
       {extra ? (
         <button
           type="button"
-          className="mt-2 text-sm text-muted transition-colors hover:text-fg"
+          className="mt-2 text-sm text-muted transition-colors duration-150 ease-out hover:text-fg"
           onClick={() => onChange({ extraEra: null })}
         >
           Nur {ERA_LABELS[value.era]}

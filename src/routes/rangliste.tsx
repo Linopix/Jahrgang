@@ -27,7 +27,7 @@ function BoardPage() {
   if (!ACCOUNT_LIVE) {
     return (
       <main className="screen-in mx-auto min-h-dvh w-full max-w-2xl px-5 py-10 lg:px-8">
-        <a href="/" className="text-sm text-muted transition-colors hover:text-fg">
+        <a href="/" className="back-link">
           Zurück
         </a>
         <h1 className="mt-6 font-display text-4xl font-medium text-fg">Rangliste</h1>
@@ -65,7 +65,7 @@ function BoardLive() {
 
   return (
     <main className="screen-in mx-auto min-h-dvh w-full max-w-2xl px-5 py-10 lg:px-8">
-      <a href="/" className="text-sm text-muted transition-colors hover:text-fg">
+      <a href="/" className="back-link">
         Zurück
       </a>
       <h1 className="mt-6 font-display text-4xl font-medium text-fg">Rangliste</h1>
@@ -73,7 +73,7 @@ function BoardLive() {
         Heute, Woche, Gesamt. Mit Konto zählt es überall.
       </p>
       <p className="mt-3 text-xs">
-        <a href="/konto" className="text-subtle hover:text-fg">
+        <a href="/konto" className="text-subtle transition-colors duration-150 ease-out hover:text-fg">
           {user ? `Konto · ${user.name}` : "Konto anlegen"}
         </a>
       </p>

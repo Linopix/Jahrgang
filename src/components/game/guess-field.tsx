@@ -3,7 +3,7 @@ import { suggestNames } from "@/lib/game/guess";
 import { cn } from "@/lib/utils";
 
 const FIELD =
-  "h-12 w-full rounded-md bg-raised px-4 text-sm text-fg shadow-border outline-none transition-[box-shadow,background-color] duration-150 focus:ring-2 focus:ring-primary/70";
+  "h-12 w-full rounded-md bg-raised px-4 text-sm text-fg shadow-border outline-none transition-[box-shadow,background-color] duration-150 ease-out focus:ring-2 focus:ring-primary/70";
 
 type GuessFieldProps = {
   value: string;

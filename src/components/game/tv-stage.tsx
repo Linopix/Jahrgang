@@ -29,7 +29,7 @@ function MuteToggle() {
     <button
       type="button"
       aria-label={muted ? "Ton an" : "Stummschalten"}
-      className="flex size-11 items-center justify-center rounded-md text-muted hover:text-fg"
+      className="flex size-11 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:text-fg"
       onClick={() => {
         const next = !muted;
         setMuted(next);
@@ -80,11 +80,11 @@ export function TvPlayScreen() {
         <div className="flex items-center gap-2">
           <MuteToggle />
           {canEndGame() ? (
-            <button type="button" className="h-11 px-3 text-sm text-muted hover:text-fg" onClick={requestEnd}>
+            <button type="button" className="h-11 px-3 text-sm text-muted transition-colors duration-150 ease-out hover:text-fg" onClick={requestEnd}>
               Beenden
             </button>
           ) : (
-            <button type="button" className="h-11 px-3 text-sm text-muted hover:text-fg" onClick={() => requestLeave()}>
+            <button type="button" className="h-11 px-3 text-sm text-muted transition-colors duration-150 ease-out hover:text-fg" onClick={() => requestLeave()}>
               Schließen
             </button>
           )}

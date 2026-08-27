@@ -53,7 +53,7 @@ export function ChatDock() {
       className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-3 z-40 sm:right-4"
     >
       {open ? (
-        <div className="mb-2 flex h-72 w-[min(20rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-xl bg-surface shadow-lift">
+        <div className="pop-in mb-2 flex h-72 w-[min(20rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-xl bg-surface shadow-lift">
           <div className="flex items-center justify-between px-3 pt-2 pb-1">
             <p className="text-xs font-medium tracking-[0.16em] text-muted uppercase">Chat</p>
           </div>
@@ -96,7 +96,7 @@ export function ChatDock() {
               placeholder="Nachricht"
               aria-label="Nachricht"
               onChange={(event) => setDraft(event.target.value)}
-              className="h-10 w-full rounded-md bg-raised px-3 text-sm text-fg shadow-border outline-none focus:ring-2 focus:ring-primary/70"
+              className="h-10 w-full rounded-md bg-raised px-3 text-sm text-fg shadow-border outline-none transition-[box-shadow] duration-150 ease-out focus:ring-2 focus:ring-primary/70"
             />
           </form>
         </div>

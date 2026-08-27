@@ -12,7 +12,7 @@ export const Route = createFileRoute("/konto")({
 function Off({ title }: { title: string }) {
   return (
     <main className="screen-in mx-auto min-h-dvh w-full max-w-lg px-5 py-10 lg:px-8">
-      <a href="/" className="text-sm text-muted transition-colors hover:text-fg">
+      <a href="/" className="back-link">
         Zurück
       </a>
       <h1 className="mt-6 font-display text-4xl font-medium text-fg">{title}</h1>
@@ -65,7 +65,7 @@ function KontoLive() {
 
   return (
     <main className="screen-in mx-auto min-h-dvh w-full max-w-lg px-5 py-10 lg:px-8">
-      <a href="/" className="text-sm text-muted transition-colors hover:text-fg">
+      <a href="/" className="back-link">
         Zurück
       </a>
       <h1 className="mt-6 font-display text-4xl font-medium text-fg">Konto</h1>
@@ -99,7 +99,7 @@ function KontoLive() {
                 />
               </div>
               <p className="mt-3 text-xs text-subtle">Platz: Heute / Woche / Gesamt</p>
-              <a href="/rangliste" className="mt-4 inline-block text-sm text-muted hover:text-fg">
+              <a href="/rangliste" className="mt-4 inline-block text-sm text-muted transition-colors duration-150 ease-out hover:text-fg">
                 Zur Rangliste
               </a>
             </section>

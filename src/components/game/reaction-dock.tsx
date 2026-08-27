@@ -70,7 +70,7 @@ export function ReactionDock() {
         className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 z-40 sm:left-4"
       >
         {open ? (
-          <div className="mb-2 grid grid-cols-4 gap-1 rounded-xl bg-surface p-1.5 shadow-lift">
+          <div className="pop-in mb-2 grid grid-cols-4 gap-1 rounded-xl bg-surface p-1.5 shadow-lift">
             {REACTION_EMOJIS.map((emoji) => (
               <button
                 key={emoji}
@@ -81,7 +81,7 @@ export function ReactionDock() {
                   unlockAudio();
                   sendReaction(emoji);
                 }}
-                className="flex size-11 items-center justify-center rounded-md text-xl transition-[transform,background-color] duration-150 ease-out hover:-translate-y-px hover:bg-raised active:scale-[0.94]"
+                className="flex size-11 items-center justify-center rounded-md text-xl transition-[transform,background-color] duration-150 ease-out hover:-translate-y-px hover:bg-raised active:scale-[0.96]"
               >
                 {emoji}
               </button>
@@ -98,7 +98,7 @@ export function ReactionDock() {
                   sendReaction(id);
                 }}
                 className={cn(
-                  "relative flex size-11 items-center justify-center rounded-md transition-[transform,background-color] duration-150 ease-out hover:-translate-y-px hover:bg-raised active:scale-[0.94]",
+                  "relative flex size-11 items-center justify-center rounded-md transition-[transform,background-color] duration-150 ease-out hover:-translate-y-px hover:bg-raised active:scale-[0.96]",
                   hint && "ring-2 ring-primary",
                 )}
               >

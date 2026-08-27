@@ -91,7 +91,7 @@ export function OnlineLobbyScreen() {
       <button
         type="button"
         onClick={() => requestLeave()}
-        className="inline-flex h-11 items-center gap-1 self-start text-sm text-muted transition-colors hover:text-fg"
+        className="back-link"
       >
         <ChevronLeft className="size-4" />
         Raum verlassen
@@ -199,7 +199,7 @@ export function OnlineLobbyScreen() {
                   type="button"
                   aria-label={`${member.name} rauswerfen`}
                   onClick={() => requestKick(member.id)}
-                  className="shrink-0 text-xs text-muted transition-colors hover:text-danger"
+                  className="shrink-0 text-xs text-muted transition-colors duration-150 ease-out hover:text-danger"
                 >
                   Raus
                 </button>

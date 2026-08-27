@@ -22,7 +22,7 @@ type MenuSelectProps<T extends string> = {
 };
 
 const TRIGGER =
-  "flex h-14 w-full items-center gap-3 rounded-md bg-raised px-3 text-left text-fg shadow-border outline-none transition-[background-color,transform,box-shadow] duration-150 ease-out hover:-translate-y-px hover:bg-surface focus-visible:ring-2 focus-visible:ring-primary/70 data-[state=open]:bg-surface data-[state=open]:ring-2 data-[state=open]:ring-primary/70";
+  "flex h-14 w-full items-center gap-3 rounded-md bg-raised px-3 text-left text-fg shadow-border outline-none transition-[background-color,transform,box-shadow] duration-150 ease-out hover:-translate-y-px hover:bg-surface active:scale-[0.96] focus-visible:ring-2 focus-visible:ring-primary/70 data-[state=open]:bg-surface data-[state=open]:ring-2 data-[state=open]:ring-primary/70";
 
 type PanelBox = {
   top?: number;
@@ -111,7 +111,7 @@ export function MenuSelect<T extends string>({
       </span>
       <ChevronDown
         className={cn(
-          "size-4 shrink-0 text-muted transition-transform duration-150 ease-out",
+          "size-4 shrink-0 text-muted transition-transform duration-200 ease-soft",
           open && "rotate-180",
         )}
       />
@@ -163,7 +163,7 @@ export function MenuSelect<T extends string>({
                     type="button"
                     aria-label="Menü schließen"
                     onClick={close}
-                    className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted hover:bg-raised hover:text-fg"
+                    className="flex size-11 shrink-0 items-center justify-center rounded-md text-muted transition-[background-color,color] duration-150 ease-out hover:bg-raised hover:text-fg"
                   >
                     <X className="size-4" />
                   </button>
@@ -200,7 +200,7 @@ export function MenuSelect<T extends string>({
                           }}
                           className={cn(
                             "flex min-h-12 w-full items-center gap-3 rounded-md px-3 py-2 text-left",
-                            "transition-colors duration-150",
+                            "transition-colors duration-150 ease-out",
                             selected ? "bg-primary text-primary-fg" : "text-fg hover:bg-raised",
                           )}
                         >

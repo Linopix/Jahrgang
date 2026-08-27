@@ -26,11 +26,13 @@ function SwapIcon({
   OnIcon,
   OffIcon,
   onClassName,
+  offClassName,
 }: {
   on: boolean;
   OnIcon: typeof Pause;
   OffIcon: typeof Play;
   onClassName?: string;
+  offClassName?: string;
 }) {
   return (
     <span className="relative inline-flex size-4">
@@ -44,6 +46,7 @@ function SwapIcon({
       <OffIcon
         className={cn(
           "icon-swap size-4",
+          offClassName,
           on ? "scale-[0.25] opacity-0 blur-[4px]" : "scale-100 opacity-100 blur-none",
         )}
       />
@@ -145,7 +148,7 @@ export function PlayScreen() {
         <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
-            className="h-11 px-2 text-sm text-muted hover:text-fg"
+            className="h-11 px-2 text-sm text-muted transition-colors duration-150 ease-out hover:text-fg"
             onClick={() => setRulesOpen(true)}
           >
             Regeln
@@ -153,7 +156,7 @@ export function PlayScreen() {
           {canEndGame() ? (
             <button
               type="button"
-              className="h-11 px-2 text-sm text-muted hover:text-fg"
+              className="h-11 px-2 text-sm text-muted transition-colors duration-150 ease-out hover:text-fg"
               onClick={requestEnd}
             >
               Beenden
@@ -162,7 +165,7 @@ export function PlayScreen() {
           <button
             type="button"
             aria-label={muted ? "Ton an" : "Stummschalten"}
-            className="flex size-11 items-center justify-center rounded-md text-muted hover:text-fg"
+            className="flex size-11 items-center justify-center rounded-md text-muted transition-colors duration-150 ease-out hover:text-fg"
             onClick={() => {
               const next = !muted;
               setMuted(next);
@@ -182,7 +185,7 @@ export function PlayScreen() {
               <li
                 key={row.id}
                 className={cn(
-                  "flex min-w-28 shrink-0 flex-col rounded-md px-3 py-2 transition-[background-color,color,transform] duration-200 ease-out",
+                  "flex min-w-28 shrink-0 flex-col rounded-md px-3 py-2 transition-[background-color,color] duration-200 ease-soft",
                   active ? "bg-primary text-primary-fg" : "bg-raised text-fg shadow-border",
                 )}
               >
@@ -260,7 +263,7 @@ export function PlayScreen() {
 
         <div className="mt-4 h-1 w-48 overflow-hidden rounded-full bg-raised">
           <div
-            className="h-full origin-left bg-primary"
+            className="h-full origin-left bg-primary transition-transform duration-200 ease-soft"
             style={{ transform: `scaleX(${progress})` }}
           />
         </div>
@@ -277,7 +280,7 @@ export function PlayScreen() {
               else replay();
             }}
           >
-            <SwapIcon on={playing} OnIcon={Pause} OffIcon={Play} onClassName="" />
+            <SwapIcon on={playing} OnIcon={Pause} OffIcon={Play} offClassName="ml-px" />
           </Button>
           <Button variant="secondary" size="icon" className="size-11" aria-label="Nochmal" onClick={replay}>
             <RotateCcw className="size-4" />

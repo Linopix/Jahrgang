@@ -30,7 +30,7 @@ export function SetupScreen() {
       <button
         type="button"
         onClick={openHome}
-        className="inline-flex h-11 items-center gap-1 self-start text-sm text-muted transition-colors hover:text-fg"
+        className="back-link"
       >
         <ChevronLeft className="size-4" />
         Zurück

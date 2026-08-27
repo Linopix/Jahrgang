@@ -93,16 +93,16 @@ export function HomeScreen() {
       </div>
       </div>
 
-      <div className="flex justify-center py-10 transition-transform duration-300 ease-out hover:scale-[1.03] lg:py-0">
+      <div className="flex justify-center py-10 transition-transform duration-200 ease-soft hover:scale-[1.03] lg:py-0">
         <Vinyl size="lg" spinning />
       </div>
       </div>
       <p className="mt-8 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-subtle lg:mt-10 lg:justify-start lg:text-left">
-        <Link to="/hinweise" className="hover:text-fg">
+        <Link to="/hinweise" className="transition-colors duration-150 ease-out hover:text-fg">
           Hinweise
         </Link>
         <span>·</span>
-        <a href="mailto:jahrgang.game@icloud.com" className="hover:text-fg">
+        <a href="mailto:jahrgang.game@icloud.com" className="transition-colors duration-150 ease-out hover:text-fg">
           Kontakt
         </a>
         <span>·</span>

@@ -33,7 +33,7 @@ export function SpotifyConnect({ compact }: { compact?: boolean }) {
         Spotify: {user.name}
         {user.product === "premium" ? " · volle Titel" : " · Free, Vorschau"}
       </span>
-      <button type="button" className="text-xs text-subtle hover:text-fg" onClick={() => void logout()}>
+      <button type="button" className="text-xs text-subtle transition-colors duration-150 ease-out hover:text-fg" onClick={() => void logout()}>
         Trennen
       </button>
     </p>

@@ -19,7 +19,7 @@ export function LoadingScreen() {
       {onlineGuest ? null : (
         <div className="mt-6 h-1 w-48 overflow-hidden rounded-full bg-raised">
           <div
-            className="h-full origin-left bg-primary transition-transform duration-300 ease-out"
+            className="h-full origin-left bg-primary transition-transform duration-200 ease-soft"
             style={{ transform: `scaleX(${Math.max(pct / 100, 0.02)})` }}
           />
         </div>

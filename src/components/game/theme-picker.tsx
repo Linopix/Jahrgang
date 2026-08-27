@@ -184,7 +184,7 @@ export function ThemePicker() {
         <Palette className="size-4" />
       </button>
       {open ? (
-        <div className="absolute right-0 mt-2 w-56 rounded-lg bg-surface p-3 shadow-lift">
+        <div className="pop-in absolute right-0 mt-2 w-56 rounded-lg bg-surface p-3 shadow-lift">
           <p className="text-xs font-medium tracking-[0.16em] text-muted uppercase">Thema</p>
           <div className="mt-2 grid grid-cols-3 gap-2">
             {palette.map((row) => {

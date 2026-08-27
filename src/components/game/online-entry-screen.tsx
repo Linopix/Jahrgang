@@ -40,7 +40,7 @@ export function OnlineEntryScreen() {
       <button
         type="button"
         onClick={() => leaveRoom()}
-        className="inline-flex h-11 items-center gap-1 self-start text-sm text-muted transition-colors hover:text-fg"
+        className="back-link"
       >
         <ChevronLeft className="size-4" />
         Zurück
@@ -111,13 +111,13 @@ export function OnlineEntryScreen() {
           <span
             aria-hidden
             className={cn(
-              "relative h-7 w-11 shrink-0 overflow-hidden rounded-full transition-colors duration-150 ease-out",
+              "relative h-7 w-11 shrink-0 overflow-hidden rounded-full transition-colors duration-200 ease-soft motion-reduce:transition-none",
               tv ? "bg-primary" : "bg-surface shadow-border",
             )}
           >
             <span
               className={cn(
-                "absolute top-0.5 left-0.5 size-6 rounded-full transition-transform duration-150 ease-out",
+                "absolute top-0.5 left-0.5 size-6 rounded-full transition-transform duration-200 ease-soft motion-reduce:transition-none",
                 tv ? "translate-x-4 bg-primary-fg" : "bg-fg",
               )}
             />

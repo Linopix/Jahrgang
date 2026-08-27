@@ -109,7 +109,7 @@ export function RevealScreen() {
       {canEndGame() ? (
         <button
           type="button"
-          className="mt-4 h-11 text-sm text-muted hover:text-fg"
+          className="mt-4 h-11 text-sm text-muted transition-colors duration-150 ease-out hover:text-fg"
           onClick={requestEnd}
         >
           Abend beenden

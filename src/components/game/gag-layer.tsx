@@ -15,7 +15,7 @@ export function EggTally({ className }: { className?: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={cn("tabular-nums text-xs text-subtle transition-colors hover:text-fg", className)}
+        className={cn("tabular-nums text-xs text-subtle transition-colors duration-150 ease-out hover:text-fg", className)}
       >
         {eggs.length} / {EGG_TOTAL} gefunden
       </button>
@@ -46,7 +46,7 @@ function EggLog({ found, onClose }: { found: string[]; onClose: () => void }) {
               {found.length} von {GAG_ITEM_TOTAL} · Nur Gefundenes hat einen Namen.
             </p>
           </div>
-          <button type="button" aria-label="Schließen" onClick={onClose} className="rounded-md p-1 text-muted hover:text-fg">
+          <button type="button" aria-label="Schließen" onClick={onClose} className="rounded-md p-1 text-muted transition-colors duration-150 ease-out hover:text-fg">
             <X className="size-4" />
           </button>
         </div>
