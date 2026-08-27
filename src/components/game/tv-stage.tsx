@@ -158,7 +158,8 @@ export function TvRevealScreen() {
         <p className="mt-6 text-lg text-muted">
           {[lastResult.titleCorrect && "Titel", lastResult.artistCorrect && "Interpret"]
             .filter(Boolean)
-            .join(" · ") || "Nichts getroffen"}
+            .join(" · ") || (lastResult.titleGuess?.trim() || lastResult.artistGuess?.trim() ? "Nichts getroffen" : "Ohne Tipp")}
+          {lastResult.jokerEarned ? " · Joker" : ""}
         </p>
       ) : null}
       <Button size="lg" className="mt-10 min-w-64" disabled={pending} onClick={requestNext}>

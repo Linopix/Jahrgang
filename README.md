@@ -39,7 +39,7 @@ Joker: Jahrzehnt sehen oder überspringen. Ziel sind 6, 8 oder 10 Karten — ode
 | --- | --- |
 | Zeitstrahl | Nur das Jahr. Cover darfst du sehen. |
 | Blind | Dasselbe, Cover bleibt zu. |
-| Kenner | Interpret und Titel, dann legen. |
+| Kenner | Interpret und Titel, wenn du sie weißt. Beides richtig: Cover und ein Joker. |
 | Star | Nur den Interpreten. |
 | Titel | Nur den Songtitel. |
 | Verrückter | Raten, Cover zu, keine Jahreszahlen, links ist später. Die Platte spinnt am Tempo. |

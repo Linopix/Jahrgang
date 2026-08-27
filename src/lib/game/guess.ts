@@ -71,7 +71,7 @@ export function guessMatches(
   return false;
 }
 
-export function suggestNames(query: string, pool: readonly string[], limit = 5): string[] {
+export function suggestNames(query: string, pool: readonly string[], limit = 8): string[] {
   const q = normalizeGuess(query);
   const compact = compactGuess(query);
   if (q.length < 2) return [];
@@ -96,6 +96,75 @@ export function suggestNames(query: string, pool: readonly string[], limit = 5):
   }
   scored.sort((a, b) => b.score - a.score || a.raw.localeCompare(b.raw, "de"));
   return scored.slice(0, limit).map((row) => row.raw);
+}
+
+export type NamePair = { title: string; artist: string };
+
+function artistHintHits(hint: string, artist: string) {
+  const q = normalizeGuess(hint);
+  if (!q) return true;
+  const a = normalizeGuess(artist);
+  if (!a) return false;
+  if (a === q || a.startsWith(q) || a.includes(` ${q}`) || a.includes(q)) return true;
+  return guessMatches(hint, artist, "artist");
+}
+
+export function mergeNamePairs(groups: readonly NamePair[][]): NamePair[] {
+  const seen = new Set<string>();
+  const out: NamePair[] = [];
+  for (const group of groups) {
+    for (const row of group) {
+      if (!row.title || !row.artist) continue;
+      const key = `${normalizeGuess(row.title)}\0${normalizeGuess(row.artist)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(row);
+    }
+  }
+  return out;
+}
+
+export function uniqueArtists(songs: readonly NamePair[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const row of songs) {
+    const key = normalizeGuess(row.artist);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(row.artist);
+  }
+  return out;
+}
+
+export function titlesForArtist(artistHint: string, songs: readonly NamePair[]): string[] {
+  const hint = artistHint.trim();
+  const rows = hint ? songs.filter((row) => artistHintHits(hint, row.artist)) : songs;
+  const titles: string[] = [];
+  const seen = new Set<string>();
+  for (const row of rows) {
+    const key = normalizeGuess(row.title);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    titles.push(row.title);
+  }
+  return titles;
+}
+
+export function suggestTitles(
+  query: string,
+  artistHint: string,
+  songs: readonly NamePair[],
+  limit = 8,
+): string[] {
+  const hint = artistHint.trim();
+  const titles = titlesForArtist(artistHint, songs);
+  const typed = normalizeGuess(query);
+  if (!typed) return hint ? titles.slice(0, limit) : [];
+  return suggestNames(query, titles, limit);
+}
+
+export function kennerBonus(variant: PlayVariant, titleCorrect: boolean, artistCorrect: boolean) {
+  return variant === "original" && titleCorrect && artistCorrect;
 }
 
 export function scoreForVariant(

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { songsForPack, songsForPacks } from "./packs";
 import { canPlace, dealCount, decadeLabel, fisherYates, insertSong, mergeSeries, tallySeries, winner } from "./engine";
-import { scoreForVariant } from "./guess";
+import { kennerBonus, scoreForVariant } from "./guess";
 import { loadPlaylistSongs, type PlaylistTrack } from "./playlist";
 import { loadSpotifyLibrary } from "@/lib/spotify/library";
 import { resolvePreviews } from "./preview";
@@ -478,18 +478,30 @@ export const useGame = create<GameStore>((set, get) => ({
       rules.guess === "none"
         ? null
         : scoreForVariant(guess?.title ?? "", guess?.artist ?? "", current, variant, custom);
+    const titleFilled = Boolean(guess?.title?.trim());
+    const artistFilled = Boolean(guess?.artist?.trim());
+    const kind = rules.guess;
+    const asked =
+      kind === "none"
+        ? 0
+        : kind === "both"
+          ? Number(titleFilled) + Number(artistFilled)
+          : kind === "title"
+            ? Number(titleFilled)
+            : Number(artistFilled);
+    const earned = Boolean(scored && kennerBonus(variant, scored.titleCorrect, scored.artistCorrect));
     const nextPlayers = players.map((row, i) => {
       if (i !== currentPlayerIndex) return row;
       const quiz = row.quiz + (scored?.quiz ?? 0);
+      const tokens = row.tokens + (earned ? 1 : 0);
       if (correct) {
-        return { ...row, timeline: insertSong(row.timeline, selectedSlot, current), quiz };
+        return { ...row, timeline: insertSong(row.timeline, selectedSlot, current), quiz, tokens };
       }
-      return { ...row, misses: row.misses + 1, quiz };
+      return { ...row, misses: row.misses + 1, quiz, tokens };
     });
     if (correct) sfxCorrect();
     else sfxWrong();
-    const kind = rules.guess;
-    const asked = kind === "both" ? 2 : kind === "none" ? 0 : 1;
+    if (earned) sfxHint();
     const patch = {
       heard: 1,
       placedOk: correct ? 1 : 0,
@@ -507,6 +519,7 @@ export const useGame = create<GameStore>((set, get) => ({
         artistGuess: kind === "both" || kind === "artist" ? guess?.artist ?? "" : undefined,
         titleCorrect: scored?.titleCorrect,
         artistCorrect: scored?.artistCorrect,
+        jokerEarned: earned,
       },
       phase: "reveal",
       selectedSlot: null,

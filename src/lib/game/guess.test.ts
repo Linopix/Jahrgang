@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { guessMatches, normalizeGuess, scoreGuesses, suggestNames } from "./guess.ts";
+import { guessMatches, kennerBonus, normalizeGuess, scoreGuesses, suggestNames, suggestTitles, titlesForArtist } from "./guess.ts";
 
 test("normalize strips punctuation, articles and featuring", () => {
   assert.equal(normalizeGuess("Y.M.C.A."), "y m c a");
@@ -53,4 +53,29 @@ test("suggestNames fixes light typos and prefixes", () => {
   const typo = suggestNames("billy jean", ["Billie Jean", "Beat It"]);
   assert.equal(typo[0], "Billie Jean");
   assert.deepEqual(suggestNames("x", pool), []);
+});
+
+test("title suggestions follow the typed artist even if it is wrong", () => {
+  const songs = [
+    { title: "Billie Jean", artist: "Michael Jackson" },
+    { title: "Beat It", artist: "Michael Jackson" },
+    { title: "Bohemian Rhapsody", artist: "Queen" },
+    { title: "Obscure Cut", artist: "Playlist Only" },
+  ];
+  const jackson = titlesForArtist("jackson", songs);
+  assert.ok(jackson.includes("Billie Jean"));
+  assert.ok(jackson.includes("Beat It"));
+  assert.equal(jackson.includes("Bohemian Rhapsody"), false);
+  const queen = suggestTitles("boh", "Queen", songs);
+  assert.deepEqual(queen, ["Bohemian Rhapsody"]);
+  const idle = suggestTitles("", "michael jackson", songs);
+  assert.ok(idle.includes("Beat It"));
+  assert.ok(titlesForArtist("", songs).includes("Obscure Cut"));
+});
+
+test("kenner bonus needs both hits", () => {
+  assert.equal(kennerBonus("original", true, true), true);
+  assert.equal(kennerBonus("original", true, false), false);
+  assert.equal(kennerBonus("wild", true, true), false);
+  assert.equal(kennerBonus("timeline", true, true), false);
 });

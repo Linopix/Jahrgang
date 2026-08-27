@@ -13,6 +13,7 @@ import { SpotifyConnect, useSpotifyConnected } from "./spotify-connect";
 import {
   DEFAULT_CUSTOM,
   DEFAULT_POOL,
+  DEFAULT_TOKENS,
   ERA_BLURBS,
   ERA_LABELS,
   GENRE_BLURBS,
@@ -697,7 +698,10 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
               value={value.variant}
               onChange={(variant) => {
                 noteVariant(variant);
-                onChange({ variant });
+                if (variant === "original") onChange({ variant, tokens: 0 });
+                else if (value.variant === "original" && value.tokens === 0) {
+                  onChange({ variant, tokens: DEFAULT_TOKENS });
+                } else onChange({ variant });
               }}
               items={VARIANT_IDS.map((id, index) => ({
                 id,
@@ -757,7 +761,9 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
               ? custom.open
                 ? "Kein Kartenziel. Der Stapel läuft sich leer — Größe oben einstellen."
                 : "Karten bis zum Sieg. Der Stapel kann größer sein als das Ziel."
-              : "Karten bis zum Sieg · Joker pro Person."}
+              : value.variant === "original"
+                ? "Kenner startet ohne Joker. Beides richtig gibt einen dazu."
+                : "Karten bis zum Sieg · Joker pro Person."}
           </p>
         </section>
       </div>

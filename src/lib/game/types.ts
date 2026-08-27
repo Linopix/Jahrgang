@@ -164,6 +164,7 @@ export interface LastResult {
   artistGuess?: string;
   titleCorrect?: boolean;
   artistCorrect?: boolean;
+  jokerEarned?: boolean;
 }
 
 export interface GameSnapshot {
@@ -323,7 +324,7 @@ export const VARIANT_LABELS: Record<PlayVariant, string> = {
 export const VARIANT_BLURBS: Record<PlayVariant, string> = {
   timeline: "Du hörst den Titel und legst das Jahr. Das Cover darfst du sehen.",
   blind: "Dasselbe, nur ohne Cover bis zum Aufdecken.",
-  original: "Erst Interpret und Titel tippen, dann legen. Cover bleibt zu.",
+  original: "Interpret und Titel, wenn du sie weißt. Beides richtig: Cover und ein Joker. Standard ohne Joker.",
   star: "Nur den Interpreten, dann legen.",
   hook: "Nur den Titel, dann legen.",
   wild: "Raten, Cover zu, keine Jahreszahlen, links ist später — und die Platte spinnt am Tempo.",

@@ -15,7 +15,8 @@ import {
 import { canControlTurn, canEndGame, isOnlinePlay, requestDecade, requestEnd, requestLeave, requestPlace, requestSkip } from "@/lib/game/online-actions";
 import { currentPlayer, useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
-import { catalogArtists, catalogTitles } from "@/lib/game/catalog";
+import { CATALOG } from "@/lib/game/catalog";
+import { guessMatches, mergeNamePairs, titlesForArtist, uniqueArtists } from "@/lib/game/guess";
 import { rulesFor, VARIANT_LABELS } from "@/lib/game/types";
 import { TvListenBanner } from "./tv-stage";
 import { useTvRemote } from "@/lib/tv/mode";
@@ -75,22 +76,20 @@ export function PlayScreen() {
   const myTurn = canControlTurn();
   const tvRemote = useTvRemote();
   const rules = rulesFor(variant, custom);
+  const deck = useGame((s) => s.deck);
   const original = rules.guess !== "none";
   const kind = rules.guess;
-  const titles = useMemo(() => {
-    const extra = [
-      ...players.flatMap((row) => row.timeline.map((song) => song.title)),
-      ...(current ? [current.title] : []),
-    ];
-    return [...new Set([...catalogTitles(), ...extra])];
-  }, [players, current]);
-  const artists = useMemo(() => {
-    const extra = [
-      ...players.flatMap((row) => row.timeline.map((song) => song.artist)),
-      ...(current ? [current.artist] : []),
-    ];
-    return [...new Set([...catalogArtists(), ...extra])];
-  }, [players, current]);
+  const songs = useMemo(
+    () =>
+      mergeNamePairs([
+        current ? [current] : [],
+        deck,
+        players.flatMap((row) => row.timeline),
+        CATALOG,
+      ]),
+    [deck, players, current],
+  );
+  const artists = useMemo(() => uniqueArtists(songs), [songs]);
 
   const player = currentPlayer({ players, currentPlayerIndex });
   const [playing, setPlaying] = useState(true);
@@ -98,6 +97,7 @@ export function PlayScreen() {
   const [progress, setProgress] = useState(0);
   const [titleGuess, setTitleGuess] = useState("");
   const [artistGuess, setArtistGuess] = useState("");
+  const titles = useMemo(() => titlesForArtist(artistGuess, songs), [songs, artistGuess]);
 
   useEffect(() => {
     setTitleGuess("");
@@ -126,7 +126,17 @@ export function PlayScreen() {
 
   if (!player || !current) return null;
 
-  const guessesReady = !original || (titleGuess.trim().length > 0 && artistGuess.trim().length > 0);
+  const guessed = Boolean(
+    ((kind === "both" || kind === "title") && titleGuess.trim()) ||
+      ((kind === "both" || kind === "artist") && artistGuess.trim()),
+  );
+  const bothHit =
+    variant === "original" &&
+    Boolean(titleGuess.trim()) &&
+    Boolean(artistGuess.trim()) &&
+    guessMatches(titleGuess, current.title, "title") &&
+    guessMatches(artistGuess, current.artist, "artist");
+  const showCover = !rules.hideCover || bothHit;
 
   return (
     <main className="screen-in mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden px-4 pb-[env(safe-area-inset-bottom)] pt-3 sm:px-6 sm:pt-6 lg:max-w-7xl">
@@ -235,14 +245,14 @@ export function PlayScreen() {
             ? `${player.name} ist am Zug.`
             : kind === "both"
               ? rules.reverse
-                ? "Interpret und Titel raten. Die Platte läuft verkehrt — links ist später."
+                ? "Tipp ist freiwillig. Beides richtig: Cover und ein Joker. Links ist später."
                 : rules.free
-                  ? "Interpret und Titel raten, dann irgendwo hinlegen."
-                  : "Interpret und Titel, dann auf die Linie legen."
+                  ? "Tipp ist freiwillig. Beides richtig: Cover und ein Joker."
+                  : "Tipp ist freiwillig. Beides richtig: Cover und ein Joker, dann legen."
               : kind === "artist"
-                ? "Nur den Interpreten, dann legen."
+                ? "Interpret tippen wenn du ihn weißt, sonst einfach legen."
                 : kind === "title"
-                  ? "Nur den Titel, dann legen."
+                  ? "Titel tippen wenn du ihn weißt, sonst einfach legen."
                   : rules.reverse
                     ? "Hören und legen. Links ist später, die Jahre bleiben versteckt."
                     : rules.hideCover
@@ -256,7 +266,7 @@ export function PlayScreen() {
           <Vinyl
             spinning={playing}
             reverse={rules.reverse}
-            artworkUrl={rules.hideCover ? undefined : current.artworkUrl}
+            artworkUrl={showCover ? current.artworkUrl : undefined}
             size="md"
           />
         </div>
@@ -303,7 +313,7 @@ export function PlayScreen() {
           </p>
         ) : null}
 
-        {player.tokens > 0 || decadeHint ? (
+        {variant === "original" || player.tokens > 0 || decadeHint ? (
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             <Button
               variant="secondary"
@@ -335,16 +345,17 @@ export function PlayScreen() {
             {kind === "both" || kind === "title" ? (
               <GuessField
                 label="Titel"
-                placeholder="Titel"
+                placeholder={kind === "both" ? "Freiwillig" : "Titel"}
                 value={titleGuess}
                 onChange={setTitleGuess}
                 pool={titles}
+                showWhenEmpty={Boolean(artistGuess.trim())}
               />
             ) : null}
             {kind === "both" || kind === "artist" ? (
               <GuessField
                 label="Interpret"
-                placeholder="Interpret"
+                placeholder={kind === "both" ? "Freiwillig" : "Interpret"}
                 value={artistGuess}
                 onChange={setArtistGuess}
                 pool={artists}
@@ -382,10 +393,6 @@ export function PlayScreen() {
               document.querySelector<HTMLElement>("[data-slot]")?.focus();
               return;
             }
-            if (!guessesReady) {
-              document.querySelector<HTMLInputElement>("[data-guess]")?.focus();
-              return;
-            }
             requestPlace({ title: titleGuess, artist: artistGuess });
           }}
         >
@@ -393,15 +400,9 @@ export function PlayScreen() {
             ? `Warten auf ${player.name}`
             : selectedSlot === null
               ? "Platz auf der Linie wählen"
-              : original && !guessesReady
-                ? kind === "both"
-                  ? "Titel und Interpret eintragen"
-                  : kind === "title"
-                    ? "Titel eintragen"
-                    : "Interpret eintragen"
-                : original
-                  ? "Tipp ablegen"
-                  : "Hier ablegen"}
+              : original && guessed
+                ? "Tipp ablegen"
+                : "Hier ablegen"}
         </Button>
       </section>
       </div>

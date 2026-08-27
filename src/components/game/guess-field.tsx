@@ -11,12 +11,16 @@ type GuessFieldProps = {
   pool: readonly string[];
   placeholder: string;
   label: string;
+  showWhenEmpty?: boolean;
 };
 
-export function GuessField({ value, onChange, pool, placeholder, label }: GuessFieldProps) {
+export function GuessField({ value, onChange, pool, placeholder, label, showWhenEmpty }: GuessFieldProps) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
-  const hints = useMemo(() => suggestNames(value, pool), [value, pool]);
+  const hints = useMemo(() => {
+    if (value.trim().length < 2) return showWhenEmpty ? [...pool].slice(0, 8) : [];
+    return suggestNames(value, pool);
+  }, [value, pool, showWhenEmpty]);
 
   function pick(next: string) {
     onChange(next);

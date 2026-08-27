@@ -11,7 +11,7 @@ const STEPS = [
   {
     n: "02",
     title: "Hören",
-    body: "Es kommt ein neuer Titel, ohne Namen und ohne Jahr. Je nach Modus siehst du das Cover oder nicht — und manchmal musst du erst raten.",
+    body: "Es kommt ein neuer Titel, ohne Namen und ohne Jahr. Je nach Modus siehst du das Cover oder nicht. Bei Kenner darfst du Interpret und Titel tippen — musst du aber nicht.",
   },
   {
     n: "03",
@@ -26,7 +26,7 @@ const STEPS = [
   {
     n: "05",
     title: "Joker",
-    body: "Jahrzehnt anzeigen oder den Titel überspringen, je nachdem wie viele Joker ihr eingestellt habt. Wer zuerst die Linie voll hat, gewinnt. Bei Custom könnt ihr auch ohne Ziel bis zum leeren Stapel spielen.",
+    body: "Jahrzehnt anzeigen oder den Titel überspringen, je nachdem wie viele Joker ihr eingestellt habt. Kenner startet ohne, ein Joker kommt dazu wenn Interpret und Titel sitzen. Wer zuerst die Linie voll hat, gewinnt. Bei Custom könnt ihr auch ohne Ziel bis zum leeren Stapel spielen.",
   },
   {
     n: "06",

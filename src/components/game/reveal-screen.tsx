@@ -6,15 +6,28 @@ import { useOnline } from "@/lib/game/online-store";
 import { guessKind } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
 
-function Mark({ ok, label, guess, actual }: { ok: boolean; label: string; guess?: string; actual: string }) {
+function Mark({
+  ok,
+  label,
+  guess,
+  actual,
+}: {
+  ok: boolean;
+  label: string;
+  guess?: string;
+  actual: string;
+}) {
+  const skipped = !guess?.trim();
   return (
     <div className="rounded-md bg-raised px-3 py-2.5 text-left shadow-border">
       <p className="flex items-center justify-between gap-3 text-xs tracking-[0.16em] uppercase">
         <span className="text-muted">{label}</span>
-        <span className={ok ? "text-success" : "text-danger"}>{ok ? "Treffer" : "Daneben"}</span>
+        <span className={skipped ? "text-subtle" : ok ? "text-success" : "text-danger"}>
+          {skipped ? "Offen" : ok ? "Treffer" : "Daneben"}
+        </span>
       </p>
       <p className="mt-1 truncate text-sm text-fg">{actual}</p>
-      {guess && guess.trim() && guess.trim().toLowerCase() !== actual.toLowerCase() ? (
+      {!skipped && guess && guess.trim().toLowerCase() !== actual.toLowerCase() ? (
         <p className="truncate text-xs text-muted">Tipp: {guess.trim()}</p>
       ) : null}
     </div>
@@ -41,7 +54,9 @@ export function RevealScreen() {
       : players[(currentPlayerIndex + 1) % players.length]?.name;
   const canAdvance = !online || myTurn || host;
   const kind = guessKind(variant, custom);
-  const quizMax = kind === "both" ? 2 : kind === "none" ? 0 : 1;
+  const asked =
+    (kind === "title" || kind === "both" ? Number(Boolean(lastResult.titleGuess?.trim())) : 0) +
+    (kind === "artist" || kind === "both" ? Number(Boolean(lastResult.artistGuess?.trim())) : 0);
   const quizHits =
     (kind === "title" || kind === "both" ? Number(lastResult.titleCorrect) : 0) +
     (kind === "artist" || kind === "both" ? Number(lastResult.artistCorrect) : 0);
@@ -63,7 +78,9 @@ export function RevealScreen() {
         {lastResult.correct
           ? "Die Karte bleibt auf der Zeitlinie."
           : "Die Karte wird zurückgelegt."}
-        {kind !== "none" ? ` ${quizHits} von ${quizMax} Treffern beim Raten.` : ""}
+        {kind !== "none" && asked > 0 ? ` ${quizHits} von ${asked} Treffern beim Raten.` : ""}
+        {kind !== "none" && asked === 0 ? " Ohne Tipp gelegt." : ""}
+        {lastResult.jokerEarned ? " Beides sitzt — Cover und ein Joker." : ""}
       </p>
 
       <div className="mt-8 pop-in">
