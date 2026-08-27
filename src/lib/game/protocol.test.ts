@@ -34,4 +34,7 @@ test("cup state is a protocol message", () => {
   );
 });
 
-
+test("pin challenge is a protocol message", () => {
+  assert.equal(isOnlineMessage({ t: "pin-needed" }), true);
+  assert.equal(isOnlineMessage({ t: "hello", name: "Ada", pin: "1234" }), true);
+});

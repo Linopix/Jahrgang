@@ -11,6 +11,7 @@ import { TV_MODE_NAME } from "@/lib/tv/names";
 import { CUP_MIN, CUP_MAX, TOURNAMENT_LIVE } from "@/lib/tournament";
 import { TournamentBoard } from "./tournament-board";
 import { TvLobbyScreen } from "./tv-lobby";
+import { HostPinPanel } from "./host-pin-panel";
 import { cn } from "@/lib/utils";
 
 export function OnlineLobbyScreen() {
@@ -175,6 +176,8 @@ export function OnlineLobbyScreen() {
           Für Discord kopieren
         </Button>
       </section>
+
+      <HostPinPanel />
 
       {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
 

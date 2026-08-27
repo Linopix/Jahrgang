@@ -12,6 +12,7 @@ import { applyChatDelete, receiveChat } from "@/lib/game/chat";
 import { takeClaim, pickSuccessor } from "@/lib/tv/names";
 import { safeName } from "@/lib/game/moderation";
 import { HOST_GRACE_MS, shouldTakeHost, nextHostId, fromHost, fromControl, acceptsHostTake } from "@/lib/game/hosting";
+import { ROOM_PIN_LIVE, pinMatch } from "@/lib/game/pin";
 import { bindMeshInspect, noteDebug } from "@/lib/game/debug";
 import { useSessionExit } from "@/lib/game/session-exit";
 import type { PeerInfo } from "@/lib/multiplayer";
@@ -103,7 +104,13 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   useEffect(() => {
     if (!p2p.joined) return;
     if (role === "guest") {
-      p2p.send({ t: "hello", name, claim: useOnline.getState().claimIntent, resume: true });
+      p2p.send({
+        t: "hello",
+        name,
+        claim: useOnline.getState().claimIntent,
+        resume: true,
+        pin: ROOM_PIN_LIVE ? useOnline.getState().joinPin : undefined,
+      });
     } else if (role === "host" && useGame.getState().phase === "home") {
       p2p.send({ t: "sync-request" });
     }
@@ -121,7 +128,13 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
     const live = Boolean(peer && peer.connectionState === "connected");
     useOnline.getState().setHostLive(live);
     if (live && !hostWasLive.current && p2p.joined) {
-      p2p.send({ t: "hello", name, resume: true, claim: useOnline.getState().claimIntent });
+      p2p.send({
+        t: "hello",
+        name,
+        resume: true,
+        claim: useOnline.getState().claimIntent,
+        pin: ROOM_PIN_LIVE ? useOnline.getState().joinPin : undefined,
+      });
       noteDebug("note", "host-back", hostId);
     }
     hostWasLive.current = live;
@@ -402,6 +415,15 @@ function handleMessage(
     }
     const members = online.members.slice();
     const existing = members.find((m) => m.id === from);
+    if (
+      ROOM_PIN_LIVE &&
+      online.roomPin &&
+      !existing &&
+      !pinMatch(msg.pin ?? "", online.roomPin)
+    ) {
+      ctx.send({ t: "pin-needed" }, from);
+      return;
+    }
     if (online.status === "playing" && !existing && !msg.resume) {
       ctx.send({ t: "start-failed", error: "Die Runde läuft bereits." }, from);
       return;
@@ -468,6 +490,7 @@ function handleMessage(
     if (online.status === "connecting" || online.status === "entry") {
       online.markLobby();
     }
+    useOnline.setState({ pinNeeded: false, error: null });
     online.persistSeat();
     return;
   }
@@ -519,6 +542,16 @@ function handleMessage(
     }
     online.markLobby();
     online.setError(msg.error);
+    return;
+  }
+
+  if (msg.t === "pin-needed") {
+    if (!ROOM_PIN_LIVE) return;
+    if (!fromHost(from, online.hostId)) return;
+    useOnline.setState({
+      pinNeeded: true,
+      error: "Dieser Raum hat eine PIN.",
+    });
     return;
   }
 

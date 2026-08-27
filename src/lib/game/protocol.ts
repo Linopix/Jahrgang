@@ -48,7 +48,7 @@ export type RoomConfigWire = {
 };
 
 export type OnlineMessage =
-  | { t: "hello"; name: string; claim?: boolean; resume?: boolean }
+  | { t: "hello"; name: string; claim?: boolean; resume?: boolean; pin?: string }
   | ({ t: "lobby"; hostId: string; adminId?: string; tvStep?: TvStep; members: MemberWire[] } & RoomConfigWire)
   | ({ t: "config" } & RoomConfigWire)
   | { t: "loading" }
@@ -72,6 +72,7 @@ export type OnlineMessage =
   | { t: "chat"; text: string; id?: string; by?: string }
   | { t: "chat-del"; id: string }
   | { t: "kick" }
+  | { t: "pin-needed" }
   | { t: "admin-start" }
   | { t: "admin-kick"; id: string }
   | { t: "pass-admin"; id: string }
@@ -99,6 +100,7 @@ const KINDS = new Set([
   "chat",
   "chat-del",
   "kick",
+  "pin-needed",
   "admin-start",
   "admin-kick",
   "pass-admin",

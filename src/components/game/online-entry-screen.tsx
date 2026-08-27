@@ -9,6 +9,7 @@ import { notePlayerName, noteRoomCode } from "@/lib/gags";
 import { TV_LIVE } from "@/lib/tv/flags";
 import { TV_MODE_NAME } from "@/lib/tv/names";
 import { isBlocked } from "@/lib/game/moderation";
+import { ROOM_PIN_LIVE, PIN_LEN } from "@/lib/game/pin";
 import { enterBigscreen } from "@/lib/tv/fullscreen";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,8 @@ export function OnlineEntryScreen() {
   const createRoom = useOnline((s) => s.createRoom);
   const joinRoom = useOnline((s) => s.joinRoom);
   const leaveRoom = useOnline((s) => s.leaveRoom);
+  const joinPin = useOnline((s) => s.joinPin);
+  const setJoinPin = useOnline((s) => s.setJoinPin);
   const claimIntent = useOnline((s) => s.claimIntent);
   const cupIntent = useOnline((s) => s.cupIntent);
   const [tv, setTv] = useState(false);
@@ -152,6 +155,29 @@ export function OnlineEntryScreen() {
           }}
         />
       </label>
+
+      {ROOM_PIN_LIVE ? (
+        <label className="mt-4 block">
+          <span className="text-sm font-medium text-fg">PIN</span>
+          <input
+            value={joinPin}
+            onChange={(event) => setJoinPin(event.target.value)}
+            placeholder="falls der Host eine verlangt"
+            inputMode="numeric"
+            autoComplete="off"
+            maxLength={PIN_LEN}
+            className="field mt-2 font-mono text-lg tracking-[0.28em]"
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" || !named || inviteCode.length < 4) return;
+              event.preventDefault();
+              join();
+            }}
+          />
+          <span className="mt-1 block text-xs text-muted">
+            Leer lassen, wenn der Raum keine PIN hat.
+          </span>
+        </label>
+      ) : null}
 
       <Button
         size="lg"

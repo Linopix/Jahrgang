@@ -106,6 +106,7 @@ src/
     api/og.ts             Vorschaubild für Links
   components/game/        Alles was du siehst
   lib/game/               Spielkern (Start hier)
+    pin.ts                Raum-PIN, hinter ROOM_PIN_LIVE
   lib/multiplayer/        WebRTC-Mesh
   lib/tv/                 Bigscreen / Discord-Bühne
   lib/tournament/         Turnier (Gruppen + K.o.), hinter TOURNAMENT_LIVE
@@ -277,8 +278,21 @@ Kleine Dateien, große Wirkung. Nicht „heimlich“ im UI verstecken.
 | `TV_LIVE` | `src/lib/tv/flags.ts` | `true` | Bigscreen |
 | `ACCOUNT_LIVE` | `src/lib/account/flags.ts` | `false` | Konto / Rangliste |
 | `TOURNAMENT_LIVE` | `src/lib/tournament/flags.ts` | `true` | Menüpunkt Turnier. Alias: `TOURNAMENT_MODE_ENABLED`. |
+| `ROOM_PIN_LIVE` | `src/lib/game/pin.ts` | `true` | Host kann eine PIN verlangen. `false` blendet Schalter und Feld aus. |
 
 Spotify einrichten: **[musikdienste.md](musikdienste.md)**. Ohne Flag bleibt der Abend gleich (iTunes + Deezer).
+
+### Raum-PIN
+
+`ROOM_PIN_LIVE` in [`src/lib/game/pin.ts`](../src/lib/game/pin.ts). **true**: der Mesh-Host (nicht das Admin-Handy) sieht in der Lobby den Schalter **PIN**. Aus: vier Ziffern, der Host sagt sie den Leuten. Sie steht nicht im QR und nicht im Link.
+
+Wer beitritt, gibt die PIN auf dem Eintrittsschirm ein oder nach einer Rückfrage. Schon im Raum gebliebene Geräte brauchen sie beim Wiederverbinden nicht.
+
+**false**: kein Schalter, kein Feld, der Host prüft hello nicht. Der Raumcode reicht wie bisher.
+
+Die PIN lebt nur auf dem Host-Gerät. Fällt der Host aus und übernimmt ein anderes Gerät, ist die PIN weg — der Nachfolger kann sie neu anmachen.
+
+Signaling (`/api/rtc`) bleibt am Raumcode. Die PIN hält nur Leute aus der Runde, die den Code haben, aber nicht die PIN.
 
 ---
 

@@ -51,6 +51,7 @@ import {
 } from "@/lib/tournament";
 import { TOURNAMENT_LIVE } from "@/lib/tournament/flags";
 import { isBlocked, stripControls, cleanName, safeName } from "./moderation";
+import { normalizePin } from "./pin";
 import { TV_LIVE } from "@/lib/tv/flags";
 import { TV_STAGE_NAME, type TvStep } from "@/lib/tv/names";
 import { makeRoomCode, normalizeRoomCode } from "./room-code";
@@ -179,6 +180,9 @@ type OnlineStore = {
   inviteCode: string;
   kickedIds: string[];
   hostLive: boolean;
+  roomPin: string;
+  joinPin: string;
+  pinNeeded: boolean;
   openEntry: (invite?: string, opts?: { claim?: boolean; cup?: boolean }) => void;
   setSelfName: (name: string) => void;
   setInviteCode: (code: string) => void;
@@ -188,6 +192,8 @@ type OnlineStore = {
   resumeSeat: () => boolean;
   becomeHost: (adminId?: string) => void;
   setHostLive: (live: boolean) => void;
+  setRoomPin: (pin: string) => void;
+  setJoinPin: (pin: string) => void;
   persistSeat: () => void;
   setIdentity: (selfId: string, hostIfCreator: boolean) => void;
   setMembers: (members: OnlineMember[]) => void;
@@ -257,6 +263,9 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   inviteCode: "",
   kickedIds: [],
   hostLive: true,
+  roomPin: "",
+  joinPin: "",
+  pinNeeded: false,
 
   openEntry: (invite, opts) => {
     const code = invite ? normalizeRoomCode(invite) : get().inviteCode;
@@ -284,6 +293,8 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       cupBoards: [],
       cupSpeakers: {},
       cupPile: [],
+      roomPin: "",
+      pinNeeded: false,
     });
   },
 
@@ -336,6 +347,8 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       cupBoards: [],
       cupSpeakers: {},
       cupPile: [],
+      roomPin: "",
+      pinNeeded: false,
     });
     persistNow(get());
   },
@@ -401,6 +414,9 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       cupBoards: [],
       cupSpeakers: {},
       cupPile: [],
+      roomPin: "",
+      joinPin: "",
+      pinNeeded: false,
     });
   },
 
@@ -427,6 +443,8 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   },
 
   setHostLive: (live) => set({ hostLive: live }),
+  setRoomPin: (pin) => set({ roomPin: normalizePin(pin) }),
+  setJoinPin: (pin) => set({ joinPin: normalizePin(pin), error: null }),
   persistSeat: () => persistNow(get()),
 
   setIdentity: (selfId, hostIfCreator) => {

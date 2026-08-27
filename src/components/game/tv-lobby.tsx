@@ -22,6 +22,7 @@ import { CUP_MIN, CUP_MAX, TOURNAMENT_LIVE } from "@/lib/tournament";
 import { TournamentBoard } from "./tournament-board";
 import { enterBigscreen } from "@/lib/tv/fullscreen";
 import { TV_MODE_NAME } from "@/lib/tv/names";
+import { HostPinPanel } from "./host-pin-panel";
 import { cn } from "@/lib/utils";
 
 function useRoomLink(host = false) {
@@ -244,6 +245,7 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
         </p>
         <div className="mt-2 w-full max-w-md text-left">
           <PlayAlongSwitch />
+          <HostPinPanel />
         </div>
       </div>
     );
@@ -268,6 +270,7 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
           Pack, Stil, Karten. Danach der Gäste-QR auf diesem Bildschirm.
         </p>
         <PlayAlongSwitch />
+        <HostPinPanel />
         <GameOptions value={config} onChange={requestConfig} online players={Math.max(seats.length, 1)} />
       </div>
       <div className="mt-8 lg:mt-16">
@@ -378,6 +381,7 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
             : "Der Ton kommt von diesem Bildschirm."}
         </p>
         <PlayAlongSwitch />
+        <HostPinPanel />
         {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
         <section className="mt-8">
           <div className="flex items-baseline justify-between">

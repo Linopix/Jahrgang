@@ -7,6 +7,7 @@ import type { OnlineMessage } from "./protocol";
 import { isAdmin, isTvRoom, isTvScreen, playerSeats } from "@/lib/tv/mode";
 import { pickSuccessor, type TvStep } from "@/lib/tv/names";
 import { nextHostId } from "./hosting";
+import { makePin, pinReady, ROOM_PIN_LIVE } from "./pin";
 import { rankPlayers, songsFromBoard } from "./engine";
 import { useSessionExit } from "./session-exit";
 import { noteDebug } from "./debug";
@@ -201,6 +202,26 @@ export function requestConfig(patch: Partial<RoomConfig>) {
   }
   online.setConfig(next);
   netSend({ t: "config", ...next } satisfies OnlineMessage);
+}
+
+export function requestSetRoomPin(on: boolean) {
+  if (!ROOM_PIN_LIVE) return;
+  const online = useOnline.getState();
+  if (online.role !== "host") return;
+  online.setRoomPin(on ? makePin() : "");
+}
+
+export function requestSubmitPin() {
+  if (!ROOM_PIN_LIVE) return;
+  const online = useOnline.getState();
+  if (!pinReady(online.joinPin)) return;
+  netSend({
+    t: "hello",
+    name: online.selfName,
+    pin: online.joinPin,
+    resume: true,
+    claim: online.claimIntent,
+  } satisfies OnlineMessage);
 }
 
 export async function requestStartOnline() {
