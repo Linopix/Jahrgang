@@ -1,4 +1,4 @@
-import type { Tournament, CupGroupSize, CupQualify } from "@/lib/tournament/types";
+import type { Tournament, CupAudio, CupFlow, CupGroupSize, CupQualify } from "@/lib/tournament/types";
 import type { TvStep } from "@/lib/tv/names";
 import type {
   CustomRules,
@@ -42,6 +42,8 @@ export type RoomConfigWire = {
   cup?: boolean;
   cupSize?: CupGroupSize;
   cupQualify?: CupQualify;
+  cupFlow?: CupFlow;
+  cupAudio?: CupAudio;
   tournament?: Tournament | null;
 };
 
@@ -74,7 +76,9 @@ export type OnlineMessage =
   | { t: "admin-kick"; id: string }
   | { t: "pass-admin"; id: string }
   | { t: "tv-step"; step: TvStep }
-  | { t: "cup"; tournament: Tournament | null };
+  | { t: "cup"; tournament: Tournament | null }
+  | { t: "cup-table"; matchId: string; snapshot: GameSnapshot }
+  | { t: "cup-board"; boards: import("@/lib/tournament").CupBoardCard[] };
 
 const KINDS = new Set([
   "hello",
@@ -100,6 +104,8 @@ const KINDS = new Set([
   "pass-admin",
   "tv-step",
   "cup",
+  "cup-table",
+  "cup-board",
 ]);
 
 export function isOnlineMessage(data: unknown): data is OnlineMessage {

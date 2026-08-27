@@ -2,7 +2,7 @@ import { netDrop, netSend } from "./net";
 import { useGame, type SongGuess } from "./store";
 import { roomConfigFrom, useOnline } from "./online-store";
 import { clearRoomFromUrl } from "./room-code";
-import type { RoomConfig } from "./types";
+import type { GameSnapshot, RoomConfig } from "./types";
 import type { OnlineMessage } from "./protocol";
 import { isAdmin, isTvRoom, isTvScreen, playerSeats } from "@/lib/tv/mode";
 import { pickSuccessor, type TvStep } from "@/lib/tv/names";
@@ -14,11 +14,16 @@ import {
   TOURNAMENT_LIVE,
   CUP_MIN,
   applyBye,
+  boardFromSnapshot,
   completeMatch,
   createTournament,
   currentMatch,
-  nextPending,
-  startMatch,
+  liveMatches,
+  matchOfPlayer,
+  matchTitle,
+  skipByes,
+  startBatch,
+  type CupBoardCard,
   type MatchScore,
 } from "@/lib/tournament";
 
@@ -186,7 +191,14 @@ export function requestNext() {
 export function requestConfig(patch: Partial<RoomConfig>) {
   const online = useOnline.getState();
   if (!isAdmin() && online.role !== "host") return;
+  if (TOURNAMENT_LIVE && online.cup && online.role !== "host") return;
   const next: RoomConfig = { ...roomConfigFrom(online), ...patch };
+  if (online.cup) {
+    next.cup = true;
+    next.tv = true;
+  } else {
+    next.cup = false;
+  }
   online.setConfig(next);
   netSend({ t: "config", ...next } satisfies OnlineMessage);
 }
@@ -246,8 +258,8 @@ export async function requestStartOnline() {
 
 async function requestStartCup() {
   const online = useOnline.getState();
-  if (!isAdmin() && online.role !== "host") return;
   if (online.role !== "host") {
+    if (!isAdmin()) return;
     online.setPending(true);
     online.setError(null);
     netSend({ t: "admin-start" } satisfies OnlineMessage);
@@ -261,7 +273,7 @@ async function requestStartCup() {
   online.setPending(true);
   online.setError(null);
   let t = online.tournament;
-  if (!t || t.status === "idle") {
+  if (!t || t.status === "idle" || t.status === "done") {
     t = createTournament(
       seats.map((row) => ({ id: row.id, name: row.name })),
       { groupPref: online.cupSize, qualify: online.cupQualify },
@@ -273,75 +285,137 @@ async function requestStartCup() {
     online.setPending(false);
     return;
   }
-  t = skipByes(t);
+  const parallel = online.cupFlow === "par";
+  t = startBatch(t, parallel);
   online.setTournament(t);
+  pushCup();
   if (t.status === "done") {
     online.setPending(false);
-    pushCup();
     return;
   }
-  const match = currentMatch(t) ?? nextPending(t);
-  if (!match) {
+  const batch = liveMatches(t).filter((row) => !row.bye);
+  if (!batch.length) {
     online.setPending(false);
     pushCup();
     return;
   }
-  t = startMatch(t, match.id);
-  online.setTournament(t);
-  pushCup();
-  const ids = new Set(match.playerIds);
-  const matchSeats = seats.filter((row) => ids.has(row.id));
-  if (matchSeats.length < 2) {
-    t = applyBye(t, match.id);
-    online.setTournament(t);
-    pushCup();
-    await requestStartCup();
-    return;
-  }
+  const tables: Record<string, GameSnapshot> = {};
+  const speakers: Record<string, string> = {};
   netSend({ t: "loading" } satisfies OnlineMessage);
-  const ok = await useGame.getState().startGame({
-    mode: "party",
-    names: matchSeats.map((m) => m.name),
-    ids: matchSeats.map((m) => m.id),
-    era: online.era,
-    target: match.stechen ? 2 : online.target,
-    variant: online.variant,
-    tokens: online.tokens,
-    playlistUrl: online.playlistUrl || undefined,
-    mixFrom: online.mixFrom,
-    mixTo: online.mixTo,
-    mixGenre: online.mixGenre,
-    custom: online.custom,
-    extraEra: online.extraEra,
-    eras: online.eras,
-    pool: online.pool,
-    suggest: online.suggest,
-  });
-  if (!ok) {
-    const error = useGame.getState().loadError ?? "Start fehlgeschlagen.";
-    useGame.getState().resetBoard();
-    online.markLobby();
-    online.setError(error);
-    netSend({ t: "start-failed", error } satisfies OnlineMessage);
-    return;
+  for (const match of batch) {
+    const ids = new Set(match.playerIds);
+    const matchSeats = seats.filter((row) => ids.has(row.id));
+    if (matchSeats.length < 2) {
+      t = applyBye(t, match.id);
+      online.setTournament(t);
+      continue;
+    }
+    const ok = await useGame.getState().startGame({
+      mode: "party",
+      names: matchSeats.map((m) => m.name),
+      ids: matchSeats.map((m) => m.id),
+      era: online.era,
+      target: match.stechen ? 2 : online.target,
+      variant: online.variant,
+      tokens: online.tokens,
+      playlistUrl: online.playlistUrl || undefined,
+      mixFrom: online.mixFrom,
+      mixTo: online.mixTo,
+      mixGenre: online.mixGenre,
+      custom: online.custom,
+      extraEra: online.extraEra,
+      eras: online.eras,
+      pool: online.pool,
+      suggest: online.suggest,
+    });
+    if (!ok) {
+      const error = useGame.getState().loadError ?? "Start fehlgeschlagen.";
+      useGame.getState().resetBoard();
+      online.markLobby();
+      online.setError(error);
+      netSend({ t: "start-failed", error } satisfies OnlineMessage);
+      return;
+    }
+    tables[match.id] = useGame.getState().snapshot();
+    speakers[match.id] = match.playerIds[0] ?? "";
   }
-  online.markPlaying();
-  pushState();
+  t = skipByes(t);
+  online.setTournament(t);
+  const boards = boardsOf(t, tables);
+  online.setCupTables(tables, boards, speakers);
   pushCup();
+  pushBoards(boards);
+  online.markPlaying();
+  if (parallel && batch.length > 1) {
+    for (const match of batch) {
+      const snap = tables[match.id];
+      if (!snap) continue;
+      pushTable(match.id, snap, match.playerIds);
+    }
+  } else {
+    const focus = batch[0];
+    if (focus && tables[focus.id]) {
+      useGame.getState().applySnapshot(tables[focus.id]!);
+      pushState();
+    }
+  }
+  online.setPending(false);
 }
 
-function skipByes(t: ReturnType<typeof createTournament>) {
-  let next = t;
-  for (let i = 0; i < 32; i++) {
-    const match = nextPending(next);
-    if (!match) break;
-    if (match.status === "live") return next;
-    if (!match.bye) {
-      return startMatch(next, match.id);
-    }
-    next = applyBye(next, match.id);
+function boardsOf(
+  t: NonNullable<ReturnType<typeof useOnline.getState>["tournament"]>,
+  tables: Record<string, GameSnapshot>,
+): CupBoardCard[] {
+  return liveMatches(t).map((match) =>
+    boardFromSnapshot(match, t, tables[match.id], matchTitle(match, t)),
+  );
+}
+
+function pushTable(matchId: string, snapshot: GameSnapshot, playerIds: string[]) {
+  netSend({ t: "cup-table", matchId, snapshot } satisfies OnlineMessage);
+  for (const id of playerIds) {
+    netSend({ t: "state", snapshot } satisfies OnlineMessage, id);
   }
-  return next;
+}
+
+function pushBoards(boards: CupBoardCard[]) {
+  netSend({ t: "cup-board", boards } satisfies OnlineMessage);
+}
+
+export function runCupAction(from: string, apply: () => void) {
+  const online = useOnline.getState();
+  const t = online.tournament;
+  if (!TOURNAMENT_LIVE || !online.cup || online.cupFlow !== "par" || !t) {
+    apply();
+    pushState();
+    return;
+  }
+  const match = matchOfPlayer(t, from);
+  if (!match) return;
+  const table = online.cupTables[match.id];
+  if (table) useGame.getState().applySnapshot(table);
+  apply();
+  const snap = useGame.getState().snapshot();
+  const tables = { ...online.cupTables, [match.id]: snap };
+  const boards = t ? boardsOf(t, tables) : [];
+  online.setCupTables(tables, boards);
+  pushTable(match.id, snap, match.playerIds);
+  pushBoards(boards);
+  if (snap.phase === "winner") {
+    const next = completeMatch(t, match.id, rankingFromSnap(snap));
+    online.setTournament(next);
+    pushCup();
+  }
+}
+
+function rankingFromSnap(snap: GameSnapshot): MatchScore[] {
+  return rankPlayers(snap.players).map((row) => ({
+    id: row.id,
+    name: row.name,
+    cards: row.timeline.length,
+    quiz: row.quiz ?? 0,
+    misses: row.misses,
+  }));
 }
 
 export function requestFinishCupMatch() {
@@ -349,8 +423,20 @@ export function requestFinishCupMatch() {
   const online = useOnline.getState();
   if (online.role !== "host") return;
   const t = online.tournament;
+  if (!t) return;
+  if (online.cupFlow === "par") {
+    const snap = useGame.getState().snapshot();
+    const match =
+      liveMatches(t).find((row) => snap.players.some((p) => row.playerIds.includes(p.id))) ?? currentMatch(t);
+    if (!match || match.status === "done") return;
+    if (snap.phase !== "winner") return;
+    const next = completeMatch(t, match.id, rankingFromSnap(snap));
+    online.setTournament(next);
+    pushCup();
+    return;
+  }
   const match = currentMatch(t);
-  if (!t || !match || match.status === "done") return;
+  if (!match || match.status === "done") return;
   const next = completeMatch(t, match.id, rankingFromGame());
   online.setTournament(next);
   pushCup();
@@ -491,6 +577,7 @@ export function requestKick(peerId: string) {
 
 export function requestPassAdmin(peerId: string) {
   const online = useOnline.getState();
+  if (TOURNAMENT_LIVE && online.cup) return;
   if (!isAdmin()) return;
   if (!peerId || peerId === online.adminId) return;
   const row = online.members.find((m) => m.id === peerId);

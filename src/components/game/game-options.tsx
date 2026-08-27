@@ -942,7 +942,7 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
                 on={value.chat}
                 onChange={(chat) => onChange({ chat })}
               />
-              {value.tv ? (
+              {value.tv && !value.cup ? (
                 <SwitchRow
                   label="Ton auf den Handys"
                   hint={
@@ -956,47 +956,68 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
               ) : null}
             </div>
           ) : null}
-          {online && TOURNAMENT_LIVE ? (
+          {online && TOURNAMENT_LIVE && value.cup ? (
             <div className="mt-5 min-w-0">
-              <div className={SWITCH_PANEL}>
-                <SwitchRow
-                  label="Turnier"
-                  hint={
-                    value.cup
-                      ? "Gruppenphase, danach K.o. Eine Runde pro Gruppe."
-                      : "Eine normale Runde mit allen im Raum."
-                  }
-                  on={value.cup}
-                  onChange={(cup) => onChange({ cup })}
-                />
-              </div>
-              {value.cup ? (
-                <div className="mt-3 space-y-3">
-                  <div>
-                    <p className="mb-2 text-sm text-muted">Gruppengröße</p>
-                    <Segment
-                      items={["auto", 3, 4] as const}
-                      value={value.cupSize}
-                      onChange={(cupSize) => onChange({ cupSize })}
-                      label={(item) => (item === "auto" ? "Auto" : `${item}er`)}
-                    />
-                  </div>
-                  <div>
-                    <p className="mb-2 text-sm text-muted">Weiter pro Gruppe</p>
-                    <Segment
-                      items={[1, 2] as const}
-                      value={value.cupQualify}
-                      onChange={(cupQualify) => onChange({ cupQualify })}
-                      label={(item) => (item === 1 ? "Platz 1" : "Platz 1 und 2")}
-                    />
-                  </div>
-                  <p className="text-sm text-muted">
-                    {players < CUP_MIN
-                      ? `Mindestens ${CUP_MIN} Personen.`
-                      : cupPreview(players, value.cupSize, value.cupQualify)}
+              <div className="space-y-3">
+                <div>
+                  <p className="mb-2 text-sm text-muted">Ablauf</p>
+                  <Segment
+                    items={["seq", "par"] as const}
+                    value={value.cupFlow}
+                    onChange={(cupFlow) =>
+                      onChange({
+                        cupFlow,
+                        cupAudio: cupFlow === "seq" ? "stage" : value.cupAudio === "stage" ? "one" : value.cupAudio,
+                      })
+                    }
+                    label={(item) => (item === "seq" ? "Nacheinander" : "Gleichzeitig")}
+                  />
+                  <p className="mt-2 text-sm text-muted">
+                    {value.cupFlow === "par"
+                      ? "Alle Gruppen dieser Runde spielen zur gleichen Zeit auf den Handys. Die Bühne zeigt die Stände."
+                      : "Eine Begegnung nach der anderen. Der Ton kommt von diesem Bildschirm."}
                   </p>
                 </div>
-              ) : null}
+                {value.cupFlow === "par" ? (
+                  <div>
+                    <p className="mb-2 text-sm text-muted">Ton</p>
+                    <Segment
+                      items={["one", "all"] as const}
+                      value={value.cupAudio === "all" ? "all" : "one"}
+                      onChange={(cupAudio) => onChange({ cupAudio })}
+                      label={(item) => (item === "one" ? "Ein Handy pro Gruppe" : "Alle Handys der Gruppe")}
+                    />
+                    <p className="mt-2 text-sm text-muted">
+                      {value.cupAudio === "all"
+                        ? "Jedes Handy in der Gruppe spielt den Titel."
+                        : "Nur das erste Handy der Gruppe spielt den Titel. Die anderen hören mit oder legen stumm."}
+                    </p>
+                  </div>
+                ) : null}
+                <div>
+                  <p className="mb-2 text-sm text-muted">Gruppengröße</p>
+                  <Segment
+                    items={["auto", 3, 4] as const}
+                    value={value.cupSize}
+                    onChange={(cupSize) => onChange({ cupSize })}
+                    label={(item) => (item === "auto" ? "Auto" : `${item}er`)}
+                  />
+                </div>
+                <div>
+                  <p className="mb-2 text-sm text-muted">Weiter pro Gruppe</p>
+                  <Segment
+                    items={[1, 2] as const}
+                    value={value.cupQualify}
+                    onChange={(cupQualify) => onChange({ cupQualify })}
+                    label={(item) => (item === 1 ? "Platz 1" : "Platz 1 und 2")}
+                  />
+                </div>
+                <p className="text-sm text-muted">
+                  {players < CUP_MIN
+                    ? `Mindestens ${CUP_MIN} Personen.`
+                    : cupPreview(players, value.cupSize, value.cupQualify)}
+                </p>
+              </div>
             </div>
           ) : null}
         </section>

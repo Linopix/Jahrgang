@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { mergeNamePairs } from "./guess.ts";
 import { parseStageAudio, parseSuggest } from "./types.ts";
+import { parseCupAudio, parseCupFlow } from "../tournament/types.ts";
 import { hintLimit, hintQuery } from "./name-query.ts";
 
 test("parseSuggest accepts on off loose", () => {
@@ -15,6 +16,14 @@ test("parseStageAudio accepts stage and all", () => {
   assert.equal(parseStageAudio("stage"), "stage");
   assert.equal(parseStageAudio("all"), "all");
   assert.equal(parseStageAudio("nope"), "stage");
+});
+
+test("cup flow and audio defaults", () => {
+  assert.equal(parseCupFlow("par"), "par");
+  assert.equal(parseCupFlow("nope"), "seq");
+  assert.equal(parseCupAudio("all", "seq"), "stage");
+  assert.equal(parseCupAudio("all", "par"), "all");
+  assert.equal(parseCupAudio("stage", "par"), "one");
 });
 
 test("name pairs drop empty rows", () => {

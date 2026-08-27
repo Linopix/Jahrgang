@@ -1,4 +1,4 @@
-import type { CupGroupSize, CupQualify } from "@/lib/tournament/types";
+import type { CupAudio, CupFlow, CupGroupSize, CupQualify } from "@/lib/tournament/types";
 
 export type EraId =
   | "all"
@@ -214,6 +214,8 @@ export interface RoomConfig {
   cup: boolean;
   cupSize: CupGroupSize;
   cupQualify: CupQualify;
+  cupFlow: CupFlow;
+  cupAudio: CupAudio;
 }
 
 export const ERA_IDS: EraId[] = [
@@ -535,6 +537,8 @@ export const DEFAULT_ROOM_CONFIG: RoomConfig = {
   cup: false,
   cupSize: "auto",
   cupQualify: 2,
+  cupFlow: "seq",
+  cupAudio: "stage",
 };
 
 export function isPlayVariant(value: unknown): value is PlayVariant {

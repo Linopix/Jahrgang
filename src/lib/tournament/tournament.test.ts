@@ -7,8 +7,10 @@ import {
   completeMatch,
   createTournament,
   cupPreview,
+  liveMatches,
   nextPending,
   openKnockout,
+  startBatch,
   startMatch,
   type MatchScore,
 } from "./engine.ts";
@@ -225,4 +227,14 @@ test("openKnockout after groups of 6 yields semifinal", () => {
   assert.equal(t.status, "knockout");
   assert.equal(collectQualifiers(t).length, 4);
   assert.ok(t.matches.some((row) => row.round === "sf"));
+});
+
+test("parallel batch keeps more than one match live", () => {
+  let t = createTournament(people(8), { shuffle: (items) => items.slice() });
+  t = startBatch(t, true);
+  const live = liveMatches(t);
+  assert.ok(live.length >= 2);
+  assert.ok(live.every((row) => row.status === "live"));
+  const seq = startBatch(createTournament(people(8), { shuffle: (items) => items.slice() }), false);
+  assert.equal(liveMatches(seq).length, 1);
 });

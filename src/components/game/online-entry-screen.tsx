@@ -22,14 +22,21 @@ export function OnlineEntryScreen() {
   const joinRoom = useOnline((s) => s.joinRoom);
   const leaveRoom = useOnline((s) => s.leaveRoom);
   const claimIntent = useOnline((s) => s.claimIntent);
+  const cupIntent = useOnline((s) => s.cupIntent);
   const [tv, setTv] = useState(false);
 
   const named = selfName.trim().length > 0 && !isBlocked(selfName);
-  const canOpenTv = TV_LIVE && tv;
+  const wantTv = TV_LIVE && (tv || cupIntent);
+  const canOpenTv = wantTv;
   const canOpenRoom = canOpenTv || named;
 
   function openRoom() {
     unlockAudio();
+    if (cupIntent) {
+      createRoom({ tv: true, cup: true });
+      enterBigscreen();
+      return;
+    }
     createRoom(canOpenTv ? { tv: true } : undefined);
     if (canOpenTv) enterBigscreen();
   }
@@ -53,14 +60,16 @@ export function OnlineEntryScreen() {
       <div className="lg:mt-8 lg:grid lg:grid-cols-[minmax(0,28rem)_auto] lg:items-start lg:gap-16">
       <div>
       <header className="mt-6 lg:mt-0">
-        <p className="kicker">Mehrspieler</p>
+        <p className="kicker">{cupIntent ? "Turnier" : "Mehrspieler"}</p>
         <h1 className="mt-2 font-display text-4xl font-medium text-fg">
-          {claimIntent ? "Host-Handy" : "Online-Abend"}
+          {claimIntent ? "Host-Handy" : cupIntent ? "Turnier" : "Online-Abend"}
         </h1>
         <p className="mt-3 max-w-md text-sm text-muted">
           {claimIntent
             ? "Name eintragen und beitreten. Du stellst Pack und Start ein. Die Bühne bleibt das Übertragungsgerät."
-            : "Ein Host öffnet den Raum. Mitspieler treten mit Code oder Einladungslink bei, jedes Gerät für sich."}
+            : cupIntent
+              ? "Dieser Bildschirm ist die Bühne. Pack, Ablauf und Ton stellst du hier ein. Mitspieler kommen per QR oder Code dazu und spielen auf dem Handy."
+              : "Ein Host öffnet den Raum. Mitspieler treten mit Code oder Einladungslink bei, jedes Gerät für sich."}
         </p>
       </header>
 
@@ -90,7 +99,7 @@ export function OnlineEntryScreen() {
       </label>
       )}
 
-      {TV_LIVE && !claimIntent ? (
+      {TV_LIVE && !claimIntent && !cupIntent ? (
         <div className={cn("mt-4", SWITCH_PANEL)}>
           <SwitchRow
             label={TV_MODE_NAME}
@@ -110,8 +119,8 @@ export function OnlineEntryScreen() {
         disabled={!canOpenRoom}
         onClick={openRoom}
       >
-        {tv ? <Monitor className="size-4" /> : <Radio className="size-4" />}
-        {tv ? `${TV_MODE_NAME} öffnen` : "Raum öffnen"}
+        {cupIntent ? <Monitor className="size-4" /> : tv ? <Monitor className="size-4" /> : <Radio className="size-4" />}
+        {cupIntent ? "Turnier öffnen" : tv ? `${TV_MODE_NAME} öffnen` : "Raum öffnen"}
       </Button>
       )}
 

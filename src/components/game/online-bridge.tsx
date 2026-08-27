@@ -5,7 +5,7 @@ import { isOnlineMessage, type MemberWire, type OnlineMessage, type RoomConfigWi
 import { bindNet, netDrop } from "@/lib/game/net";
 import { useGame } from "@/lib/game/store";
 import { useOnline, type OnlineMember } from "@/lib/game/online-store";
-import { requestStartOnline } from "@/lib/game/online-actions";
+import { requestStartOnline, runCupAction } from "@/lib/game/online-actions";
 import { DEFAULT_NEXT_ROUND, DEFAULT_ROOM_CONFIG, DEFAULT_VARIANT, defaultTokensFor, isNextRoundPolicy, isPlayVariant, isTokenCount, parseCustom, parseStageAudio, parseSuggest } from "@/lib/game/types";
 import { receiveReaction } from "@/lib/game/reactions";
 import { applyChatDelete, receiveChat } from "@/lib/game/chat";
@@ -16,7 +16,7 @@ import { bindMeshInspect, noteDebug } from "@/lib/game/debug";
 import { useSessionExit } from "@/lib/game/session-exit";
 import type { PeerInfo } from "@/lib/multiplayer";
 import { TOURNAMENT_LIVE } from "@/lib/tournament/flags";
-import { parseCupQualify, parseCupSize, parseTournament } from "@/lib/tournament";
+import { parseCupAudio, parseCupFlow, parseCupQualify, parseCupSize, parseTournament, matchOfPlayer } from "@/lib/tournament";
 import { roomCap } from "@/lib/tv/mode";
 
 const JOIN_TIMEOUT_MS = 14000;
@@ -63,6 +63,8 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   const cup = useOnline((s) => s.cup);
   const cupSize = useOnline((s) => s.cupSize);
   const cupQualify = useOnline((s) => s.cupQualify);
+  const cupFlow = useOnline((s) => s.cupFlow);
+  const cupAudio = useOnline((s) => s.cupAudio);
   const tournament = useOnline((s) => s.tournament);
   const hostId = useOnline((s) => s.hostId);
   const adminId = useOnline((s) => s.adminId);
@@ -310,10 +312,12 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       cup,
       cupSize,
       cupQualify,
+      cupFlow,
+      cupAudio,
       tournament: TOURNAMENT_LIVE ? useOnline.getState().tournament : null,
     };
     p2p.send(msg);
-  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, extraEra, eras, pool, emoji, chat, tv, members, adminId, tvStep, stagePlays, suggest, stageAudio, cup, cupSize, cupQualify, tournament]);
+  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, extraEra, eras, pool, emoji, chat, tv, members, adminId, tvStep, stagePlays, suggest, stageAudio, cup, cupSize, cupQualify, cupFlow, cupAudio, tournament]);
 
   useEffect(() => {
     return p2p.onMessage((from, data, channel) => {
@@ -366,6 +370,8 @@ function roomConfigFromWire(msg: RoomConfigWire) {
     cup: TOURNAMENT_LIVE && Boolean(msg.cup),
     cupSize: parseCupSize(msg.cupSize),
     cupQualify: parseCupQualify(msg.cupQualify),
+    cupFlow: parseCupFlow(msg.cupFlow),
+    cupAudio: parseCupAudio(msg.cupAudio, parseCupFlow(msg.cupFlow)),
   };
 }
 
@@ -400,6 +406,15 @@ function handleMessage(
     online.setMembers(members);
     if (online.status === "playing") {
       ctx.send({ t: "state", snapshot: useGame.getState().snapshot() }, from);
+      const match = matchOfPlayer(online.tournament, from);
+      const table = match ? online.cupTables[match.id] : null;
+      if (TOURNAMENT_LIVE && online.cup && match && table) {
+        ctx.send({ t: "state", snapshot: table }, from);
+        ctx.send({ t: "cup-table", matchId: match.id, snapshot: table }, from);
+      }
+      if (TOURNAMENT_LIVE && online.cupBoards.length) {
+        ctx.send({ t: "cup-board", boards: online.cupBoards }, from);
+      }
     }
     if (TOURNAMENT_LIVE && online.tournament) {
       ctx.send({ t: "cup", tournament: online.tournament }, from);
@@ -617,6 +632,26 @@ function handleMessage(
     return;
   }
 
+  if (msg.t === "cup-table") {
+    if (!TOURNAMENT_LIVE) return;
+    if (online.role === "host" && from !== ctx.selfId) return;
+    const tables = { ...online.cupTables, [msg.matchId]: msg.snapshot };
+    online.setCupTables(tables);
+    const self = online.selfId;
+    if (self && msg.snapshot.players.some((row) => row.id === self)) {
+      useGame.getState().applySnapshot(msg.snapshot);
+      online.markPlaying();
+    }
+    return;
+  }
+
+  if (msg.t === "cup-board") {
+    if (!TOURNAMENT_LIVE) return;
+    if (online.role === "host" && from !== ctx.selfId) return;
+    useOnline.setState({ cupBoards: msg.boards });
+    return;
+  }
+
   if (msg.t === "react") {
     const who = msg.by || from;
     if (who === ctx.selfId) return;
@@ -669,6 +704,7 @@ function handleMessage(
   }
 
   if (msg.t === "admin-start" && online.role === "host") {
+    if (online.cup) return;
     if (from !== online.adminId) return;
     void requestStartOnline();
     return;
@@ -699,19 +735,26 @@ function handleMessage(
   }
 
   if (msg.t === "action" && online.role === "host") {
-    const current = game.players[game.currentPlayerIndex];
-    if (!current || current.id !== from) return;
-    if (msg.kind === "place") {
-      if (typeof msg.slot !== "number") return;
-      useGame.setState({ selectedSlot: msg.slot });
-      game.confirmPlacement({ title: msg.title ?? "", artist: msg.artist ?? "" });
-    } else if (msg.kind === "decade") {
-      game.useDecade();
-    } else if (msg.kind === "skip") {
-      game.useSkip();
-    } else if (msg.kind === "next") {
-      game.nextTurn({ skipIds: ctx.skipIds });
+    const apply = () => {
+      const current = useGame.getState().players[useGame.getState().currentPlayerIndex];
+      if (!current || current.id !== from) return;
+      if (msg.kind === "place") {
+        if (typeof msg.slot !== "number") return;
+        useGame.setState({ selectedSlot: msg.slot });
+        useGame.getState().confirmPlacement({ title: msg.title ?? "", artist: msg.artist ?? "" });
+      } else if (msg.kind === "decade") {
+        useGame.getState().useDecade();
+      } else if (msg.kind === "skip") {
+        useGame.getState().useSkip();
+      } else if (msg.kind === "next") {
+        useGame.getState().nextTurn({ skipIds: ctx.skipIds });
+      }
+    };
+    if (TOURNAMENT_LIVE && online.cup && online.cupFlow === "par") {
+      runCupAction(from, apply);
+      return;
     }
+    apply();
     ctx.send({ t: "state", snapshot: useGame.getState().snapshot() });
   }
 }

@@ -30,16 +30,25 @@ import {
   type StageAudio,
   type SuggestMode,
   type TokenCount,
+  type GameSnapshot,
 } from "./types";
 import {
+  DEFAULT_CUP_AUDIO,
+  DEFAULT_CUP_FLOW,
   DEFAULT_CUP_QUALIFY,
   DEFAULT_CUP_SIZE,
+  parseCupAudio,
+  parseCupFlow,
   parseCupQualify,
   parseCupSize,
+  type CupAudio,
+  type CupBoardCard,
+  type CupFlow,
   type CupGroupSize,
   type CupQualify,
   type Tournament,
 } from "@/lib/tournament";
+import { TOURNAMENT_LIVE } from "@/lib/tournament/flags";
 import { isBlocked, stripControls, cleanName, safeName } from "./moderation";
 import { TV_LIVE } from "@/lib/tv/flags";
 import { TV_STAGE_NAME, type TvStep } from "@/lib/tv/names";
@@ -151,7 +160,13 @@ type OnlineStore = {
   cup: boolean;
   cupSize: CupGroupSize;
   cupQualify: CupQualify;
+  cupFlow: CupFlow;
+  cupAudio: CupAudio;
   tournament: Tournament | null;
+  cupTables: Record<string, GameSnapshot>;
+  cupBoards: CupBoardCard[];
+  cupSpeakers: Record<string, string>;
+  cupIntent: boolean;
   stagePlays: boolean;
   adminId: string;
   tvStep: TvStep;
@@ -162,10 +177,10 @@ type OnlineStore = {
   inviteCode: string;
   kickedIds: string[];
   hostLive: boolean;
-  openEntry: (invite?: string, opts?: { claim?: boolean }) => void;
+  openEntry: (invite?: string, opts?: { claim?: boolean; cup?: boolean }) => void;
   setSelfName: (name: string) => void;
   setInviteCode: (code: string) => void;
-  createRoom: (opts?: { tv?: boolean }) => void;
+  createRoom: (opts?: { tv?: boolean; cup?: boolean }) => void;
   joinRoom: (code?: string, opts?: { claim?: boolean }) => void;
   leaveRoom: () => void;
   resumeSeat: () => boolean;
@@ -176,6 +191,11 @@ type OnlineStore = {
   setMembers: (members: OnlineMember[]) => void;
   setConfig: (config: RoomConfig) => void;
   setTournament: (tournament: Tournament | null) => void;
+  setCupTables: (
+    tables: Record<string, GameSnapshot>,
+    boards?: CupBoardCard[],
+    speakers?: Record<string, string>,
+  ) => void;
   setTvStep: (step: TvStep) => void;
   skipTvClaim: () => void;
   setStagePlays: (on: boolean) => void;
@@ -216,7 +236,13 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   cup: false,
   cupSize: DEFAULT_CUP_SIZE,
   cupQualify: DEFAULT_CUP_QUALIFY,
+  cupFlow: DEFAULT_CUP_FLOW,
+  cupAudio: DEFAULT_CUP_AUDIO,
   tournament: null,
+  cupTables: {},
+  cupBoards: [],
+  cupSpeakers: {},
+  cupIntent: false,
   stagePlays: false,
   adminId: "",
   tvStep: "invite",
@@ -247,6 +273,12 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       tvStep: "invite",
       claimOpen: false,
       claimIntent: Boolean(opts?.claim) && code.length === 4,
+      cupIntent: Boolean(opts?.cup),
+      cup: false,
+      tournament: null,
+      cupTables: {},
+      cupBoards: [],
+      cupSpeakers: {},
     });
   },
 
@@ -258,7 +290,8 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   setInviteCode: (code) => set({ inviteCode: normalizeRoomCode(code) }),
 
   createRoom: (opts) => {
-    const tv = TV_LIVE && Boolean(opts?.tv);
+    const cup = TOURNAMENT_LIVE && (Boolean(opts?.cup) || get().cupIntent);
+    const tv = TV_LIVE && (Boolean(opts?.tv) || cup);
     const name = tv ? TV_STAGE_NAME : get().selfName.trim() || readStoredName();
     if (!name) {
       set({ error: "Bitte zuerst einen Namen eintragen." });
@@ -284,11 +317,19 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       kickedIds: [],
       tv,
       stagePlays: false,
-      adminId: "",
-      tvStep: tv ? "claim" : "invite",
-      claimOpen: tv,
+      adminId: cup || !tv ? selfId : "",
+      tvStep: cup ? "setup" : tv ? "claim" : "invite",
+      claimOpen: tv && !cup,
       claimIntent: false,
       hostLive: true,
+      cup,
+      cupIntent: false,
+      cupFlow: cup ? DEFAULT_CUP_FLOW : DEFAULT_CUP_FLOW,
+      cupAudio: cup ? DEFAULT_CUP_AUDIO : DEFAULT_CUP_AUDIO,
+      tournament: null,
+      cupTables: {},
+      cupBoards: [],
+      cupSpeakers: {},
     });
     persistNow(get());
   },
@@ -348,7 +389,11 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       claimIntent: false,
       hostLive: true,
       cup: false,
+      cupIntent: false,
       tournament: null,
+      cupTables: {},
+      cupBoards: [],
+      cupSpeakers: {},
     });
   },
 
@@ -427,10 +472,18 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       cup: Boolean(config.cup),
       cupSize: parseCupSize(config.cupSize),
       cupQualify: parseCupQualify(config.cupQualify),
+      cupFlow: parseCupFlow(config.cupFlow),
+      cupAudio: parseCupAudio(config.cupAudio, parseCupFlow(config.cupFlow)),
       tournament: config.cup ? get().tournament : null,
     });
   },
   setTournament: (tournament) => set({ tournament }),
+  setCupTables: (tables, boards, speakers) =>
+    set({
+      cupTables: tables,
+      ...(boards ? { cupBoards: boards } : {}),
+      ...(speakers ? { cupSpeakers: speakers } : {}),
+    }),
   setTvStep: (step) => set({ tvStep: step }),
   skipTvClaim: () => {
     if (!get().claimOpen) return;
@@ -475,8 +528,11 @@ export function roomConfigFrom(
     | "cup"
     | "cupSize"
     | "cupQualify"
+    | "cupFlow"
+    | "cupAudio"
   >,
 ): RoomConfig {
+  const cupFlow = parseCupFlow(state.cupFlow);
   return {
     era: state.era,
     target: state.target,
@@ -500,6 +556,8 @@ export function roomConfigFrom(
     cup: Boolean(state.cup),
     cupSize: parseCupSize(state.cupSize),
     cupQualify: parseCupQualify(state.cupQualify),
+    cupFlow,
+    cupAudio: parseCupAudio(state.cupAudio, cupFlow),
   };
 }
 

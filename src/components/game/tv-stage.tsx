@@ -27,7 +27,7 @@ import { enterBigscreen } from "@/lib/tv/fullscreen";
 import { useIsAdmin } from "@/lib/tv/mode";
 import { cn } from "@/lib/utils";
 import { TournamentBoard } from "./tournament-board";
-import { TOURNAMENT_LIVE, currentMatch } from "@/lib/tournament";
+import { TOURNAMENT_LIVE, currentMatch, liveMatches } from "@/lib/tournament";
 
 function MuteToggle() {
   const [muted, setMutedState] = useState(isMuted);
@@ -266,6 +266,82 @@ export function TvWinnerScreen() {
       ) : (
         <p className="mt-12 text-muted">Weiter vom Host-Handy.</p>
       )}
+    </main>
+  );
+}
+
+export function TvCupGridScreen() {
+  const boards = useOnline((s) => s.cupBoards);
+  const tournament = useOnline((s) => s.tournament);
+  const roomCode = useOnline((s) => s.roomCode);
+  const pending = useOnline((s) => s.pending);
+  const admin = useIsAdmin();
+  const live = liveMatches(tournament);
+  const done = tournament?.status === "done";
+  const waiting = live.length === 0 && !done;
+
+  return (
+    <main className="screen-in mx-auto flex h-dvh w-full max-w-[90rem] flex-col overflow-hidden px-6 py-5 lg:px-10">
+      <header className="theme-clear flex items-center justify-between gap-4">
+        <div>
+          <p className="tv-kicker">Turnier</p>
+          <h1 className="font-display text-3xl text-fg lg:text-4xl">
+            {done ? "Turniersieger" : waiting ? "Nächste Runde" : "Laufende Begegnungen"}
+          </h1>
+        </div>
+        <p className="font-mono text-3xl tracking-[0.2em] text-fg lg:text-5xl">{roomCode}</p>
+        <MuteToggle />
+      </header>
+      <div className="cup-live-grid mt-6 min-h-0 flex-1 overflow-auto">
+        {(boards.length ? boards : live.map((match) => ({
+          matchId: match.id,
+          title: match.round === "group" ? "Gruppe" : match.round,
+          phase: "idle" as const,
+          currentName: "",
+          rows: match.playerIds.map((id) => ({ id, name: id, cards: 0, quiz: 0 })),
+        }))).map((card) => (
+          <article key={card.matchId} className={cn("cup-live-card", card.phase === "winner" && "is-done")}>
+            <p className="cup-live-title">{card.title}</p>
+            {card.currentName && card.phase !== "winner" ? (
+              <p className="cup-live-now">Dran: {card.currentName}</p>
+            ) : (
+              <p className="cup-live-now">{card.phase === "winner" ? "fertig" : "läuft"}</p>
+            )}
+            <ol>
+              {card.rows.map((row) => (
+                <li key={row.id} className="cup-live-row">
+                  <span className="min-w-0 truncate">{row.name}</span>
+                  <span className="tabular-nums text-muted">
+                    {row.cards} · {row.quiz}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </article>
+        ))}
+      </div>
+      {tournament ? (
+        <div className="mt-4 min-w-0 shrink-0">
+          <TournamentBoard t={tournament} tv compact />
+        </div>
+      ) : null}
+      {admin && (waiting || done) ? (
+        <div className="mt-4 flex gap-3">
+          <Button
+            size="lg"
+            disabled={pending}
+            onClick={() => {
+              if (done) {
+                requestBackToLobby();
+                return;
+              }
+              void requestAgain();
+            }}
+          >
+            {done ? "Lobby" : "Weiter"}
+          </Button>
+        </div>
+      ) : null}
     </main>
   );
 }

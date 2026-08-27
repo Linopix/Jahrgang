@@ -40,6 +40,8 @@ export function OnlineLobbyScreen() {
   const cup = useOnline((s) => s.cup);
   const cupSize = useOnline((s) => s.cupSize);
   const cupQualify = useOnline((s) => s.cupQualify);
+  const cupFlow = useOnline((s) => s.cupFlow);
+  const cupAudio = useOnline((s) => s.cupAudio);
   const tournament = useOnline((s) => s.tournament);
   const error = useOnline((s) => s.error);
   const hostId = useOnline((s) => s.hostId);
@@ -74,6 +76,8 @@ export function OnlineLobbyScreen() {
     cup,
     cupSize,
     cupQualify,
+    cupFlow,
+    cupAudio,
   });
 
   useEffect(() => {
@@ -216,6 +220,7 @@ export function OnlineLobbyScreen() {
                       : "verbunden"}
               </span>
               {isAdmin &&
+              !(TOURNAMENT_LIVE && cup) &&
               member.id !== currentAdmin &&
               member.connectionState !== "failed" &&
               member.connectionState !== "disconnected" ? (

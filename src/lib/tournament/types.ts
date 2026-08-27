@@ -56,10 +56,36 @@ export type Tournament = {
   championId: string | null;
 };
 
+export type CupFlow = "seq" | "par";
+export type CupAudio = "stage" | "one" | "all";
+
+export const DEFAULT_CUP_FLOW: CupFlow = "seq";
+export const DEFAULT_CUP_AUDIO: CupAudio = "stage";
+
+export function isCupFlow(value: unknown): value is CupFlow {
+  return value === "seq" || value === "par";
+}
+
+export function isCupAudio(value: unknown): value is CupAudio {
+  return value === "stage" || value === "one" || value === "all";
+}
+
+export function parseCupFlow(value: unknown): CupFlow {
+  return isCupFlow(value) ? value : DEFAULT_CUP_FLOW;
+}
+
+export function parseCupAudio(value: unknown, flow: CupFlow = DEFAULT_CUP_FLOW): CupAudio {
+  if (flow === "seq") return "stage";
+  if (value === "one" || value === "all") return value;
+  return "one";
+}
+
 export type CupConfig = {
   cup: boolean;
   cupSize: CupGroupSize;
   cupQualify: CupQualify;
+  cupFlow: CupFlow;
+  cupAudio: CupAudio;
 };
 
 export const DEFAULT_CUP_SIZE: CupGroupSize = "auto";

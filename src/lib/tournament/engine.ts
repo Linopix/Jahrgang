@@ -71,8 +71,25 @@ export function createTournament(
 }
 
 export function currentMatch(t: Tournament | null): CupMatch | null {
-  if (!t?.currentMatchId) return null;
+  if (!t) return null;
+  const live = t.matches.find((row) => row.status === "live");
+  if (live) return live;
+  if (!t.currentMatchId) return null;
   return t.matches.find((row) => row.id === t.currentMatchId) ?? null;
+}
+
+export function liveMatches(t: Tournament | null): CupMatch[] {
+  if (!t) return [];
+  return t.matches.filter((row) => row.status === "live");
+}
+
+export function matchOfPlayer(t: Tournament | null, playerId: string): CupMatch | null {
+  if (!t || !playerId) return null;
+  return (
+    t.matches.find((row) => row.status === "live" && row.playerIds.includes(playerId)) ??
+    t.matches.find((row) => row.playerIds.includes(playerId) && row.status !== "done") ??
+    null
+  );
 }
 
 export function nextPending(t: Tournament): CupMatch | null {
@@ -85,22 +102,64 @@ export function nextPending(t: Tournament): CupMatch | null {
   return t.matches.find((row) => row.kind === "knockout" && row.status === "pending") ?? null;
 }
 
+export function pendingBatch(t: Tournament): CupMatch[] {
+  const groups = t.matches.filter((row) => row.kind === "group" && row.status !== "done");
+  if (groups.length) return groups.filter((row) => !row.bye);
+  for (const round of ["r16", "qf", "sf", "final"] as const) {
+    const list = t.matches.filter((row) => row.round === round && row.status !== "done" && !row.bye);
+    if (list.length) return list;
+  }
+  return [];
+}
+
 export function scoresTied(a: MatchScore | undefined, b: MatchScore | undefined): boolean {
   if (!a || !b) return false;
   return a.cards === b.cards && a.quiz === b.quiz && a.misses === b.misses;
 }
 
-export function startMatch(t: Tournament, matchId: string): Tournament {
+export function startMatch(t: Tournament, matchId: string, parallel = false): Tournament {
   const match = t.matches.find((row) => row.id === matchId);
-  if (match?.status === "live" && t.currentMatchId === matchId) return t;
-  const matches = t.matches.map((row) =>
-    row.id === matchId
-      ? { ...row, status: "live" as const, stechen: row.stechen }
-      : row.status === "live"
-        ? { ...row, status: "pending" as const }
-        : row,
-  );
-  return bump({ ...t, matches, currentMatchId: matchId, status: t.status === "done" ? t.status : t.status });
+  if (!match) return t;
+  if (match.status === "live" && (parallel || t.currentMatchId === matchId)) return t;
+  const matches = t.matches.map((row) => {
+    if (row.id === matchId) return { ...row, status: "live" as const, stechen: row.stechen };
+    if (!parallel && row.status === "live") return { ...row, status: "pending" as const };
+    return row;
+  });
+  const focus = matches.find((row) => row.status === "live");
+  return bump({
+    ...t,
+    matches,
+    currentMatchId: focus?.id ?? matchId,
+    status: t.status === "done" ? t.status : t.status,
+  });
+}
+
+export function skipByes(t: Tournament): Tournament {
+  let next = t;
+  for (let i = 0; i < 32; i += 1) {
+    const match = nextPending(next);
+    if (!match) break;
+    if (match.status === "live") return next;
+    if (!match.bye) return next;
+    next = applyBye(next, match.id);
+  }
+  return next;
+}
+
+export function startBatch(t: Tournament, parallel: boolean): Tournament {
+  let next = skipByes(t);
+  const batch = pendingBatch(next);
+  if (!batch.length) return next;
+  if (!parallel) {
+    const first = batch.find((row) => row.status === "pending") ?? batch[0];
+    return first ? startMatch(next, first.id, false) : next;
+  }
+  for (const row of batch) {
+    if (row.status === "done") continue;
+    next = startMatch(next, row.id, true);
+  }
+  return next;
 }
 
 export function completeMatch(t: Tournament, matchId: string, ranking: MatchScore[]): Tournament {
@@ -313,9 +372,14 @@ export function namesOf(ids: string[], t: Tournament): string {
 export { nextKnockoutRound };
 
 export function parseCupConfig(raw: Partial<CupConfig> | null | undefined): CupConfig {
+  const cupSize = raw?.cupSize === 3 || raw?.cupSize === 4 ? raw.cupSize : "auto";
+  const cupQualify = raw?.cupQualify === 1 ? 1 : 2;
+  const cupFlow = raw?.cupFlow === "par" ? "par" : "seq";
   return {
     cup: Boolean(raw?.cup),
-    cupSize: raw?.cupSize === 3 || raw?.cupSize === 4 ? raw.cupSize : "auto",
-    cupQualify: raw?.cupQualify === 1 ? 1 : 2,
+    cupSize,
+    cupQualify,
+    cupFlow,
+    cupAudio: raw?.cupAudio === "all" && cupFlow === "par" ? "all" : cupFlow === "par" ? "one" : "stage",
   };
 }

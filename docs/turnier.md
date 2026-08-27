@@ -1,29 +1,47 @@
 # Turnier
 
-Jahrgang kann einen Abend als Turnier spielen: zuerst Gruppen, danach K.o. Das ist optional. Ohne den Schalter in der Lobby ändert sich nichts.
+Jahrgang kann einen Abend als Turnier spielen: zuerst Gruppen, danach K.o. Der Modus ist ein eigener Punkt im Hauptmenü (**Turnier**). Ein normaler Online-Abend oder Bigscreen startet kein Turnier.
 
-Der Modus ist **eingebaut und an**. Wer ihn vollständig aus dem Produkt nehmen will, setzt in [`src/lib/tournament/flags.ts`](../src/lib/tournament/flags.ts) `TOURNAMENT_LIVE` auf `false` (gleicher Wert wie `TOURNAMENT_MODE_ENABLED`). Dann verschwinden Schalter, Tafel und Netz-Nachrichten. Die Dateien bleiben.
+Der Modus ist **eingebaut und an**. Wer ihn aus dem Produkt nehmen will, setzt in [`src/lib/tournament/flags.ts`](../src/lib/tournament/flags.ts) `TOURNAMENT_LIVE` auf `false` (gleicher Wert wie `TOURNAMENT_MODE_ENABLED`). Dann verschwinden Menüpunkt, Tafel und Netz-Nachrichten.
 
-Darstellung der Tafel, QR-Codes und CSS: **[turnier-ui.md](turnier-ui.md)**.
+Darstellung, QR und CSS: **[turnier-ui.md](turnier-ui.md)**.
 
 ---
 
 ## Bedienung
 
-1. Online-Raum öffnen, Mitspieler beitreten (4 bis 32 Personen).
-2. Host: Schalter **Turnier**. Optional Gruppengröße (Auto, 3er, 4er) und wer weiterkommt (Platz 1 oder Platz 1 und 2).
-3. Die Lobby zeigt, wie die Gruppen aus der aktuellen Zahl entstehen.
-4. **Turnier starten**. Es läuft immer **eine** Begegnung. Die anderen sehen die Tafel und den Zwischenstand.
-5. Nach jeder Begegnung: Podest dieser Runde, dann **Nächstes Spiel** (Host). Gleichstand in einer K.o.-Begegnung: **Stechen** mit Ziel 2.
+1. Startseite: **Turnier**. Es öffnet sich die Bühne (Bigscreen). Pack, Ablauf und Ton stellst du auf diesem Bildschirm ein.
+2. Mitspieler kommen per QR oder Code dazu. Die Handys spielen und tragen Ergebnisse ein. Sie stellen das Turnier nicht ein und starten es nicht.
+3. Ablauf: **Nacheinander** (eine Begegnung, Ton vom Bigscreen) oder **Gleichzeitig** (alle Gruppen dieser Runde parallel, Ton auf einem oder allen Handys der Gruppe).
+4. **Turnier starten**. Es laufen eine oder mehrere Begegnungen, je nach Ablauf.
+5. Nach einer Begegnung: Podest, dann weiter. Gleichstand im K.o.: Stechen mit Ziel 2.
 6. Nach dem Finale: Sieger, zurück in die Lobby.
 
-Bigscreen zeigt Gruppen und K.o.-Baum. Handys der Wartenden zeigen dieselbe Tafel.
+Eine Begegnung ist eine normale Jahrgang-Runde nur mit den Personen dieser Gruppe oder diesem K.o.-Paar.
 
-Eine Begegnung ist eine normale Jahrgang-Runde (Kenner, Zeitstrahl, …) nur mit den Personen dieser Gruppe oder diesem K.o.-Paar. Regeln, Pack und Ziel kommen aus der Lobby. Die Platzierung in der Begegnung ist unverändert: zuerst Karten auf der Linie, dann Ratepunkte, dann weniger Fehler.
+---
+
+## Steuerung und Netz
+
+Die Bühne (`role: host`) rechnet und sendet den Stand. Handys sind Gäste: sie senden Züge, nicht Konfiguration. Für die Ausfallsicherheit bleiben sie Peers im Stern. Fällt die Bühne aus, übernimmt das nächste Gerät die Rechnung (wie bisher, 12 s).
+
+`adminId` im Turnier ist die Bühne. Host-Rechte werden nicht an ein Handy übergeben.
+
+---
+
+## Ablauf und Ton
+
+| Ablauf | Ton |
+| --- | --- |
+| Nacheinander (`cupFlow: seq`) | Nur Bigscreen (`cupAudio: stage`) |
+| Gleichzeitig (`cupFlow: par`) | Ein Handy pro Gruppe (`one`) oder alle Handys der Gruppe (`all`). Die Bühne spielt keinen Titel. |
+
+Welches Handy bei `one` den Ton hat: erstes Mitglied der Begegnung (`cupSpeakers[matchId]`).
 
 ---
 
 ## Gruppen
+
 
 `planGroupSizes(n, prefer)` in [`groups.ts`](../src/lib/tournament/groups.ts).
 

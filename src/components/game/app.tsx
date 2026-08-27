@@ -13,7 +13,7 @@ import { RevealScreen } from "./reveal-screen";
 import { RulesDialog } from "./rules-dialog";
 import { SetupScreen } from "./setup-screen";
 import { WinnerScreen } from "./winner-screen";
-import { TvPlayScreen, TvRevealScreen, TvWinnerScreen, BigscreenPrompt } from "./tv-stage";
+import { TvPlayScreen, TvRevealScreen, TvWinnerScreen, TvCupGridScreen, BigscreenPrompt } from "./tv-stage";
 import { TournamentWatch } from "./tournament-board";
 import { TOURNAMENT_LIVE } from "@/lib/tournament/flags";
 import { ExitScreen } from "./exit-screen";
@@ -144,6 +144,7 @@ export function GameApp() {
   const tvMyTurn = Boolean(tvScreen && stagePlays && selfId && players[currentPlayerIndex]?.id === selfId);
   const localPhase = onlineStatus === "off" || onlineStatus === "playing";
   const cupOn = TOURNAMENT_LIVE && useOnline((s) => s.cup);
+  const cupPar = cupOn && useOnline((s) => s.cupFlow) === "par";
   const watching =
     Boolean(cupOn && onlineStatus === "playing" && selfId && !tvScreen && !players.some((row) => row.id === selfId));
 
@@ -164,10 +165,10 @@ export function GameApp() {
       {!exitKind && onlineStatus === "off" && phase === "home" ? <HomeScreen /> : null}
       {!exitKind && localPhase && phase === "setup" ? <SetupScreen /> : null}
       {!exitKind && localPhase && phase === "loading" ? <LoadingScreen /> : null}
-      {!exitKind && localPhase && phase === "listen" ? watching ? <TournamentWatch /> : tvScreen && !tvMyTurn ? <TvPlayScreen /> : <PlayScreen /> : null}
-      {!exitKind && localPhase && phase === "reveal" ? watching ? <TournamentWatch /> : tvScreen ? <TvRevealScreen /> : <RevealScreen /> : null}
-      {!exitKind && localPhase && phase === "winner" ? tvScreen ? <TvWinnerScreen /> : <WinnerScreen /> : null}
-      {!exitKind && onlineStatus === "playing" && phase === "home" ? <LoadingScreen /> : null}
+      {!exitKind && localPhase && phase === "listen" ? watching ? <TournamentWatch /> : tvScreen && cupPar ? <TvCupGridScreen /> : tvScreen && !tvMyTurn ? <TvPlayScreen /> : <PlayScreen /> : null}
+      {!exitKind && localPhase && phase === "reveal" ? watching ? <TournamentWatch /> : tvScreen && cupPar ? <TvCupGridScreen /> : tvScreen ? <TvRevealScreen /> : <RevealScreen /> : null}
+      {!exitKind && localPhase && phase === "winner" ? tvScreen && cupPar ? <TvCupGridScreen /> : tvScreen ? <TvWinnerScreen /> : <WinnerScreen /> : null}
+      {!exitKind && onlineStatus === "playing" && phase === "home" ? cupPar && tvScreen ? <TvCupGridScreen /> : <LoadingScreen /> : null}
       <ReactionDock />
       <ChatDock />
       <GagLayer />

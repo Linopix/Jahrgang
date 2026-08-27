@@ -18,7 +18,7 @@ import {
 } from "@/lib/game/online-actions";
 import { roomConfigFrom, useOnline } from "@/lib/game/online-store";
 import { playerSeats, useIsAdmin } from "@/lib/tv/mode";
-import { CUP_MIN, TOURNAMENT_LIVE } from "@/lib/tournament";
+import { CUP_MIN, CUP_MAX, TOURNAMENT_LIVE } from "@/lib/tournament";
 import { TournamentBoard } from "./tournament-board";
 import { enterBigscreen } from "@/lib/tv/fullscreen";
 import { TV_MODE_NAME } from "@/lib/tv/names";
@@ -75,7 +75,9 @@ function CopyRow({ code, link }: { code: string; link: string }) {
 function PlayAlongSwitch() {
   const on = useOnline((s) => s.stagePlays);
   const role = useOnline((s) => s.role);
+  const cup = useOnline((s) => s.cup);
   if (role !== "host") return null;
+  if (TOURNAMENT_LIVE && cup) return null;
   return (
     <div className={cn("mt-5", SWITCH_PANEL)}>
       <SwitchRow
@@ -192,6 +194,8 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
   const cup = useOnline((s) => s.cup);
   const cupSize = useOnline((s) => s.cupSize);
   const cupQualify = useOnline((s) => s.cupQualify);
+  const cupFlow = useOnline((s) => s.cupFlow);
+  const cupAudio = useOnline((s) => s.cupAudio);
   const tournament = useOnline((s) => s.tournament);
   const members = useOnline((s) => s.members);
   const hostId = useOnline((s) => s.hostId);
@@ -221,6 +225,8 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
     cup,
     cupSize,
     cupQualify,
+    cupFlow,
+    cupAudio,
   });
   const pile = optionsPile(config, Math.max(seats.length, 1));
   const pileBlocked = pile.status === "short" || pile.status === "empty";
@@ -311,6 +317,8 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
   const cup = useOnline((s) => s.cup);
   const cupSize = useOnline((s) => s.cupSize);
   const cupQualify = useOnline((s) => s.cupQualify);
+  const cupFlow = useOnline((s) => s.cupFlow);
+  const cupAudio = useOnline((s) => s.cupAudio);
   const tournament = useOnline((s) => s.tournament);
   const seats = playerSeats(members, hostId, tv, stagePlays, cup);
   const need = cup && TOURNAMENT_LIVE ? CUP_MIN : 1;
@@ -338,6 +346,8 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
     cup,
     cupSize,
     cupQualify,
+    cupFlow,
+    cupAudio,
   });
   const pile = optionsPile(config, Math.max(seats.length, need));
   const pileBlocked = pile.status === "short" || pile.status === "empty";
@@ -372,7 +382,7 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
         <section className="mt-8">
           <div className="flex items-baseline justify-between">
             <h2 className="text-sm font-medium text-fg">Im Raum</h2>
-            <p className="text-xs tabular-nums text-subtle">{seats.length}/8</p>
+            <p className="text-xs tabular-nums text-subtle">{seats.length}/{cup && TOURNAMENT_LIVE ? CUP_MAX : 8}</p>
           </div>
           <ul className="mt-3 space-y-2">
             {members.map((member) => {
@@ -409,7 +419,7 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
                           ? "verbindet…"
                           : "verbunden"}
                   </span>
-                  {isAdmin && live && member.id !== currentAdmin ? (
+                  {isAdmin && live && member.id !== currentAdmin && !(TOURNAMENT_LIVE && cup) ? (
                     <button
                       type="button"
                       aria-label={`${member.name} wird Host`}
@@ -433,7 +443,7 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
               );
             })}
           </ul>
-          {isAdmin ? (
+          {isAdmin && !(TOURNAMENT_LIVE && cup) ? (
             <p className="mt-3 text-xs text-subtle">
               Host-Rechte übergeben, wenn du oder jemand anderes nicht mehr leiten will. Die anderen
               spielen weiter.

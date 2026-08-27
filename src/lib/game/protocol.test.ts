@@ -23,6 +23,15 @@ test("host succession and evening messages", () => {
 
 test("cup state is a protocol message", () => {
   assert.equal(isOnlineMessage({ t: "cup", tournament: null }), true);
+  assert.equal(isOnlineMessage({ t: "cup-board", boards: [] }), true);
+  assert.equal(
+    isOnlineMessage({
+      t: "cup-table",
+      matchId: "m0",
+      snapshot: { phase: "listen" },
+    }),
+    true,
+  );
 });
 
 

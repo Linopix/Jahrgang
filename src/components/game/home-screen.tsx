@@ -1,4 +1,4 @@
-import { BookOpen, Radio, User, Users } from "lucide-react";
+import { BookOpen, Radio, Trophy, User, Users } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Vinyl } from "./vinyl";
@@ -9,6 +9,7 @@ import { noteTitleClick, useGags } from "@/lib/gags";
 import { EggTally } from "./gag-layer";
 import { SpotifyConnect } from "./spotify-connect";
 import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
+import { TOURNAMENT_LIVE } from "@/lib/tournament/flags";
 import { cn } from "@/lib/utils";
 
 export function HomeScreen() {
@@ -57,6 +58,20 @@ export function HomeScreen() {
           <Radio className="size-4" />
           Online-Abend
         </Button>
+        {TOURNAMENT_LIVE ? (
+          <Button
+            size="lg"
+            variant="secondary"
+            className="w-full col-span-2"
+            onClick={() => {
+              unlockAudio();
+              openEntry(undefined, { cup: true });
+            }}
+          >
+            <Trophy className="size-4" />
+            Turnier
+          </Button>
+        ) : null}
         <Button
           size="lg"
           variant="secondary"
