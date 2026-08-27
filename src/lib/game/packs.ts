@@ -456,53 +456,55 @@ function mixBounds(mix?: MixFilter) {
   };
 }
 
+export function songFitsPack(song: CatalogSong, pack: EraId, mix?: MixFilter): boolean {
+  if (pack === "likes") return true;
+  if (pack === "playlist") return false;
+  if (pack === "mix") {
+    const { start, end, genre } = mixBounds(mix);
+    return song.year >= start && song.year <= end && matchesGenre(song, genre);
+  }
+  switch (pack) {
+    case "all":
+      return true;
+    case "classic":
+      return song.year <= 1979;
+    case "eighties":
+      return song.year >= 1980 && song.year <= 1989;
+    case "nineties":
+      return song.year >= 1990 && song.year <= 1999;
+    case "two-thousands":
+      return song.year >= 2000 && song.year <= 2009;
+    case "tens":
+      return song.year >= 2010 && song.year <= 2019;
+    case "today":
+      return song.year >= 2020;
+    case "german":
+      return Boolean(song.german);
+    case "pop":
+    case "rock":
+    case "rap":
+    case "dance":
+    case "soul":
+    case "metal":
+    case "indie":
+    case "latin":
+    case "schlager":
+      return matchesGenre(song, pack as GenreId);
+    case "party":
+      return inKit(song, PARTY_SET);
+    case "charts":
+      return song.year >= 2015;
+    case "rap-charts":
+      return matchesGenre(song, "rap") && song.year >= 2015;
+    default:
+      return true;
+  }
+}
+
 export function songsForPack(pack: EraId, mix?: MixFilter): CatalogSong[] {
   if (pack === "playlist") return CATALOG;
   if (pack === "likes") return [];
-  if (pack === "mix") {
-    const { start, end, genre } = mixBounds(mix);
-    return CATALOG.filter(
-      (song) => song.year >= start && song.year <= end && matchesGenre(song, genre),
-    );
-  }
-  return CATALOG.filter((song) => {
-    switch (pack) {
-      case "all":
-        return true;
-      case "classic":
-        return song.year <= 1979;
-      case "eighties":
-        return song.year >= 1980 && song.year <= 1989;
-      case "nineties":
-        return song.year >= 1990 && song.year <= 1999;
-      case "two-thousands":
-        return song.year >= 2000 && song.year <= 2009;
-      case "tens":
-        return song.year >= 2010 && song.year <= 2019;
-      case "today":
-        return song.year >= 2020;
-      case "german":
-        return Boolean(song.german);
-      case "pop":
-      case "rock":
-      case "rap":
-      case "dance":
-      case "soul":
-      case "metal":
-      case "indie":
-      case "latin":
-      case "schlager":
-        return matchesGenre(song, pack as GenreId);
-      case "party":
-        return inKit(song, PARTY_SET);
-      case "charts":
-        return song.year >= 2015;
-      case "rap-charts":
-        return matchesGenre(song, "rap") && song.year >= 2015;
-      default:
-        return true;
-    }
-  });
+  return CATALOG.filter((song) => songFitsPack(song, pack, mix));
 }
 
 export function songsForPacks(pack: EraId, extra?: EraId | null, mix?: MixFilter): CatalogSong[] {

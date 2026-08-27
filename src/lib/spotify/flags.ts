@@ -11,6 +11,8 @@
  * 4. Flip this to true and deploy.
  *
  * Play never depends on this. iTunes/Deezer stay the default pile.
- * Login only adds "Meine Titel" and, with Premium, the Spotify player.
+ * Login uses the player's Spotify account (OAuth cookie), never a shared
+ * server user. Their likes, playlists and top tracks join any pack they fit.
+ * Public charts refresh on their own, without Spotify.
  */
 export const SPOTIFY_LIVE = false;

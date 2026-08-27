@@ -279,7 +279,7 @@ export const ERA_BLURBS: Record<EraId, string> = {
   "rap-charts": "Hip-Hop-Hits der letzten Jahre.",
   mix: "Zeitraum und Genre selbst wählen.",
   playlist: "Öffentliche Spotify- oder Deezer-Playlist, oder eine Titelliste.",
-  likes: "Likes und Playlists von deinem Spotify-Konto. Ohne Login läuft der Katalog.",
+  likes: "Likes, Playlists und Top-Titel von deinem Spotify-Konto. Die rutschen auch in andere Packs, wenn sie passen.",
 };
 
 export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [

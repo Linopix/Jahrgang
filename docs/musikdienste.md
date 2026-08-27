@@ -12,8 +12,10 @@ Diese Seite ist für dich, wenn du das Extra einschalten willst: eigene Likes, e
 | --- | --- | --- | --- |
 | Spielen | ja | ja | ja |
 | Katalog-Packs | ja | ja | ja |
+| Frische Charts (alle 12 Stunden) | ja | ja | ja |
 | Öffentliche Playlist als Stapel | ja (Spotify- oder Deezer-Link) | ja | ja |
-| Eigene Likes als Pack | — | ja | ja |
+| Deine Likes, Playlists, Top-Titel | — | ja, im passenden Pack | ja, im passenden Pack |
+| Pack „Meine Titel“ | — | ja | ja |
 | Volle Titel statt Vorschau | — | nein | ja, auf diesem Gerät |
 | Online / Wohnzimmer | ja | ja | ja, Audio am Gerät das spielt |
 
@@ -27,12 +29,29 @@ Nicht als Tür, als zweites Fach.
 
 1. **Der Abend startet wie immer.** Pack, Stil, Mix, öffentliche Playlist — nichts davon braucht Spotify.
 2. **Unter Repertoire** steht ein kleiner Knopf *Spotify optional verbinden*. Kein Modal, kein Zwang, kein Hinweis der den Start blockiert.
-3. **Nach dem Login** erscheint das Pack *Meine Titel*: Likes und die eigenen Playlists, gemischt, Doppelte einmal. Reicht der Stapel nicht, kann man es als zweites Pack dazu nehmen.
-4. **Free** bleibt bei der öffentlichen Vorschau (iTunes/Deezer, 30 Sekunden). In der Zeile steht `Free, Vorschau`.
-5. **Premium** schaltet auf diesem Gerät den Spotify-Player ein. Dann läuft der volle Titel. In der Zeile steht `volle Titel`.
-6. **Trennen** nimmt Likes und Player wieder weg. Der Katalog bleibt.
+3. **Du meldest dich mit deinem Spotify an.** Jahrgang speichert kein geteiltes Konto auf dem Server. Client-ID und Secret gehören nur der App (Suche, Redirect). Likes kommen immer aus dem Cookie *dieser* Person.
+4. **Danach** liegt das Pack *Meine Titel* bereit, und dieselben Songs rutschen in jedes andere Pack, zu dem sie zeitlich oder vom Stil her passen. Ein Achtziger in deinen Likes landet im Pack 80er, nicht in den 2000ern.
+5. **Free** bleibt bei der öffentlichen Vorschau (iTunes/Deezer, 30 Sekunden). In der Zeile steht `Free, Vorschau`.
+6. **Premium** schaltet auf diesem Gerät den Spotify-Player ein. Dann läuft der volle Titel. In der Zeile steht `volle Titel`.
+7. **Trennen** nimmt Likes und Player wieder weg. Der Katalog und die öffentlichen Charts bleiben.
 
 So fühlt es sich an wie ein extra Plattenkoffer, nicht wie eine Anmeldung vor dem Spiel.
+
+### Wessen Spotify?
+
+Deins. Nicht unseres.
+
+Die App im Dashboard ist nur der Schlüssel zur API. Wenn du in Jahrgang auf *verbinden* tippst, öffnet Spotify den Login für **dein** Konto. Der Access-Token liegt als HttpOnly-Cookie auf deinem Gerät, nicht in einer `.env` und nicht in einem gemeinsamen User-Token. Ein zweiter Mensch am selben Server sieht deine Likes nicht.
+
+`SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` sind App-Credentials (Client Credentials für die Suche, OAuth für den Login). Es gibt keine Variable für ein Spotify-Passwort oder ein Refresh-Token vom Betreiber.
+
+Die Bibliothek wird etwa alle 15 Minuten neu gelesen, solange du verbunden bist. Neue Likes kommen also nach, ohne dass du dich neu anmelden musst.
+
+### Frische Charts, ohne Spotify
+
+Der feste Katalog altert. Deshalb holt Jahrgang alle zwölf Stunden die aktuellen Most-Played-Listen von iTunes (DE) und die Deezer-Charts. Neue Titel, die noch nicht im Katalog stehen, legen sich in die Packs, zu denen sie passen — vor allem *Heute*, *Charts*, *Alles*, Mix wenn die Jahre stimmen.
+
+Das läuft ohne Konto. Ein stiller Hinweis unter Repertoire sagt, wie viele extra Titel gerade dazukommen. Ohne Netz bleibt der letzte Stand im Browser liegen.
 
 ### Online, Handy, Wohnzimmer, Discord
 

@@ -18,7 +18,9 @@ export function SpotifyConnect({ compact }: { compact?: boolean }) {
     return (
       <div className={compact ? "text-sm text-muted" : "rounded-lg bg-raised px-4 py-3 text-sm text-muted"}>
         <p>
-          Optional: Spotify verbindet Likes und Playlists als extra Pack. Ohne Konto läuft der Katalog weiter.
+          Optional: mit <span className="text-fg">deinem</span> Spotify-Konto. Jahrgang nutzt nie
+          unser Konto. Likes, Playlists und Top-Titel rutschen in den Stapel, wenn sie zum Pack
+          passen.
         </p>
         <Button className="mt-3 w-full" variant={compact ? "secondary" : "primary"} onClick={login}>
           Spotify optional verbinden

@@ -23,6 +23,7 @@ import { ACCOUNT_LIVE } from "@/lib/account/flags";
 import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
 import { useSpotify } from "@/lib/spotify/session";
 import { useAccount } from "@/lib/account/client";
+import { refreshFreshSongs } from "@/lib/game/fresh";
 import { VARIANT_LABELS } from "@/lib/game/types";
 import { shareUrl } from "@/lib/game/room-code";
 
@@ -47,6 +48,12 @@ export function GameApp() {
   useEffect(() => {
     if (SPOTIFY_LIVE) void hydrateSpotify();
   }, [hydrateSpotify]);
+
+  useEffect(() => {
+    void refreshFreshSongs();
+    const id = window.setInterval(() => void refreshFreshSongs(), 12 * 60 * 60 * 1000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (ACCOUNT_LIVE && account && !useOnline.getState().selfName.trim()) {

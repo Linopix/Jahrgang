@@ -90,9 +90,9 @@ Kleine Tippfehler beim Raten sind in Ordnung. „Beatles“ zählt für The Beat
 
 ## Musikdienste
 
-Spielen braucht kein Konto. iTunes und Deezer liefern die kurze Vorschau, eine öffentliche Playlist reicht als extra Stapel.
+Spielen braucht kein Konto. iTunes und Deezer liefern die kurze Vorschau, eine öffentliche Playlist reicht als extra Stapel. Alle zwölf Stunden kommen frische Charts dazu.
 
-Spotify ist optional: Likes als Pack, mit Premium volle Titel auf dem Gerät das spielt. Free reicht für Online, Wohnzimmer und Discord — nur der volle Player will Premium, und nur dort wo der Ton rauskommt.
+Spotify ist optional und immer **dein** Konto: Likes, Playlists und Top-Titel rutschen in die Packs, zu denen sie passen. Mit Premium volle Titel auf dem Gerät das spielt. Free reicht für Online, Wohnzimmer und Discord.
 
 Einrichtung, Flag, Redirects, und warum Apple Music kein kleiner Schalter ist: **[docs/musikdienste.md](docs/musikdienste.md)**.
 

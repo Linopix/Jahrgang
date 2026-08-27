@@ -4,6 +4,10 @@ import { canPlace, dealCount, decadeLabel, fisherYates, insertSong, mergeSeries,
 import { kennerBonus, scoreForVariant } from "./guess";
 import { loadPlaylistSongs, type PlaylistTrack } from "./playlist";
 import { loadSpotifyLibrary } from "@/lib/spotify/library";
+import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
+import { useSpotify } from "@/lib/spotify/session";
+import { mergeExtraSongs } from "./extras";
+import { getFreshSongs } from "./fresh";
 import { resolvePreviews } from "./preview";
 import {
   pausePreview,
@@ -342,15 +346,15 @@ export const useGame = create<GameStore>((set, get) => ({
         }
       }
       const extra = parseExtraEra(config.extraEra, config.era);
-      if (config.era === "likes" || extra === "likes") {
+      let library: PlaylistTrack[] = [];
+      if (SPOTIFY_LIVE && useSpotify.getState().user) {
         try {
-          const lib = await loadSpotifyLibrary();
-          imported = [...imported, ...lib];
+          library = await loadSpotifyLibrary();
         } catch {
-          /* stay with what we have */
+          library = [];
         }
       }
-      if (config.era === "likes" && imported.length === 0) {
+      if (config.era === "likes" && imported.length === 0 && library.length === 0) {
         set({
           phase: "setup",
           loadError: "Bei Spotify anmelden, dann liegen deine Titel bereit. Oder ein anderes Pack wählen.",
@@ -371,9 +375,9 @@ export const useGame = create<GameStore>((set, get) => ({
             ? songsForPack(extra && extra !== "likes" ? extra : "all", mix)
             : songsForPacks(config.era, extra !== "likes" ? extra : null, mix),
       );
-      const pool: Array<CatalogSong | PlaylistTrack> = imported.length
-        ? [...fisherYates(imported), ...catalogPool]
-        : catalogPool;
+      const extras = fisherYates([...imported, ...library, ...getFreshSongs()]);
+      const merged = mergeExtraSongs(catalogPool, extras, config.era, extra, mix);
+      const pool: Array<CatalogSong | PlaylistTrack> = merged.pool;
       const resolved: ResolvedSong[] = [];
       const seen = new Set<string>();
       set({ loadProgress: { done: 0, total: needed } });

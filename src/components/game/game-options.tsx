@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { peekPlaylist } from "@/lib/game/playlist";
 import { packSize, songsForPacks } from "@/lib/game/packs";
+import { countFittingExtras } from "@/lib/game/extras";
+import { getFreshSongs, subscribeFresh } from "@/lib/game/fresh";
 import { dealCount, pileStatus, type PileStatus } from "@/lib/game/engine";
 import { sfxHover, sfxSlide, sfxTick } from "@/lib/game/audio";
 import { GenreArt, PackArt } from "@/components/game/pack-art";
@@ -44,6 +46,7 @@ import {
   type NextRoundPolicy,
   type RoomConfig,
   type TokenCount,
+  type CatalogSong,
 } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
 
@@ -516,8 +519,12 @@ function mixOf(value: RoomConfig) {
   return { from: value.mixFrom, to: value.mixTo, genre: value.mixGenre };
 }
 
-function primaryPile(value: RoomConfig, libraryCount: number | null = null) {
-  if (value.era === "likes") return libraryCount ?? 0;
+function liveExtras() {
+  return [...(useSpotify.getState().library ?? []), ...getFreshSongs()];
+}
+
+function primaryPile(value: RoomConfig, extras: CatalogSong[] = liveExtras()) {
+  if (value.era === "likes") return extras.length;
   if (value.era === "playlist") {
     const match = value.playlistLabel.match(/(\d+)\s*Titel/);
     return match ? Number(match[1]) : null;
@@ -525,22 +532,32 @@ function primaryPile(value: RoomConfig, libraryCount: number | null = null) {
   return packSize(value.era, mixOf(value));
 }
 
-function pileCount(value: RoomConfig, libraryCount: number | null = null) {
+function pileCount(value: RoomConfig, extras: CatalogSong[] = liveExtras()) {
   const extra = parseExtraEra(value.extraEra, value.era);
-  const lib = extra === "likes" || value.era === "likes" ? libraryCount ?? 0 : 0;
+  const mix = mixOf(value);
   if (value.era === "likes") {
-    if (!extra || extra === "likes") return lib;
-    return lib + packSize(extra, mixOf(value));
+    const more = extra && extra !== "likes" ? packSize(extra, mix) : 0;
+    return extras.length + more;
   }
   if (value.era === "playlist") {
-    const base = primaryPile(value, libraryCount);
-    if (!extra) return base;
-    const added = extra === "likes" ? lib : packSize(extra, mixOf(value));
-    if (base === null) return added || null;
-    return base + added;
+    const base = primaryPile(value, extras);
+    const extraPack = extra && extra !== "likes" && extra !== "playlist" ? packSize(extra, mix) : 0;
+    const fitting = countFittingExtras(extras, value.era, extra, mix);
+    if (base === null) {
+      const n = extraPack + fitting;
+      return n > 0 ? n : null;
+    }
+    return base + extraPack + fitting;
   }
-  const catalog = songsForPacks(value.era, extra === "likes" ? null : extra, mixOf(value)).length;
-  return extra === "likes" ? catalog + lib : catalog;
+  const catalogSongs = songsForPacks(value.era, extra && extra !== "likes" ? extra : null, mix);
+  const fitting = countFittingExtras(
+    extras,
+    value.era,
+    extra,
+    mix,
+    new Set(catalogSongs.map((song) => song.id)),
+  );
+  return catalogSongs.length + fitting;
 }
 
 function eraPatch(value: RoomConfig, era: EraId): Partial<RoomConfig> {
@@ -624,7 +641,7 @@ function isOpenPlay(value: RoomConfig) {
 }
 
 export function optionsPile(value: RoomConfig, players: number) {
-  const pile = pileCount(value, useSpotify.getState().libraryCount);
+  const pile = pileCount(value, liveExtras());
   const open = isOpenPlay(value);
   const pool = value.variant === "custom" ? clampPool(value.pool) : undefined;
   return {
@@ -680,12 +697,25 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
   const showTarget = value.variant !== "custom" || !custom.open;
   const showPool = value.variant === "custom";
   const libraryCount = useSpotify((s) => s.libraryCount);
+  const library = useSpotify((s) => s.library);
+  const [fresh, setFresh] = useState(getFreshSongs);
+  useEffect(() => subscribeFresh(() => setFresh(getFreshSongs())), []);
+  const extras = [...library, ...fresh];
+  const pile = pileCount(value, extras);
+  const base = primaryPile(value, extras);
   const spotifyUser = useSpotifyConnected();
   const login = useSpotify((s) => s.login);
-  const pile = pileCount(value, libraryCount);
   const extra = parseExtraEra(value.extraEra, value.era);
-  const base = primaryPile(value, libraryCount);
   const ownPacks = OWN_PACKS.filter((id) => id !== "likes" || SPOTIFY_LIVE);
+  const extraFit = countFittingExtras(
+    extras,
+    value.era,
+    extra,
+    mixOf(value),
+    value.era === "likes" || value.era === "playlist"
+      ? undefined
+      : new Set(songsForPacks(value.era, extra && extra !== "likes" ? extra : null, mixOf(value)).map((song) => song.id)),
+  );
   return (
     <div>
       <div className="mt-8 grid gap-8 lg:mt-0 lg:grid-cols-2">
@@ -864,6 +894,14 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
           <div className="mt-4">
             <SpotifyConnect compact />
           </div>
+        ) : null}
+        {extraFit > 0 ? (
+          <p className="mt-2 text-xs text-subtle">
+            {extraFit} extra Titel
+            {spotifyUser ? " aus deinem Spotify" : ""}
+            {fresh.length ? (spotifyUser ? " und frischen Charts" : " aus frischen Charts") : ""}
+            , die zum Pack passen.
+          </p>
         ) : null}
         {solo ? null : <ExtraPack value={value} onChange={onChange} players={players} />}
         <PileNote value={value} players={players} solo={solo} />
