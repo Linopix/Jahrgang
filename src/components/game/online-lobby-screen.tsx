@@ -3,7 +3,7 @@ import { Check, ChevronLeft, Copy, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GameOptions, optionsPile, roomConfigSummary } from "./game-options";
 import { shareUrl } from "@/lib/game/room-code";
-import { requestConfig, requestKick, requestLeave, requestStartOnline } from "@/lib/game/online-actions";
+import { requestConfig, requestKick, requestLeave, requestPassAdmin, requestStartOnline } from "@/lib/game/online-actions";
 import { roomConfigFrom, useOnline } from "@/lib/game/online-store";
 import { playerSeats, useIsAdmin } from "@/lib/tv/mode";
 import { TV_LIVE } from "@/lib/tv/flags";
@@ -33,6 +33,8 @@ export function OnlineLobbyScreen() {
   const tv = useOnline((s) => s.tv);
   const error = useOnline((s) => s.error);
   const hostId = useOnline((s) => s.hostId);
+  const adminId = useOnline((s) => s.adminId);
+  const stagePlays = useOnline((s) => s.stagePlays);
   const pending = useOnline((s) => s.pending);
   const isHost = role === "host";
   const isAdmin = useIsAdmin();
@@ -78,7 +80,8 @@ export function OnlineLobbyScreen() {
   }
 
   const readyCount = members.filter((m) => m.connectionState !== "failed").length;
-  const seats = playerSeats(members, hostId, tv);
+  const seats = playerSeats(members, hostId, tv, stagePlays);
+  const currentAdmin = adminId || hostId;
   const need = TV_LIVE && tv ? 1 : 2;
   const pile = optionsPile(config, Math.max(seats.length, need));
   const pileBlocked = pile.status === "short" || pile.status === "empty";
@@ -174,6 +177,8 @@ export function OnlineLobbyScreen() {
                   </span>
                 ) : member.id === hostId && tv ? (
                   <span className="ml-2 text-xs font-normal text-muted">Fernseher</span>
+                ) : member.id === currentAdmin ? (
+                  <span className="ml-2 text-xs font-normal text-muted">Host</span>
                 ) : null}
               </span>
               <span
@@ -194,7 +199,20 @@ export function OnlineLobbyScreen() {
                       ? "verbindet…"
                       : "verbunden"}
               </span>
-              {isAdmin && member.id !== hostId ? (
+              {isAdmin &&
+              member.id !== currentAdmin &&
+              member.connectionState !== "failed" &&
+              member.connectionState !== "disconnected" ? (
+                <button
+                  type="button"
+                  aria-label={`${member.name} wird Host`}
+                  onClick={() => requestPassAdmin(member.id)}
+                  className="shrink-0 text-xs text-muted transition-colors duration-150 ease-out hover:text-fg"
+                >
+                  Übergeben
+                </button>
+              ) : null}
+              {isAdmin && member.id !== hostId && member.id !== currentAdmin ? (
                 <button
                   type="button"
                   aria-label={`${member.name} rauswerfen`}

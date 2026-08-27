@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { TV_LIVE } from "./flags.ts";
-import { skipClaim, takeClaim, TV_MODE_NAME, TV_STAGE_NAME } from "./names.ts";
+import { pickSuccessor, skipClaim, takeClaim, TV_MODE_NAME, TV_STAGE_NAME } from "./names.ts";
 import { encodeQr } from "../qr.ts";
 import { shareUrl, wantsHostClaim } from "../game/room-code.ts";
 
@@ -16,18 +16,31 @@ test("first phone can claim host", () => {
   const phone = "phone-1";
   const hit = takeClaim({
     claimOpen: true,
-    wantsClaim: true,
     tvId: tv,
     adminId: tv,
     from: phone,
   });
-  assert.deepEqual(hit, { adminId: phone, claimOpen: false, tvStep: "setup" });
+  assert.deepEqual(hit, {
+    adminId: phone,
+    claimOpen: false,
+    tvStep: "setup",
+    stagePlays: false,
+  });
+});
+
+test("first phone claims even without host flag", () => {
+  const hit = takeClaim({
+    claimOpen: true,
+    tvId: "tv-1",
+    adminId: "tv-1",
+    from: "phone-1",
+  });
+  assert.equal(hit?.adminId, "phone-1");
 });
 
 test("second phone cannot steal host", () => {
   const miss = takeClaim({
     claimOpen: false,
-    wantsClaim: true,
     tvId: "tv-1",
     adminId: "phone-1",
     from: "phone-2",
@@ -35,8 +48,42 @@ test("second phone cannot steal host", () => {
   assert.equal(miss, null);
 });
 
-test("skip keeps the tv as admin", () => {
-  assert.deepEqual(skipClaim("tv-1"), { adminId: "tv-1", claimOpen: false, tvStep: "setup" });
+test("skip keeps the tv as admin and lets it play", () => {
+  assert.deepEqual(skipClaim("tv-1"), {
+    adminId: "tv-1",
+    claimOpen: false,
+    tvStep: "setup",
+    stagePlays: true,
+  });
+});
+
+test("successor prefers a live phone", () => {
+  assert.equal(
+    pickSuccessor(
+      [
+        { id: "tv", live: true },
+        { id: "a", live: true },
+        { id: "b", live: true },
+      ],
+      "a",
+      "tv",
+    ),
+    "b",
+  );
+});
+
+test("successor falls back to the tv", () => {
+  assert.equal(
+    pickSuccessor(
+      [
+        { id: "tv", live: true },
+        { id: "a", live: false },
+      ],
+      "a",
+      "tv",
+    ),
+    "tv",
+  );
 });
 
 test("host link is marked", () => {

@@ -19,7 +19,7 @@ function Home() {
     const code = normalizeRoomCode(room ?? "");
     if (code.length !== 4) return;
     const current = useOnline.getState();
-    if (current.status !== "off") return;
+    if (current.status !== "off" && current.status !== "entry") return;
     current.openEntry(code, { claim: wantsHostClaim(host) });
   }, [room, host]);
 

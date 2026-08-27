@@ -2,7 +2,7 @@ import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-r
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { ThemePicker } from "@/components/game/theme-picker";
-import { inviteCode, ogMeta } from "@/lib/og/invite";
+import { inviteCode, ogMeta } from "@/lib/og/meta";
 import appCss from "../styles.css?url";
 
 const THEME_BOOT = `(function(){try{var t=localStorage.getItem("jahrgang-theme");var u=[];try{u=JSON.parse(localStorage.getItem("jahrgang-theme-unlocks")||"[]")}catch(e){}var ok=t==="night"||t==="paper"||t==="ink"||t==="ember"||t==="glass"||t==="retro"||(t==="disco"&&u.indexOf("disco")>=0);if(ok)document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`;

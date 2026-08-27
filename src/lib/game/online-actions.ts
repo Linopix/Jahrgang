@@ -5,7 +5,7 @@ import { clearRoomFromUrl } from "./room-code";
 import type { RoomConfig } from "./types";
 import type { OnlineMessage } from "./protocol";
 import { isAdmin, isTvRoom, isTvScreen, playerSeats } from "@/lib/tv/mode";
-import type { TvStep } from "@/lib/tv/names";
+import { pickSuccessor, type TvStep } from "@/lib/tv/names";
 
 function skipIds() {
   return useOnline
@@ -25,7 +25,7 @@ export function isOnlinePlay() {
 export function canControlTurn() {
   const online = useOnline.getState();
   if (online.status !== "playing") return true;
-  if (isTvScreen()) return false;
+  if (isTvScreen() && !online.stagePlays) return false;
   const current = useGame.getState().players[useGame.getState().currentPlayerIndex];
   return Boolean(current && current.id === online.selfId);
 }
@@ -152,7 +152,7 @@ export async function requestStartOnline() {
   if (!isAdmin() && online.role !== "host") return;
   if (online.role !== "host") {
     if (!isAdmin()) return;
-    const seats = playerSeats(online.members, online.hostId, online.tv);
+    const seats = playerSeats(online.members, online.hostId, online.tv, online.stagePlays);
     const need = isTvRoom(online.tv) ? 1 : 2;
     if (seats.length < need) return;
     online.setPending(true);
@@ -160,7 +160,7 @@ export async function requestStartOnline() {
     netSend({ t: "admin-start" } satisfies OnlineMessage);
     return;
   }
-  const seats = playerSeats(online.members, online.hostId, online.tv);
+  const seats = playerSeats(online.members, online.hostId, online.tv, online.stagePlays);
   const need = isTvRoom(online.tv) ? 1 : 2;
   if (seats.length < need) return;
   online.setPending(true);
@@ -228,6 +228,18 @@ export function requestLeave() {
   const online = useOnline.getState();
   if (online.role === "host") {
     netSend({ t: "host-left" } satisfies OnlineMessage);
+  } else if (isAdmin()) {
+    const successor = pickSuccessor(
+      online.members.map((row) => ({
+        id: row.id,
+        live: row.connectionState !== "failed" && row.connectionState !== "disconnected",
+      })),
+      online.selfId,
+      online.tv ? online.hostId : "",
+    );
+    if (successor && successor !== online.selfId) {
+      netSend({ t: "pass-admin", id: successor } satisfies OnlineMessage);
+    }
   }
   useGame.getState().openHome();
   online.leaveRoom();
@@ -249,6 +261,30 @@ export function requestKick(peerId: string) {
     return;
   }
   netSend({ t: "admin-kick", id: peerId } satisfies OnlineMessage);
+}
+
+export function requestPassAdmin(peerId: string) {
+  const online = useOnline.getState();
+  if (!isAdmin()) return;
+  if (!peerId || peerId === online.adminId) return;
+  const row = online.members.find((m) => m.id === peerId);
+  if (!row || row.connectionState === "failed" || row.connectionState === "disconnected") return;
+  if (online.role === "host") {
+    online.setAdminId(peerId);
+  }
+  netSend({ t: "pass-admin", id: peerId } satisfies OnlineMessage);
+}
+
+export function requestStagePlays(on: boolean) {
+  const online = useOnline.getState();
+  if (!online.tv) return;
+  if (!isAdmin() && !isTvScreen()) return;
+  if (online.role === "host") {
+    online.setStagePlays(on);
+    return;
+  }
+  online.setStagePlays(on);
+  netSend({ t: "config", ...roomConfigFrom(online), stagePlays: on } satisfies OnlineMessage);
 }
 
 export function requestTvStep(step: TvStep) {
