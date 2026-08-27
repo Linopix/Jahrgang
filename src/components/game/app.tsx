@@ -117,6 +117,11 @@ export function GameApp() {
   }, [playing]);
 
   const tvScreen = useTvScreen();
+  const stagePlays = useOnline((s) => s.stagePlays);
+  const selfId = useOnline((s) => s.selfId);
+  const currentPlayerIndex = useGame((s) => s.currentPlayerIndex);
+  const players = useGame((s) => s.players);
+  const tvMyTurn = Boolean(tvScreen && stagePlays && selfId && players[currentPlayerIndex]?.id === selfId);
   const localPhase = onlineStatus === "off" || onlineStatus === "playing";
 
   return (
@@ -130,7 +135,7 @@ export function GameApp() {
       {onlineStatus === "off" && phase === "home" ? <HomeScreen /> : null}
       {localPhase && phase === "setup" ? <SetupScreen /> : null}
       {localPhase && phase === "loading" ? <LoadingScreen /> : null}
-      {localPhase && phase === "listen" ? tvScreen ? <TvPlayScreen /> : <PlayScreen /> : null}
+      {localPhase && phase === "listen" ? tvScreen && !tvMyTurn ? <TvPlayScreen /> : <PlayScreen /> : null}
       {localPhase && phase === "reveal" ? tvScreen ? <TvRevealScreen /> : <RevealScreen /> : null}
       {localPhase && phase === "winner" ? tvScreen ? <TvWinnerScreen /> : <WinnerScreen /> : null}
       {onlineStatus === "playing" && phase === "home" ? <LoadingScreen /> : null}

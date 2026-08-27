@@ -1,7 +1,7 @@
 import { TV_LIVE } from "./flags";
 import { useOnline, type OnlineMember } from "@/lib/game/online-store";
 
-export { TV_MODE_NAME, TV_STAGE_NAME, skipClaim, takeClaim, type TvStep } from "./names";
+export { TV_MODE_NAME, TV_STAGE_NAME, pickSuccessor, skipClaim, takeClaim, type TvStep } from "./names";
 
 export function isTvRoom(tv?: boolean) {
   return TV_LIVE && Boolean(tv);
@@ -31,11 +31,16 @@ export function useTvRemote() {
   return TV_LIVE && tv && role === "guest";
 }
 
-export function playerSeats(members: OnlineMember[], hostId: string, tv: boolean) {
+export function playerSeats(
+  members: OnlineMember[],
+  hostId: string,
+  tv: boolean,
+  stagePlays = false,
+) {
   const live = members.filter(
     (m) => m.connectionState !== "failed" && m.connectionState !== "disconnected",
   );
-  if (isTvRoom(tv)) {
+  if (isTvRoom(tv) && !stagePlays) {
     return live.filter((m) => m.id !== hostId).slice(0, 8);
   }
   return live.slice(0, 8);

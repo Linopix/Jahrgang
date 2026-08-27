@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { GameApp } from "@/components/game/app";
-import { inviteCode } from "@/lib/og/invite";
+import { inviteCode } from "@/lib/og/meta";
 import { wantsHostClaim } from "@/lib/game/room-code";
 import { useOnline } from "@/lib/game/online-store";
 
@@ -25,7 +25,7 @@ function InviteJoin() {
     const room = inviteCode(code);
     if (room.length !== 4) return;
     const current = useOnline.getState();
-    if (current.status !== "off") return;
+    if (current.status !== "off" && current.status !== "entry") return;
     current.openEntry(room, { claim: wantsHostClaim(host) });
   }, [code, host]);
 

@@ -9,13 +9,15 @@ import {
   requestConfig,
   requestKick,
   requestLeave,
+  requestPassAdmin,
   requestSkipTvClaim,
+  requestStagePlays,
   requestStartOnline,
   requestTvStep,
 } from "@/lib/game/online-actions";
 import { roomConfigFrom, useOnline } from "@/lib/game/online-store";
 import { playerSeats, useIsAdmin } from "@/lib/tv/mode";
-import { TV_MODE_NAME, TV_STAGE_NAME } from "@/lib/tv/names";
+import { TV_MODE_NAME } from "@/lib/tv/names";
 import { cn } from "@/lib/utils";
 
 function useRoomLink(host = false) {
@@ -53,6 +55,44 @@ function CopyRow({ code, link }: { code: string; link: string }) {
         {copied === "discord" ? "Discord kopiert" : "Für Discord"}
       </Button>
     </div>
+  );
+}
+
+function PlayAlongSwitch() {
+  const on = useOnline((s) => s.stagePlays);
+  const role = useOnline((s) => s.role);
+  if (role !== "host") return null;
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={() => requestStagePlays(!on)}
+      className="mt-5 flex min-h-12 w-full items-center justify-between gap-4 py-2 text-left"
+    >
+      <span className="min-w-0">
+        <span className="block text-sm text-fg">Dieser Bildschirm spielt mit</span>
+        <span className="mt-0.5 block text-xs text-muted">
+          {on
+            ? "Die Bühne hat einen Platz auf der Linie. Am Zug erscheinen die Knöpfe hier."
+            : "Nur Anzeige. Geraten wird auf den Handys."}
+        </span>
+      </span>
+      <span
+        aria-hidden
+        className={cn(
+          "relative h-7 w-11 shrink-0 overflow-hidden rounded-full transition-colors duration-200 ease-soft",
+          on ? "bg-primary" : "bg-surface shadow-border",
+        )}
+      >
+        <span
+          className={cn(
+            "absolute top-0.5 left-0.5 size-6 rounded-full transition-transform duration-200 ease-soft",
+            on ? "translate-x-4 bg-primary-fg" : "bg-fg",
+          )}
+        />
+      </span>
+    </button>
   );
 }
 
@@ -98,12 +138,12 @@ function ClaimStep({ connecting }: { connecting: boolean }) {
         <p className="text-xs font-medium tracking-[0.24em] text-muted uppercase">Bühne</p>
         <h1 className="mt-2 font-display text-5xl font-medium text-fg">{TV_MODE_NAME}</h1>
         <p className="mt-4 max-w-xl text-lg text-muted">
-          Zuerst das Host-Handy. QR scannen, Namen eintragen — du stellst Pack und Start vom Handy.
-          Dieser Bildschirm spielt nur.
+          Zuerst das Host-Handy. QR scannen, Namen eintragen — du wirst Host. Pack und Start liegen
+          bei dir, dieser Bildschirm bleibt die Bühne.
         </p>
         <p className="mt-3 max-w-xl text-sm text-muted">
           Discord: Bildschirm teilen, den Host-Link in den Chat. Danach kommt der Gäste-QR für alle
-          im Call.
+          im Call. Wenn du selbst mitspielst, einfach überspringen.
         </p>
         <p className="mt-6 font-mono text-5xl tracking-[0.28em] text-fg">{roomCode || "····"}</p>
         <CopyRow code={roomCode} link={link} />
@@ -114,11 +154,11 @@ function ClaimStep({ connecting }: { connecting: boolean }) {
           disabled={connecting}
           onClick={() => requestSkipTvClaim()}
         >
-          Überspringen — {TV_STAGE_NAME} bleibt Host
+          Überspringen — ich spiele hier mit
         </Button>
         <p className="mt-3 max-w-md text-xs text-subtle">
-          Ohne Handy hat nur dieser Bildschirm die Rechte. Gut, wenn du allein am Fernseher oder am
-          Stream-Rechner sitzt.
+          Ohne Handy steuerst du Pack und Start hier. Host-Rechte kannst du später an ein Handy
+          geben, falls du nicht mehr leiten willst.
         </p>
       </div>
     </div>
@@ -145,7 +185,8 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
   const members = useOnline((s) => s.members);
   const hostId = useOnline((s) => s.hostId);
   const adminId = useOnline((s) => s.adminId);
-  const seats = playerSeats(members, hostId, tv);
+  const stagePlays = useOnline((s) => s.stagePlays);
+  const seats = playerSeats(members, hostId, tv, stagePlays);
   const config = roomConfigFrom({
     era,
     target,
@@ -178,6 +219,9 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
           {hostName ? `${hostName} wählt Pack und Regeln am Handy.` : "Warten auf das Host-Handy."}{" "}
           Danach kommt der Gäste-QR auf diesen Bildschirm.
         </p>
+        <div className="mt-2 w-full max-w-md text-left">
+          <PlayAlongSwitch />
+        </div>
       </div>
     );
   }
@@ -200,6 +244,7 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
         <p className="mt-3 max-w-xl text-sm text-muted">
           Pack, Stil, Karten. Danach der Gäste-QR — fürs Wohnzimmer und fürs Discord-Streaming.
         </p>
+        <PlayAlongSwitch />
         <GameOptions value={config} onChange={requestConfig} online players={Math.max(seats.length, 1)} />
       </div>
       <div className="mt-8 lg:mt-16">
@@ -227,6 +272,7 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
   const pending = useOnline((s) => s.pending);
   const error = useOnline((s) => s.error);
   const tv = useOnline((s) => s.tv);
+  const stagePlays = useOnline((s) => s.stagePlays);
   const era = useOnline((s) => s.era);
   const target = useOnline((s) => s.target);
   const variant = useOnline((s) => s.variant);
@@ -242,8 +288,9 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
   const pool = useOnline((s) => s.pool);
   const emoji = useOnline((s) => s.emoji);
   const chat = useOnline((s) => s.chat);
-  const seats = playerSeats(members, hostId, tv);
+  const seats = playerSeats(members, hostId, tv, stagePlays);
   const need = 1;
+  const currentAdmin = adminId || hostId;
   const config = roomConfigFrom({
     era,
     target,
@@ -282,6 +329,7 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
           Handy auf den QR. Im Discord-Stream den Code abtippen oder den Link aus dem Chat öffnen.
           Der Ton kommt von diesem Bildschirm.
         </p>
+        <PlayAlongSwitch />
         {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
         <section className="mt-8">
           <div className="flex items-baseline justify-between">
@@ -289,52 +337,70 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
             <p className="text-xs tabular-nums text-subtle">{seats.length}/8</p>
           </div>
           <ul className="mt-3 space-y-2">
-            {members.map((member) => (
-              <li
-                key={member.id}
-                className="flex items-center gap-3 rounded-md bg-raised px-4 py-3 text-sm shadow-border"
-              >
-                <span className="min-w-0 flex-1 truncate font-medium text-fg">
-                  {member.name}
-                  {member.id === hostId ? (
-                    <span className="ml-2 text-xs font-normal text-muted">{TV_STAGE_NAME}</span>
-                  ) : member.id === adminId ? (
-                    <span className="ml-2 text-xs font-normal text-muted">Host</span>
-                  ) : member.connectionState === "self" ? (
-                    <span className="ml-2 text-xs font-normal text-muted">du</span>
-                  ) : null}
-                </span>
-                <span
-                  className={cn(
-                    "shrink-0 text-xs",
-                    member.connectionState === "failed"
-                      ? "text-danger"
-                      : member.connectionState === "connecting"
-                        ? "text-muted"
-                        : "text-success",
-                  )}
+            {members.map((member) => {
+              const live =
+                member.connectionState !== "failed" && member.connectionState !== "disconnected";
+              return (
+                <li
+                  key={member.id}
+                  className="flex items-center gap-3 rounded-md bg-raised px-4 py-3 text-sm shadow-border"
                 >
-                  {member.id === hostId
-                    ? "Bühne"
-                    : member.connectionState === "failed"
-                      ? "blockiert"
-                      : member.connectionState === "connecting"
-                        ? "verbindet…"
-                        : "verbunden"}
-                </span>
-                {isAdmin && member.id !== hostId && member.id !== adminId ? (
-                  <button
-                    type="button"
-                    aria-label={`${member.name} rauswerfen`}
-                    onClick={() => requestKick(member.id)}
-                    className="shrink-0 text-xs text-muted transition-colors duration-150 ease-out hover:text-danger"
+                  <span className="min-w-0 flex-1 truncate font-medium text-fg">
+                    {member.name}
+                    {member.id === currentAdmin && member.id !== hostId ? (
+                      <span className="ml-2 text-xs font-normal text-muted">Host</span>
+                    ) : member.connectionState === "self" && member.id !== hostId ? (
+                      <span className="ml-2 text-xs font-normal text-muted">du</span>
+                    ) : null}
+                  </span>
+                  <span
+                    className={cn(
+                      "shrink-0 text-xs",
+                      member.connectionState === "failed"
+                        ? "text-danger"
+                        : member.connectionState === "connecting"
+                          ? "text-muted"
+                          : "text-success",
+                    )}
                   >
-                    Raus
-                  </button>
-                ) : null}
-              </li>
-            ))}
+                    {member.id === hostId
+                      ? "Bühne"
+                      : member.connectionState === "failed"
+                        ? "blockiert"
+                        : member.connectionState === "connecting"
+                          ? "verbindet…"
+                          : "verbunden"}
+                  </span>
+                  {isAdmin && live && member.id !== currentAdmin ? (
+                    <button
+                      type="button"
+                      aria-label={`${member.name} wird Host`}
+                      onClick={() => requestPassAdmin(member.id)}
+                      className="shrink-0 text-xs text-muted transition-colors duration-150 ease-out hover:text-fg"
+                    >
+                      Übergeben
+                    </button>
+                  ) : null}
+                  {isAdmin && member.id !== hostId && member.id !== currentAdmin ? (
+                    <button
+                      type="button"
+                      aria-label={`${member.name} rauswerfen`}
+                      onClick={() => requestKick(member.id)}
+                      className="shrink-0 text-xs text-muted transition-colors duration-150 ease-out hover:text-danger"
+                    >
+                      Raus
+                    </button>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
+          {isAdmin ? (
+            <p className="mt-3 text-xs text-subtle">
+              Host-Rechte übergeben, wenn du oder jemand anderes nicht mehr leiten will. Die anderen
+              spielen weiter.
+            </p>
+          ) : null}
         </section>
         {isAdmin ? (
           <div className="mt-8 flex flex-col gap-2 sm:flex-row">
@@ -349,7 +415,9 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
               {pending
                 ? "Titel werden geladen…"
                 : seats.length < need
-                  ? "Mindestens ein Handy"
+                  ? stagePlays
+                    ? "Mindestens eine Person"
+                    : "Mindestens ein Handy"
                   : pileBlocked
                     ? "Zu wenig Titel"
                     : "Abend starten"}

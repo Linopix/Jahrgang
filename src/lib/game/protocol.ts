@@ -31,6 +31,7 @@ export type RoomConfigWire = {
   emoji?: boolean;
   chat?: boolean;
   tv?: boolean;
+  stagePlays?: boolean;
 };
 
 export type OnlineMessage =
@@ -59,6 +60,7 @@ export type OnlineMessage =
   | { t: "kick" }
   | { t: "admin-start" }
   | { t: "admin-kick"; id: string }
+  | { t: "pass-admin"; id: string }
   | { t: "tv-step"; step: TvStep };
 
 const KINDS = new Set([
@@ -77,6 +79,7 @@ const KINDS = new Set([
   "kick",
   "admin-start",
   "admin-kick",
+  "pass-admin",
   "tv-step",
 ]);
 

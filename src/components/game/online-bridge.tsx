@@ -9,7 +9,7 @@ import { requestStartOnline } from "@/lib/game/online-actions";
 import { DEFAULT_NEXT_ROUND, DEFAULT_ROOM_CONFIG, DEFAULT_TOKENS, DEFAULT_VARIANT, isNextRoundPolicy, isPlayVariant, isTokenCount, parseCustom } from "@/lib/game/types";
 import { receiveReaction } from "@/lib/game/reactions";
 import { receiveChat } from "@/lib/game/chat";
-import { takeClaim } from "@/lib/tv/names";
+import { takeClaim, pickSuccessor } from "@/lib/tv/names";
 import type { PeerInfo } from "@/lib/multiplayer";
 
 const JOIN_TIMEOUT_MS = 14000;
@@ -52,6 +52,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   const tv = useOnline((s) => s.tv);
   const adminId = useOnline((s) => s.adminId);
   const tvStep = useOnline((s) => s.tvStep);
+  const stagePlays = useOnline((s) => s.stagePlays);
   const status = useOnline((s) => s.status);
   const sendRef = useRef(p2p.send);
   sendRef.current = p2p.send;
@@ -112,7 +113,45 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
         next.push({ ...prev, connectionState: "disconnected" });
       }
     }
-    useOnline.getState().setMembers(next.slice(0, 8));
+    useOnline.getState().setMembers(next.slice(0, 9));
+    const state = useOnline.getState();
+    if (state.adminId) {
+      const admin = next.find((row) => row.id === state.adminId);
+      const gone =
+        !admin ||
+        admin.connectionState === "failed" ||
+        admin.connectionState === "disconnected";
+      if (gone) {
+        const successor = pickSuccessor(
+          next.map((row) => ({
+            id: row.id,
+            live: row.connectionState !== "failed" && row.connectionState !== "disconnected",
+          })),
+          state.adminId,
+          state.tv ? selfId : "",
+        );
+        if (successor && successor !== state.adminId) state.setAdminId(successor);
+      }
+    }
+    if (status === "playing") {
+      const game = useGame.getState();
+      const current = game.players[game.currentPlayerIndex];
+      const liveIds = new Set(
+        next
+          .filter((row) => row.connectionState !== "failed" && row.connectionState !== "disconnected")
+          .map((row) => row.id),
+      );
+      const currentGone = Boolean(current && !liveIds.has(current.id));
+      const someoneLive = game.players.some((row) => liveIds.has(row.id));
+      if (currentGone && someoneLive && (game.phase === "listen" || game.phase === "reveal")) {
+        game.nextTurn({
+          skipIds: next
+            .filter((row) => row.connectionState === "failed" || row.connectionState === "disconnected")
+            .map((row) => row.id),
+        });
+        sendRef.current({ t: "state", snapshot: useGame.getState().snapshot() });
+      }
+    }
   }, [p2p.peers, p2p.selfId, name, role, status]);
 
   useEffect(() => {
@@ -143,9 +182,10 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       emoji,
       chat,
       tv,
+      stagePlays: useOnline.getState().stagePlays,
     };
     p2p.send(msg);
-  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, extraEra, pool, emoji, chat, tv, members, adminId, tvStep]);
+  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, extraEra, pool, emoji, chat, tv, members, adminId, tvStep, stagePlays]);
 
   useEffect(() => {
     return p2p.onMessage((from, data, channel) => {
@@ -201,14 +241,13 @@ function handleMessage(
     const existing = members.find((m) => m.id === from);
     if (existing) {
       existing.name = msg.name || existing.name;
-    } else if (members.length < 8) {
+    } else if (members.length < 9) {
       members.push({ id: from, name: msg.name || "Gast", connectionState: "connecting" });
     }
     online.setMembers(members);
-    if (online.tv && msg.claim) {
+    if (online.tv && online.claimOpen) {
       const claimed = takeClaim({
-        claimOpen: online.claimOpen,
-        wantsClaim: true,
+        claimOpen: true,
         tvId: ctx.selfId,
         adminId: online.adminId || ctx.selfId,
         from,
@@ -250,6 +289,7 @@ function handleMessage(
       hostId: msg.hostId,
       adminId: msg.adminId || msg.hostId,
       tvStep: msg.tvStep ?? (msg.tv ? "invite" : "invite"),
+      stagePlays: Boolean(msg.stagePlays),
     });
     if (online.status === "connecting" || online.status === "entry") {
       online.markLobby();
@@ -277,6 +317,7 @@ function handleMessage(
         chat: msg.chat !== false,
         tv: Boolean(msg.tv),
       });
+      if (typeof msg.stagePlays === "boolean") useOnline.setState({ stagePlays: msg.stagePlays });
       return;
     }
     if (from === online.adminId) {
@@ -298,7 +339,23 @@ function handleMessage(
         chat: msg.chat !== false,
         tv: Boolean(msg.tv),
       });
+      if (typeof msg.stagePlays === "boolean") online.setStagePlays(msg.stagePlays);
     }
+    return;
+  }
+
+  if (msg.t === "pass-admin") {
+    const next = msg.id;
+    if (!next || next === online.adminId) return;
+    if (!online.members.some((row) => row.id === next)) return;
+    if (online.role === "host") {
+      if (from !== online.adminId && from !== ctx.selfId) return;
+      online.setAdminId(next);
+      ctx.send({ t: "pass-admin", id: next });
+      return;
+    }
+    if (from !== online.hostId && from !== online.adminId) return;
+    online.setAdminId(next);
     return;
   }
 

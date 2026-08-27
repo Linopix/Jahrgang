@@ -83,6 +83,7 @@ type OnlineStore = {
   emoji: boolean;
   chat: boolean;
   tv: boolean;
+  stagePlays: boolean;
   adminId: string;
   tvStep: TvStep;
   claimOpen: boolean;
@@ -102,6 +103,7 @@ type OnlineStore = {
   setConfig: (config: RoomConfig) => void;
   setTvStep: (step: TvStep) => void;
   skipTvClaim: () => void;
+  setStagePlays: (on: boolean) => void;
   setAdminId: (id: string) => void;
   setError: (error: string | null) => void;
   setPending: (pending: boolean) => void;
@@ -133,6 +135,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   emoji: true,
   chat: true,
   tv: false,
+  stagePlays: false,
   adminId: "",
   tvStep: "invite",
   claimOpen: false,
@@ -156,6 +159,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       inviteCode: code,
       selfName: get().selfName.trim() || readStoredName(),
       tv: false,
+      stagePlays: false,
       adminId: "",
       tvStep: "invite",
       claimOpen: false,
@@ -189,6 +193,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       pending: false,
       kickedIds: [],
       tv,
+      stagePlays: false,
       adminId: "",
       tvStep: tv ? "claim" : "invite",
       claimOpen: tv,
@@ -235,6 +240,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       pending: false,
       kickedIds: [],
       tv: false,
+      stagePlays: false,
       adminId: "",
       tvStep: "invite",
       claimOpen: false,
@@ -287,8 +293,14 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   skipTvClaim: () => {
     if (!get().claimOpen) return;
     const selfId = get().selfId;
-    set({ claimOpen: false, tvStep: "setup", adminId: selfId || get().adminId });
+    set({
+      claimOpen: false,
+      tvStep: "setup",
+      adminId: selfId || get().adminId,
+      stagePlays: true,
+    });
   },
+  setStagePlays: (on) => set({ stagePlays: Boolean(on) }),
   setAdminId: (id) => set({ adminId: id, claimOpen: false }),
   setError: (error) => set({ error, pending: false }),
   setPending: (pending) => set({ pending }),
