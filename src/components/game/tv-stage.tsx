@@ -17,6 +17,7 @@ import {
   requestAgain,
   requestBackToLobby,
   requestEndEvening,
+  requestFinishCupMatch,
 } from "@/lib/game/online-actions";
 import { currentPlayer, useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
@@ -25,6 +26,8 @@ import { guessKind, rulesFor, VARIANT_LABELS } from "@/lib/game/types";
 import { enterBigscreen } from "@/lib/tv/fullscreen";
 import { useIsAdmin } from "@/lib/tv/mode";
 import { cn } from "@/lib/utils";
+import { TournamentBoard } from "./tournament-board";
+import { TOURNAMENT_LIVE, currentMatch } from "@/lib/tournament";
 
 function MuteToggle() {
   const [muted, setMutedState] = useState(isMuted);
@@ -192,11 +195,20 @@ export function TvWinnerScreen() {
   const ranked = rankPlayers(players);
   const top = ranked.slice(0, 3);
   const admin = useIsAdmin();
+  const tournament = useOnline((s) => s.tournament);
+  const cupOn = TOURNAMENT_LIVE && Boolean(useOnline((s) => s.cup));
+  const pending = useOnline((s) => s.pending);
+  const cupMatch = cupOn ? currentMatch(tournament) : null;
+
+  useEffect(() => {
+    if (!cupOn || !admin) return;
+    requestFinishCupMatch();
+  }, [cupOn, admin, players]);
 
   return (
     <main className="screen-in mx-auto flex min-h-dvh w-full max-w-[70rem] flex-col items-center justify-center px-8 py-10 text-center">
-      <p className="tv-kicker">Abend vorbei</p>
-      <h1 className="mt-3 tv-title">Podest</h1>
+      <p className="tv-kicker">{cupOn ? "Begegnung" : "Abend vorbei"}</p>
+      <h1 className="mt-3 tv-title">{cupOn && tournament?.status === "done" ? "Turniersieger" : "Podest"}</h1>
       <ol className="mt-12 flex items-end justify-center gap-6">
         {top.map((row, i) => (
           <li
@@ -214,17 +226,42 @@ export function TvWinnerScreen() {
           </li>
         ))}
       </ol>
+      {cupOn && tournament ? (
+        <div className="mt-10 w-full text-left">
+          <TournamentBoard t={tournament} tv />
+        </div>
+      ) : null}
       {admin ? (
         <div className="mt-12 flex gap-3">
-          <Button size="xl" onClick={() => void requestAgain()}>
-            Nochmal
+          <Button
+            size="xl"
+            disabled={pending}
+            onClick={() => {
+              if (cupOn && tournament?.status === "done") {
+                requestBackToLobby();
+                return;
+              }
+              void requestAgain();
+            }}
+          >
+            {cupOn
+              ? tournament?.status === "done"
+                ? "Lobby"
+                : cupMatch?.stechen
+                  ? "Stechen"
+                  : "Weiter"
+              : "Nochmal"}
           </Button>
-          <Button size="xl" variant="secondary" onClick={requestBackToLobby}>
-            Lobby
-          </Button>
-          <Button size="xl" variant="ghost" onClick={requestEndEvening}>
-            Abend
-          </Button>
+          {!cupOn ? (
+            <>
+              <Button size="xl" variant="secondary" onClick={requestBackToLobby}>
+                Lobby
+              </Button>
+              <Button size="xl" variant="ghost" onClick={requestEndEvening}>
+                Abend
+              </Button>
+            </>
+          ) : null}
         </div>
       ) : (
         <p className="mt-12 text-muted">Weiter vom Host-Handy.</p>

@@ -6,15 +6,18 @@ import { bindNet, netDrop } from "@/lib/game/net";
 import { useGame } from "@/lib/game/store";
 import { useOnline, type OnlineMember } from "@/lib/game/online-store";
 import { requestStartOnline } from "@/lib/game/online-actions";
-import { DEFAULT_NEXT_ROUND, DEFAULT_ROOM_CONFIG, DEFAULT_VARIANT, defaultTokensFor, isNextRoundPolicy, isPlayVariant, isTokenCount, parseCustom, parseSuggest } from "@/lib/game/types";
+import { DEFAULT_NEXT_ROUND, DEFAULT_ROOM_CONFIG, DEFAULT_VARIANT, defaultTokensFor, isNextRoundPolicy, isPlayVariant, isTokenCount, parseCustom, parseStageAudio, parseSuggest } from "@/lib/game/types";
 import { receiveReaction } from "@/lib/game/reactions";
 import { applyChatDelete, receiveChat } from "@/lib/game/chat";
 import { takeClaim, pickSuccessor } from "@/lib/tv/names";
 import { safeName } from "@/lib/game/moderation";
-import { HOST_GRACE_MS, shouldTakeHost } from "@/lib/game/hosting";
+import { HOST_GRACE_MS, shouldTakeHost, nextHostId } from "@/lib/game/hosting";
 import { bindMeshInspect, noteDebug } from "@/lib/game/debug";
 import { useSessionExit } from "@/lib/game/session-exit";
 import type { PeerInfo } from "@/lib/multiplayer";
+import { TOURNAMENT_LIVE } from "@/lib/tournament/flags";
+import { parseCupQualify, parseCupSize, parseTournament } from "@/lib/tournament";
+import { roomCap } from "@/lib/tv/mode";
 
 const JOIN_TIMEOUT_MS = 14000;
 
@@ -56,6 +59,12 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   const chat = useOnline((s) => s.chat);
   const tv = useOnline((s) => s.tv);
   const suggest = useOnline((s) => s.suggest);
+  const stageAudio = useOnline((s) => s.stageAudio);
+  const cup = useOnline((s) => s.cup);
+  const cupSize = useOnline((s) => s.cupSize);
+  const cupQualify = useOnline((s) => s.cupQualify);
+  const tournament = useOnline((s) => s.tournament);
+  const hostId = useOnline((s) => s.hostId);
   const adminId = useOnline((s) => s.adminId);
   const tvStep = useOnline((s) => s.tvStep);
   const stagePlays = useOnline((s) => s.stagePlays);
@@ -67,6 +76,15 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
     bindNet({ send: p2p.send, selfId: p2p.selfId, dropPeer: p2p.dropPeer });
     return () => bindNet(null);
   }, [p2p.send, p2p.selfId, p2p.dropPeer]);
+
+  useEffect(() => {
+    if (!TOURNAMENT_LIVE || !cup) {
+      p2p.setHub(null);
+      return;
+    }
+    const hub = role === "host" ? p2p.selfId : hostId;
+    if (hub) p2p.setHub(hub);
+  }, [cup, role, p2p.selfId, hostId, p2p.setHub]);
 
   useEffect(() => {
     bindMeshInspect(() => p2p.inspect());
@@ -116,13 +134,22 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
     if (live) return;
     const timer = window.setTimeout(() => {
       const online = useOnline.getState();
-      const members = [
-        { id: p2p.selfId, live: true },
-        ...p2p.peers.map((row) => ({
-          id: row.id,
-          live: row.connectionState === "connected",
-        })),
-      ];
+      const roster = p2p.roster();
+      const members =
+        TOURNAMENT_LIVE && online.cup && roster.length
+          ? [
+              { id: p2p.selfId, live: true },
+              ...roster
+                .filter((row) => row.id !== p2p.selfId)
+                .map((row) => ({ id: row.id, live: row.id !== online.hostId })),
+            ]
+          : [
+              { id: p2p.selfId, live: true },
+              ...p2p.peers.map((row) => ({
+                id: row.id,
+                live: row.connectionState === "connected",
+              })),
+            ];
       if (
         !shouldTakeHost({
           selfId: p2p.selfId,
@@ -132,15 +159,22 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
           tvId: online.tv ? online.hostId : "",
         })
       ) {
+        const next = nextHostId(members, online.hostId, online.tv ? online.hostId : "");
+        if (next && next !== p2p.selfId) {
+          useOnline.setState({ hostId: next, hostLive: false });
+          if (TOURNAMENT_LIVE && online.cup) p2p.setHub(next);
+        }
         return;
       }
       const adminLive = members.some((row) => row.id === online.adminId && row.live);
       const oldHost = online.hostId;
       const wasTv = online.tv;
-      online.becomeHost(adminLive ? online.adminId : p2p.selfId);
+      const successor = p2p.selfId;
+      online.becomeHost(adminLive ? online.adminId : successor);
       if (wasTv && oldHost !== p2p.selfId) {
         useOnline.setState({ tv: false, stagePlays: false });
       }
+      p2p.setHub(p2p.selfId);
       noteDebug("note", "host-take", p2p.selfId);
       sendRef.current({
         t: "host-take",
@@ -151,9 +185,12 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       if (game.phase === "listen" || game.phase === "reveal" || game.phase === "winner" || game.phase === "loading") {
         sendRef.current({ t: "state", snapshot: game.snapshot() });
       }
+      if (TOURNAMENT_LIVE) {
+        sendRef.current({ t: "cup", tournament: useOnline.getState().tournament });
+      }
     }, HOST_GRACE_MS);
     return () => window.clearTimeout(timer);
-  }, [p2p.peers, p2p.selfId, role]);
+  }, [p2p.peers, p2p.selfId, role, p2p.setHub, p2p.roster]);
 
   useEffect(() => {
     if (role !== "guest" || status !== "connecting") return;
@@ -197,7 +234,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
         next.push({ ...prev, connectionState: "disconnected", droppedAt });
       }
     }
-    useOnline.getState().setMembers(next.slice(0, 9));
+    useOnline.getState().setMembers(next.slice(0, roomCap(useOnline.getState().cup)));
     const state = useOnline.getState();
     if (state.adminId) {
       const admin = next.find((row) => row.id === state.adminId);
@@ -269,9 +306,14 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       tv,
       stagePlays: useOnline.getState().stagePlays,
       suggest,
+      stageAudio,
+      cup,
+      cupSize,
+      cupQualify,
+      tournament: TOURNAMENT_LIVE ? useOnline.getState().tournament : null,
     };
     p2p.send(msg);
-  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, extraEra, eras, pool, emoji, chat, tv, members, adminId, tvStep, stagePlays, suggest]);
+  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, extraEra, eras, pool, emoji, chat, tv, members, adminId, tvStep, stagePlays, suggest, stageAudio, cup, cupSize, cupQualify, tournament]);
 
   useEffect(() => {
     return p2p.onMessage((from, data, channel) => {
@@ -320,6 +362,10 @@ function roomConfigFromWire(msg: RoomConfigWire) {
     chat: msg.chat !== false,
     tv: Boolean(msg.tv),
     suggest: parseSuggest(msg.suggest),
+    stageAudio: parseStageAudio(msg.stageAudio),
+    cup: TOURNAMENT_LIVE && Boolean(msg.cup),
+    cupSize: parseCupSize(msg.cupSize),
+    cupQualify: parseCupQualify(msg.cupQualify),
   };
 }
 
@@ -348,12 +394,15 @@ function handleMessage(
       existing.name = name;
       existing.connectionState = "connected";
       existing.droppedAt = undefined;
-    } else if (members.length < 9) {
+    } else if (members.length < roomCap(online.cup)) {
       members.push({ id: from, name, connectionState: "connecting" });
     }
     online.setMembers(members);
     if (online.status === "playing") {
       ctx.send({ t: "state", snapshot: useGame.getState().snapshot() }, from);
+    }
+    if (TOURNAMENT_LIVE && online.tournament) {
+      ctx.send({ t: "cup", tournament: online.tournament }, from);
     }
     if (online.tv && online.claimOpen) {
       const claimed = takeClaim({
@@ -388,6 +437,9 @@ function handleMessage(
       tvStep: msg.tvStep ?? (msg.tv ? "invite" : "invite"),
       stagePlays: Boolean(msg.stagePlays),
     });
+    if (TOURNAMENT_LIVE) {
+      online.setTournament(parseTournament(msg.tournament) ?? msg.tournament ?? null);
+    }
     if (online.status === "connecting" || online.status === "entry") {
       online.markLobby();
     }
@@ -523,6 +575,9 @@ function handleMessage(
       adminId: msg.adminId || msg.hostId,
       hostLive: true,
     });
+    if (TOURNAMENT_LIVE && useOnline.getState().cup) {
+      // Hub is set by the effect on hostId.
+    }
     online.persistSeat();
     return;
   }
@@ -540,6 +595,10 @@ function handleMessage(
     ) {
       ctx.send({ t: "state", snapshot: game.snapshot() }, from);
     }
+    const cupState = useOnline.getState().tournament;
+    if (TOURNAMENT_LIVE && cupState) {
+      ctx.send({ t: "cup", tournament: cupState }, from);
+    }
     return;
   }
 
@@ -551,17 +610,32 @@ function handleMessage(
     return;
   }
 
+  if (msg.t === "cup") {
+    if (!TOURNAMENT_LIVE) return;
+    if (online.role === "host" && from !== ctx.selfId) return;
+    online.setTournament(parseTournament(msg.tournament) ?? msg.tournament ?? null);
+    return;
+  }
+
   if (msg.t === "react") {
-    if (from === ctx.selfId) return;
-    const member = online.members.find((row) => row.id === from);
+    const who = msg.by || from;
+    if (who === ctx.selfId) return;
+    const member = online.members.find((row) => row.id === who);
     receiveReaction(msg.emoji, member?.name ?? "");
+    if (online.role === "host" && TOURNAMENT_LIVE && online.cup && !msg.by) {
+      ctx.send({ t: "react", emoji: msg.emoji, by: from });
+    }
     return;
   }
 
   if (msg.t === "chat") {
-    if (from === ctx.selfId) return;
-    const member = online.members.find((row) => row.id === from);
-    receiveChat(msg.text, member?.name ?? "Gast", from, msg.id);
+    const who = msg.by || from;
+    if (who === ctx.selfId) return;
+    const member = online.members.find((row) => row.id === who);
+    receiveChat(msg.text, member?.name ?? "Gast", who, msg.id);
+    if (online.role === "host" && TOURNAMENT_LIVE && online.cup && !msg.by) {
+      ctx.send({ t: "chat", text: msg.text, id: msg.id, by: from });
+    }
     return;
   }
 
@@ -572,14 +646,18 @@ function handleMessage(
   }
 
   if (msg.t === "aim") {
+    const who = msg.by || from;
     const current = game.players[game.currentPlayerIndex];
-    if (!current || current.id !== from) return;
-    if (from === ctx.selfId) return;
+    if (!current || current.id !== who) return;
+    if (who === ctx.selfId) return;
     if (game.phase !== "listen") return;
     if (msg.slot !== null && (typeof msg.slot !== "number" || msg.slot < 0 || msg.slot > current.timeline.length)) {
       return;
     }
     useGame.setState({ selectedSlot: msg.slot });
+    if (online.role === "host" && TOURNAMENT_LIVE && online.cup && !msg.by) {
+      ctx.send({ t: "aim", slot: msg.slot, by: from });
+    }
     return;
   }
 

@@ -650,6 +650,26 @@ export function sfxWin() {
   tone({ freq: 1046.5, duration: 0.36, type: "sine", when: 0.34, gain: 0.04, filter: 2800 });
 }
 
+export function sfxPodium(place: 1 | 2 | 3) {
+  if (place === 3) {
+    tone({ freq: 196, duration: 0.16, type: "sine", gain: 0.045, filter: 900 });
+    tone({ freq: 246.94, duration: 0.2, type: "triangle", when: 0.12, gain: 0.035, filter: 1200 });
+    return;
+  }
+  if (place === 2) {
+    tone({ freq: 329.63, duration: 0.14, type: "triangle", gain: 0.045, filter: 1800 });
+    tone({ freq: 392, duration: 0.18, type: "sine", when: 0.1, gain: 0.04, filter: 2000 });
+    tone({ freq: 493.88, duration: 0.22, type: "sine", when: 0.2, gain: 0.035, filter: 2200 });
+    return;
+  }
+  tone({ freq: 392, duration: 0.12, type: "triangle", gain: 0.04, filter: 1600 });
+  tone({ freq: 523.25, duration: 0.16, type: "triangle", when: 0.1, gain: 0.05, filter: 2200 });
+  tone({ freq: 659.25, duration: 0.16, type: "triangle", when: 0.22, gain: 0.05, filter: 2400 });
+  tone({ freq: 783.99, duration: 0.2, type: "sine", when: 0.34, gain: 0.05, filter: 2600 });
+  tone({ freq: 1046.5, duration: 0.5, type: "sine", when: 0.48, gain: 0.055, filter: 2800 });
+  tone({ freq: 1318.5, duration: 0.4, type: "triangle", when: 0.62, gain: 0.03, filter: 3200 });
+}
+
 declare global {
   interface Window {
     webkitAudioContext?: typeof AudioContext;

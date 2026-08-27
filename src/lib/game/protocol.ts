@@ -1,3 +1,4 @@
+import type { Tournament, CupGroupSize, CupQualify } from "@/lib/tournament/types";
 import type { TvStep } from "@/lib/tv/names";
 import type {
   CustomRules,
@@ -7,6 +8,7 @@ import type {
   NextRoundPolicy,
   PlayVariant,
   SeriesStanding,
+  StageAudio,
   SuggestMode,
   TokenCount,
 } from "./types";
@@ -36,6 +38,11 @@ export type RoomConfigWire = {
   tv?: boolean;
   stagePlays?: boolean;
   suggest?: SuggestMode;
+  stageAudio?: StageAudio;
+  cup?: boolean;
+  cupSize?: CupGroupSize;
+  cupQualify?: CupQualify;
+  tournament?: Tournament | null;
 };
 
 export type OnlineMessage =
@@ -58,15 +65,16 @@ export type OnlineMessage =
   | { t: "host-take"; hostId: string; adminId?: string }
   | { t: "sync-request" }
   | { t: "evening"; series?: SeriesStanding[] }
-  | { t: "aim"; slot: number | null }
-  | { t: "react"; emoji: string }
-  | { t: "chat"; text: string; id?: string }
+  | { t: "aim"; slot: number | null; by?: string }
+  | { t: "react"; emoji: string; by?: string }
+  | { t: "chat"; text: string; id?: string; by?: string }
   | { t: "chat-del"; id: string }
   | { t: "kick" }
   | { t: "admin-start" }
   | { t: "admin-kick"; id: string }
   | { t: "pass-admin"; id: string }
-  | { t: "tv-step"; step: TvStep };
+  | { t: "tv-step"; step: TvStep }
+  | { t: "cup"; tournament: Tournament | null };
 
 const KINDS = new Set([
   "hello",
@@ -91,6 +99,7 @@ const KINDS = new Set([
   "admin-kick",
   "pass-admin",
   "tv-step",
+  "cup",
 ]);
 
 export function isOnlineMessage(data: unknown): data is OnlineMessage {

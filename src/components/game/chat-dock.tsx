@@ -111,7 +111,7 @@ export function ChatDock() {
               placeholder="Nachricht"
               aria-label="Nachricht"
               onChange={(event) => setDraft(event.target.value)}
-              className="h-10 w-full rounded-md bg-raised px-3 text-sm text-fg shadow-border outline-none transition-[box-shadow] duration-150 ease-out focus:ring-2 focus:ring-primary/70"
+              className="field h-11 text-base"
             />
           </form>
         </div>

@@ -21,4 +21,8 @@ test("host succession and evening messages", () => {
   assert.equal(isOnlineMessage({ t: "hello", name: "Ada", resume: true }), true);
 });
 
+test("cup state is a protocol message", () => {
+  assert.equal(isOnlineMessage({ t: "cup", tournament: null }), true);
+});
+
 

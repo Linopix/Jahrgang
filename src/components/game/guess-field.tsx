@@ -18,8 +18,8 @@ export function GuessField({ value, onChange, pool, placeholder, label, showWhen
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const hints = useMemo(() => {
-    if (value.trim().length < 2) return showWhenEmpty ? [...pool].slice(0, 8) : [];
-    return suggestNames(value, pool);
+    if (value.trim().length < 2) return showWhenEmpty ? [...pool].slice(0, 24) : [];
+    return suggestNames(value, pool, 24);
   }, [value, pool, showWhenEmpty]);
 
   function pick(next: string) {
@@ -69,7 +69,7 @@ export function GuessField({ value, onChange, pool, placeholder, label, showWhen
         aria-autocomplete="list"
       />
       {open && hints.length > 0 ? (
-        <ul className="absolute z-20 mt-1 w-full overflow-hidden rounded-md bg-surface py-1 shadow-lift">
+        <ul className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-md bg-surface py-1 shadow-lift">
           {hints.map((hint, index) => (
             <li key={hint}>
               <button

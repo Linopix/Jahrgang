@@ -8,6 +8,8 @@ import { roomConfigFrom, useOnline } from "@/lib/game/online-store";
 import { playerSeats, useIsAdmin } from "@/lib/tv/mode";
 import { TV_LIVE } from "@/lib/tv/flags";
 import { TV_MODE_NAME } from "@/lib/tv/names";
+import { CUP_MIN, CUP_MAX, TOURNAMENT_LIVE } from "@/lib/tournament";
+import { TournamentBoard } from "./tournament-board";
 import { TvLobbyScreen } from "./tv-lobby";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +36,11 @@ export function OnlineLobbyScreen() {
   const chat = useOnline((s) => s.chat);
   const tv = useOnline((s) => s.tv);
   const suggest = useOnline((s) => s.suggest);
+  const stageAudio = useOnline((s) => s.stageAudio);
+  const cup = useOnline((s) => s.cup);
+  const cupSize = useOnline((s) => s.cupSize);
+  const cupQualify = useOnline((s) => s.cupQualify);
+  const tournament = useOnline((s) => s.tournament);
   const error = useOnline((s) => s.error);
   const hostId = useOnline((s) => s.hostId);
   const adminId = useOnline((s) => s.adminId);
@@ -63,6 +70,10 @@ export function OnlineLobbyScreen() {
     chat,
     tv,
     suggest,
+    stageAudio,
+    cup,
+    cupSize,
+    cupQualify,
   });
 
   useEffect(() => {
@@ -85,9 +96,9 @@ export function OnlineLobbyScreen() {
   }
 
   const readyCount = members.filter((m) => m.connectionState !== "failed").length;
-  const seats = playerSeats(members, hostId, tv, stagePlays);
+  const seats = playerSeats(members, hostId, tv, stagePlays, cup);
   const currentAdmin = adminId || hostId;
-  const need = TV_LIVE && tv ? 1 : 2;
+  const need = cup && TOURNAMENT_LIVE ? CUP_MIN : TV_LIVE && tv ? 1 : 2;
   const pile = optionsPile(config, Math.max(seats.length, need));
   const pileBlocked = pile.status === "short" || pile.status === "empty";
   const canStart = isAdmin && !connecting && !pending && seats.length >= need && !pileBlocked;
@@ -166,7 +177,7 @@ export function OnlineLobbyScreen() {
       <section className="mt-6">
         <div className="flex items-baseline justify-between">
           <h2 className="text-sm font-medium text-fg">Im Raum</h2>
-          <p className="text-xs tabular-nums text-subtle">{readyCount}/8</p>
+          <p className="text-xs tabular-nums text-subtle">{readyCount}/{cup && TOURNAMENT_LIVE ? CUP_MAX : 8}</p>
         </div>
         <ul className="mt-3 space-y-2">
           {members.map((member) => (
@@ -235,6 +246,11 @@ export function OnlineLobbyScreen() {
 
       {isAdmin ? (
         <div>
+          {TOURNAMENT_LIVE && cup && tournament && tournament.status !== "idle" ? (
+            <div className="mb-6 rounded-xl bg-surface p-4 shadow-border">
+              <TournamentBoard t={tournament} compact />
+            </div>
+          ) : null}
           <GameOptions value={config} onChange={requestConfig} online players={Math.max(seats.length, need)} />
           <div className="fixed inset-x-0 bottom-0 z-20 bg-bg/90 px-16 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:static lg:inset-auto lg:bg-transparent lg:px-0 lg:pt-8 lg:pb-0 lg:backdrop-blur-none">
             <Button
@@ -248,19 +264,30 @@ export function OnlineLobbyScreen() {
               {pending
                 ? "Titel werden geladen…"
                 : seats.length < need
-                  ? tv
+                  ? cup && TOURNAMENT_LIVE
+                    ? `Mindestens ${CUP_MIN} Personen`
+                    : tv
                     ? "Mindestens ein Handy"
                     : "Mindestens zwei Personen"
                   : pileBlocked
                     ? "Zu wenig Titel"
-                    : "Abend starten"}
+                    : cup && TOURNAMENT_LIVE
+                      ? "Turnier starten"
+                      : "Abend starten"}
             </Button>
           </div>
         </div>
       ) : (
-        <p className="mt-8 rounded-md bg-raised px-4 py-3 text-sm text-muted shadow-border">
-          {roomConfigSummary(config)}. Der Host startet die Runde.
-        </p>
+        <div className="mt-8">
+          {TOURNAMENT_LIVE && cup && tournament && tournament.status !== "idle" ? (
+            <div className="mb-4 rounded-xl bg-surface p-4 shadow-border">
+              <TournamentBoard t={tournament} compact />
+            </div>
+          ) : null}
+          <p className="rounded-md bg-raised px-4 py-3 text-sm text-muted shadow-border">
+            {roomConfigSummary(config)}. Der Host startet die Runde.
+          </p>
+        </div>
       )}
       </div>
     </main>

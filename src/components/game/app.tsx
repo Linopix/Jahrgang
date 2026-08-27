@@ -14,6 +14,8 @@ import { RulesDialog } from "./rules-dialog";
 import { SetupScreen } from "./setup-screen";
 import { WinnerScreen } from "./winner-screen";
 import { TvPlayScreen, TvRevealScreen, TvWinnerScreen, BigscreenPrompt } from "./tv-stage";
+import { TournamentWatch } from "./tournament-board";
+import { TOURNAMENT_LIVE } from "@/lib/tournament/flags";
 import { ExitScreen } from "./exit-screen";
 import { DebugOverlay } from "./debug-overlay";
 import { useTvScreen } from "@/lib/tv/mode";
@@ -86,7 +88,7 @@ export function GameApp() {
         details: tv ? "Bigscreen" : "Lobby",
         state: roomCode ? `Raum ${roomCode}` : tv ? "Bühne öffnen" : "Raum öffnen",
         size,
-        max: 8,
+        max: tv ? 32 : 8,
         join: roomCode ? shareUrl(roomCode) : undefined,
       });
       return;
@@ -96,7 +98,7 @@ export function GameApp() {
         details: VARIANT_LABELS[variant] ?? "Jahrgang",
         state: roomCode ? `Raum ${roomCode}` : "Am Spielen",
         size,
-        max: 8,
+        max: tv ? 32 : 8,
         join: roomCode ? shareUrl(roomCode) : undefined,
       });
       return;
@@ -106,7 +108,7 @@ export function GameApp() {
         details: "Abend vorbei",
         state: "Rangliste",
         size,
-        max: 8,
+        max: tv ? 32 : 8,
       });
     }
   }, [onlineStatus, phase, roomCode, members, variant, tv]);
@@ -141,6 +143,9 @@ export function GameApp() {
   const players = useGame((s) => s.players);
   const tvMyTurn = Boolean(tvScreen && stagePlays && selfId && players[currentPlayerIndex]?.id === selfId);
   const localPhase = onlineStatus === "off" || onlineStatus === "playing";
+  const cupOn = TOURNAMENT_LIVE && useOnline((s) => s.cup);
+  const watching =
+    Boolean(cupOn && onlineStatus === "playing" && selfId && !tvScreen && !players.some((row) => row.id === selfId));
 
   useEffect(() => {
     if (!tvScreen) return;
@@ -159,8 +164,8 @@ export function GameApp() {
       {!exitKind && onlineStatus === "off" && phase === "home" ? <HomeScreen /> : null}
       {!exitKind && localPhase && phase === "setup" ? <SetupScreen /> : null}
       {!exitKind && localPhase && phase === "loading" ? <LoadingScreen /> : null}
-      {!exitKind && localPhase && phase === "listen" ? tvScreen && !tvMyTurn ? <TvPlayScreen /> : <PlayScreen /> : null}
-      {!exitKind && localPhase && phase === "reveal" ? tvScreen ? <TvRevealScreen /> : <RevealScreen /> : null}
+      {!exitKind && localPhase && phase === "listen" ? watching ? <TournamentWatch /> : tvScreen && !tvMyTurn ? <TvPlayScreen /> : <PlayScreen /> : null}
+      {!exitKind && localPhase && phase === "reveal" ? watching ? <TournamentWatch /> : tvScreen ? <TvRevealScreen /> : <RevealScreen /> : null}
       {!exitKind && localPhase && phase === "winner" ? tvScreen ? <TvWinnerScreen /> : <WinnerScreen /> : null}
       {!exitKind && onlineStatus === "playing" && phase === "home" ? <LoadingScreen /> : null}
       <ReactionDock />

@@ -116,6 +116,8 @@ export class P2PRoom {
   private ignored = new Set<string>();
   private everPolled = false;
   private lastPeersFingerprint = "";
+  private hubId: string | null = null;
+  private roster: { id: string; name: string }[] = [];
 
   constructor(opts: P2PRoomOptions) {
     this.opts = opts;
@@ -166,6 +168,25 @@ export class P2PRoom {
     this.emitPeers();
   }
 
+  /** Star topology: only keep a link to the hub (or to everyone if we are the hub). */
+  setHub(id: string | null): void {
+    this.hubId = id;
+    if (!id || this.opts.selfId === id) {
+      this.emitPeers();
+      return;
+    }
+    for (const [pid, slot] of this.peers) {
+      if (pid === id) continue;
+      slot.pc.close();
+      this.peers.delete(pid);
+    }
+    this.emitPeers();
+  }
+
+  rosterList(): { id: string; name: string }[] {
+    return this.roster.slice();
+  }
+
   /** Send on the unreliable game-state channel (drops stale packets). */
   broadcast(data: unknown): void {
     const wire = JSON.stringify({ t: "d", d: data });
@@ -197,6 +218,8 @@ export class P2PRoom {
       closed: this.closed,
       cursor: this.cursor,
       everPolled: this.everPolled,
+      hubId: this.hubId,
+      roster: this.roster.map((row) => row.id),
       ice,
       peers: [...this.peers.values()].map((slot) => ({
         id: slot.info.id,
@@ -272,26 +295,33 @@ export class P2PRoom {
   }
 
   private reconcileRoster(peers: { id: string; name: string }[]): void {
+    this.roster = peers.slice();
     const alive = new Set(peers.map((p) => p.id));
     for (const p of peers) {
       if (p.id === this.opts.selfId) continue;
       if (this.ignored.has(p.id)) continue;
+      if (!this.shouldPair(p.id)) continue;
       const existing = this.peers.get(p.id);
       if (existing) {
         existing.info.name = p.name;
       } else {
-        // Exactly one side dials each pair; the other waits for the offer.
         this.connectTo(p.id, p.name, this.opts.selfId > p.id);
       }
     }
     for (const [id, slot] of this.peers) {
-      if (!alive.has(id)) {
+      if (!alive.has(id) || !this.shouldPair(id)) {
         slot.pc.close();
         this.peers.delete(id);
         this.ignored.delete(id);
       }
     }
     this.emitPeers();
+  }
+
+  private shouldPair(peerId: string): boolean {
+    if (!this.hubId) return true;
+    if (this.opts.selfId === this.hubId) return true;
+    return peerId === this.hubId;
   }
 
   // ── per-pair connection ────────────────────────────────────────────────────

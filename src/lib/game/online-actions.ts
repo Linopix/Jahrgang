@@ -10,6 +10,17 @@ import { nextHostId } from "./hosting";
 import { rankPlayers } from "./engine";
 import { useSessionExit } from "./session-exit";
 import { noteDebug } from "./debug";
+import {
+  TOURNAMENT_LIVE,
+  CUP_MIN,
+  applyBye,
+  completeMatch,
+  createTournament,
+  currentMatch,
+  nextPending,
+  startMatch,
+  type MatchScore,
+} from "@/lib/tournament";
 
 function skipIds() {
   return useOnline
@@ -20,6 +31,26 @@ function skipIds() {
 
 function pushState() {
   netSend({ t: "state", snapshot: useGame.getState().snapshot() } satisfies OnlineMessage);
+}
+
+function pushCup() {
+  if (!TOURNAMENT_LIVE) return;
+  netSend({ t: "cup", tournament: useOnline.getState().tournament } satisfies OnlineMessage);
+}
+
+export function cupSeats() {
+  const online = useOnline.getState();
+  return playerSeats(online.members, online.hostId, online.tv, online.stagePlays, online.cup);
+}
+
+function rankingFromGame(): MatchScore[] {
+  return rankPlayers(useGame.getState().players).map((row) => ({
+    id: row.id,
+    name: row.name,
+    cards: row.timeline.length,
+    quiz: row.quiz ?? 0,
+    misses: row.misses,
+  }));
 }
 
 export function isOnlinePlay() {
@@ -163,6 +194,10 @@ export function requestConfig(patch: Partial<RoomConfig>) {
 export async function requestStartOnline() {
   const online = useOnline.getState();
   if (!isAdmin() && online.role !== "host") return;
+  if (TOURNAMENT_LIVE && online.cup) {
+    await requestStartCup();
+    return;
+  }
   if (online.role !== "host") {
     if (!isAdmin()) return;
     const seats = playerSeats(online.members, online.hostId, online.tv, online.stagePlays);
@@ -207,6 +242,118 @@ export async function requestStartOnline() {
   }
   online.markPlaying();
   pushState();
+}
+
+async function requestStartCup() {
+  const online = useOnline.getState();
+  if (!isAdmin() && online.role !== "host") return;
+  if (online.role !== "host") {
+    online.setPending(true);
+    online.setError(null);
+    netSend({ t: "admin-start" } satisfies OnlineMessage);
+    return;
+  }
+  const seats = cupSeats();
+  if (seats.length < CUP_MIN) {
+    online.setError(`Turnier: mindestens ${CUP_MIN} Personen.`);
+    return;
+  }
+  online.setPending(true);
+  online.setError(null);
+  let t = online.tournament;
+  if (!t || t.status === "idle") {
+    t = createTournament(
+      seats.map((row) => ({ id: row.id, name: row.name })),
+      { groupPref: online.cupSize, qualify: online.cupQualify },
+    );
+    online.setTournament(t);
+    pushCup();
+  }
+  if (t.status === "done") {
+    online.setPending(false);
+    return;
+  }
+  t = skipByes(t);
+  online.setTournament(t);
+  if (t.status === "done") {
+    online.setPending(false);
+    pushCup();
+    return;
+  }
+  const match = currentMatch(t) ?? nextPending(t);
+  if (!match) {
+    online.setPending(false);
+    pushCup();
+    return;
+  }
+  t = startMatch(t, match.id);
+  online.setTournament(t);
+  pushCup();
+  const ids = new Set(match.playerIds);
+  const matchSeats = seats.filter((row) => ids.has(row.id));
+  if (matchSeats.length < 2) {
+    t = applyBye(t, match.id);
+    online.setTournament(t);
+    pushCup();
+    await requestStartCup();
+    return;
+  }
+  netSend({ t: "loading" } satisfies OnlineMessage);
+  const ok = await useGame.getState().startGame({
+    mode: "party",
+    names: matchSeats.map((m) => m.name),
+    ids: matchSeats.map((m) => m.id),
+    era: online.era,
+    target: match.stechen ? 2 : online.target,
+    variant: online.variant,
+    tokens: online.tokens,
+    playlistUrl: online.playlistUrl || undefined,
+    mixFrom: online.mixFrom,
+    mixTo: online.mixTo,
+    mixGenre: online.mixGenre,
+    custom: online.custom,
+    extraEra: online.extraEra,
+    eras: online.eras,
+    pool: online.pool,
+    suggest: online.suggest,
+  });
+  if (!ok) {
+    const error = useGame.getState().loadError ?? "Start fehlgeschlagen.";
+    useGame.getState().resetBoard();
+    online.markLobby();
+    online.setError(error);
+    netSend({ t: "start-failed", error } satisfies OnlineMessage);
+    return;
+  }
+  online.markPlaying();
+  pushState();
+  pushCup();
+}
+
+function skipByes(t: ReturnType<typeof createTournament>) {
+  let next = t;
+  for (let i = 0; i < 32; i++) {
+    const match = nextPending(next);
+    if (!match) break;
+    if (match.status === "live") return next;
+    if (!match.bye) {
+      return startMatch(next, match.id);
+    }
+    next = applyBye(next, match.id);
+  }
+  return next;
+}
+
+export function requestFinishCupMatch() {
+  if (!TOURNAMENT_LIVE) return;
+  const online = useOnline.getState();
+  if (online.role !== "host") return;
+  const t = online.tournament;
+  const match = currentMatch(t);
+  if (!t || !match || match.status === "done") return;
+  const next = completeMatch(t, match.id, rankingFromGame());
+  online.setTournament(next);
+  pushCup();
 }
 
 export async function requestAgain() {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { canPlace, cardsNeeded, dealCount, pileStatus, turnsUntilFirstWin } from "./engine.ts";
-import { DEFAULT_TARGET, DEFAULT_VARIANT, VARIANT_IDS, defaultTokensFor, parseEras } from "./types.ts";
+import { canPlace, cardsNeeded, dealCount, pileStatus, rankPlayers, turnsUntilFirstWin } from "./engine.ts";
+import { DEFAULT_TARGET, DEFAULT_VARIANT, VARIANT_IDS, defaultTokensFor, parseEras, type Player } from "./types.ts";
 
 test("kenner is first, zeitstrahl second, ten cards default", () => {
   assert.equal(VARIANT_IDS[0], "original");
@@ -84,4 +84,26 @@ test("pile status flags a short pack for four at eight cards", () => {
   assert.equal(pileStatus(null, 4, 8, false), "unknown");
   assert.equal(pileStatus(36, 4, 8, true, 48), "short");
   assert.equal(pileStatus(48, 4, 8, true, 48), "tight");
+});
+
+test("rank prefers more cards then more quiz hits", () => {
+  const seat = (id: string, cards: number, quiz: number, misses: number): Player => ({
+    id,
+    name: id,
+    timeline: Array.from({ length: cards }, (_, i) => ({
+      id: `${id}-${i}`,
+      title: id,
+      artist: id,
+      year: 1980 + i,
+      previewUrl: "",
+    })),
+    tokens: 0,
+    misses,
+    quiz,
+  });
+  const ranked = rankPlayers([seat("a", 2, 0, 1), seat("b", 2, 3, 0), seat("c", 1, 9, 0)]);
+  assert.deepEqual(
+    ranked.map((row) => row.id),
+    ["b", "a", "c"],
+  );
 });

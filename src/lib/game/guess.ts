@@ -71,7 +71,7 @@ export function guessMatches(
   return false;
 }
 
-export function suggestNames(query: string, pool: readonly string[], limit = 8): string[] {
+export function suggestNames(query: string, pool: readonly string[], limit = 24): string[] {
   const q = normalizeGuess(query);
   const compact = compactGuess(query);
   if (q.length < 2) return [];
@@ -160,7 +160,7 @@ export function suggestTitles(
   query: string,
   artistHint: string,
   songs: readonly NamePair[],
-  limit = 8,
+  limit = 24,
   mode: SuggestMode = "on",
 ): string[] {
   if (mode === "off") return [];

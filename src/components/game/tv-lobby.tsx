@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, ChevronLeft, Copy, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SwitchRow, SWITCH_PANEL } from "@/components/ui/switch-row";
 import { QrCode } from "./qr-code";
 import { Vinyl } from "./vinyl";
 import { GameOptions, optionsPile } from "./game-options";
-import { shareUrl } from "@/lib/game/room-code";
+import { probeLanOrigin, shareOrigin, shareUrl } from "@/lib/game/room-code";
 import {
   requestConfig,
   requestKick,
@@ -18,13 +18,25 @@ import {
 } from "@/lib/game/online-actions";
 import { roomConfigFrom, useOnline } from "@/lib/game/online-store";
 import { playerSeats, useIsAdmin } from "@/lib/tv/mode";
+import { CUP_MIN, TOURNAMENT_LIVE } from "@/lib/tournament";
+import { TournamentBoard } from "./tournament-board";
 import { enterBigscreen } from "@/lib/tv/fullscreen";
 import { TV_MODE_NAME } from "@/lib/tv/names";
 import { cn } from "@/lib/utils";
 
 function useRoomLink(host = false) {
   const roomCode = useOnline((s) => s.roomCode);
-  return { roomCode, link: shareUrl(roomCode, host ? { host: true } : undefined) };
+  const [origin, setOrigin] = useState(() => (typeof window === "undefined" ? "" : shareOrigin()));
+  useEffect(() => {
+    let cancel = false;
+    void probeLanOrigin().then((lan) => {
+      if (!cancel && lan) setOrigin(lan);
+    });
+    return () => {
+      cancel = true;
+    };
+  }, []);
+  return { roomCode, link: shareUrl(roomCode, { host, origin: origin || undefined }) };
 }
 
 function CopyRow({ code, link }: { code: string; link: string }) {
@@ -117,6 +129,11 @@ function ClaimStep({ connecting }: { connecting: boolean }) {
     <div className="mt-6 grid flex-1 items-center gap-10 lg:grid-cols-[minmax(16rem,28rem)_minmax(0,1fr)]">
       <div className="mx-auto w-full max-w-sm">
         <QrCode value={link} label="Host-QR" className="aspect-square w-full shadow-lift" />
+        {link ? (
+          <p className="mt-3 break-all text-center text-xs text-muted" data-invite-url>
+            {link}
+          </p>
+        ) : null}
       </div>
       <div>
         <p className="tv-kicker">Bühne</p>
@@ -171,11 +188,16 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
   const chat = useOnline((s) => s.chat);
   const tv = useOnline((s) => s.tv);
   const suggest = useOnline((s) => s.suggest);
+  const stageAudio = useOnline((s) => s.stageAudio);
+  const cup = useOnline((s) => s.cup);
+  const cupSize = useOnline((s) => s.cupSize);
+  const cupQualify = useOnline((s) => s.cupQualify);
+  const tournament = useOnline((s) => s.tournament);
   const members = useOnline((s) => s.members);
   const hostId = useOnline((s) => s.hostId);
   const adminId = useOnline((s) => s.adminId);
   const stagePlays = useOnline((s) => s.stagePlays);
-  const seats = playerSeats(members, hostId, tv, stagePlays);
+  const seats = playerSeats(members, hostId, tv, stagePlays, cup);
   const config = roomConfigFrom({
     era,
     target,
@@ -195,6 +217,10 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
     chat,
     tv,
     suggest,
+    stageAudio,
+    cup,
+    cupSize,
+    cupQualify,
   });
   const pile = optionsPile(config, Math.max(seats.length, 1));
   const pileBlocked = pile.status === "short" || pile.status === "empty";
@@ -281,8 +307,13 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
   const emoji = useOnline((s) => s.emoji);
   const chat = useOnline((s) => s.chat);
   const suggest = useOnline((s) => s.suggest);
-  const seats = playerSeats(members, hostId, tv, stagePlays);
-  const need = 1;
+  const stageAudio = useOnline((s) => s.stageAudio);
+  const cup = useOnline((s) => s.cup);
+  const cupSize = useOnline((s) => s.cupSize);
+  const cupQualify = useOnline((s) => s.cupQualify);
+  const tournament = useOnline((s) => s.tournament);
+  const seats = playerSeats(members, hostId, tv, stagePlays, cup);
+  const need = cup && TOURNAMENT_LIVE ? CUP_MIN : 1;
   const currentAdmin = adminId || hostId;
   const config = roomConfigFrom({
     era,
@@ -303,6 +334,10 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
     chat,
     tv,
     suggest,
+    stageAudio,
+    cup,
+    cupSize,
+    cupQualify,
   });
   const pile = optionsPile(config, Math.max(seats.length, need));
   const pileBlocked = pile.status === "short" || pile.status === "empty";
@@ -312,6 +347,11 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
     <div className={cn("mt-6 grid flex-1 gap-10", isTv && "lg:grid-cols-[minmax(16rem,28rem)_minmax(0,1fr)]")}>
       <div className="mx-auto w-full max-w-sm">
         <QrCode value={link} label="Gäste-QR" className="aspect-square w-full shadow-lift" />
+        {link ? (
+          <p className="mt-3 break-all text-center text-xs text-muted" data-invite-url>
+            {link}
+          </p>
+        ) : null}
         <p className="mt-4 text-center font-mono text-5xl tracking-[0.28em] text-fg">
           {roomCode || "····"}
         </p>
@@ -321,8 +361,10 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
         <p className="tv-kicker">{TV_MODE_NAME}</p>
         <h1 className="mt-2 tv-title">Mitspielen</h1>
         <p className="mt-3 max-w-xl text-base text-muted">
-          Handy auf den QR. Im Discord-Stream den Code abtippen oder den Link aus dem Chat öffnen.
-          Der Ton kommt von diesem Bildschirm.
+          Handy auf den QR. Im Discord-Stream den Code abtippen oder den Link aus dem Chat öffnen.{" "}
+          {config.stageAudio === "all"
+            ? "Der Titel läuft auf dem Bigscreen und auf den Handys."
+            : "Der Ton kommt von diesem Bildschirm."}
         </p>
         <PlayAlongSwitch />
         {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
@@ -397,6 +439,11 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
             </p>
           ) : null}
         </section>
+        {TOURNAMENT_LIVE && cup && tournament && tournament.status !== "idle" ? (
+          <div className="mt-8">
+            <TournamentBoard t={tournament} tv />
+          </div>
+        ) : null}
         {isAdmin ? (
           <div className="mt-8 flex flex-col gap-2 sm:flex-row">
             <Button
@@ -415,7 +462,9 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
                     : "Mindestens ein Handy"
                   : pileBlocked
                     ? "Zu wenig Titel"
-                    : "Abend starten"}
+                    : cup && TOURNAMENT_LIVE
+                      ? "Turnier starten"
+                      : "Abend starten"}
             </Button>
             <Button size="lg" variant="secondary" className="flex-1" onClick={() => requestTvStep("setup")}>
               Einstellungen

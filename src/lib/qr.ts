@@ -310,7 +310,7 @@ function interleave(version: Version, data: number[]) {
 }
 
 export function encodeQr(text: string): boolean[][] {
-  const payload = text.slice(0, 120);
+  const payload = text.slice(0, 180);
   const bits = bytesToBits(payload);
   const index = pickVersion(Math.ceil(bits.length / 8));
   const version = VERSIONS[index]!;

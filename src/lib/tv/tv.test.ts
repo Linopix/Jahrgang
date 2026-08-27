@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { TV_LIVE } from "./flags.ts";
 import { pickSuccessor, skipClaim, takeClaim, TV_MODE_NAME, TV_STAGE_NAME } from "./names.ts";
 import { encodeQr } from "../qr.ts";
-import { shareUrl, wantsHostClaim } from "../game/room-code.ts";
+import { invitePath, shareOrigin, shareUrl, wantsHostClaim } from "../game/room-code.ts";
 
 test("bigscreen is live", () => {
   assert.equal(TV_LIVE, true);
@@ -93,10 +93,19 @@ test("host link is marked", () => {
   assert.equal(shareUrl("K7P2", { host: true }).includes("host=1"), true);
   assert.equal(shareUrl("K7P2").includes("/i/K7P2"), true);
   assert.equal(shareUrl("K7P2").includes("host="), false);
+  assert.equal(invitePath("K7P2", { host: true }), "/i/K7P2?host=1");
+  assert.equal(
+    shareUrl("K7P2", { host: true, origin: "https://jahrgang.vercel.app" }),
+    "https://jahrgang.vercel.app/i/K7P2?host=1",
+  );
+  assert.equal(shareOrigin("https://abc.grok-sandbox.com/play"), "https://jahrgang.vercel.app");
+  assert.equal(shareOrigin("https://jahrgang.vercel.app/x"), "https://jahrgang.vercel.app");
+  assert.equal(shareOrigin("http://192.168.1.20:8080/"), "http://192.168.1.20:8080");
 });
 
-test("qr has finder patterns", () => {
-  const m = encodeQr("https://jahrgang.vercel.app/?room=K7P2&host=1");
+test("qr encodes the full invite url", () => {
+  const url = "https://jahrgang.vercel.app/i/K7P2?host=1";
+  const m = encodeQr(url);
   const n = m.length;
   assert.ok(n >= 25);
   assert.equal(n, m[0]?.length);
@@ -109,4 +118,10 @@ test("qr has finder patterns", () => {
   finder(0, 0);
   finder(n - 7, 0);
   finder(0, n - 7);
+  const long = encodeQr("https://jahrgang.vercel.app/i/K7P2?host=1&from=discord");
+  assert.equal(long.length, long[0]?.length);
+  assert.notEqual(
+    JSON.stringify(encodeQr("https://jahrgang.vercel.app/i/AAAA")),
+    JSON.stringify(encodeQr("https://jahrgang.vercel.app/i/BBBB")),
+  );
 });

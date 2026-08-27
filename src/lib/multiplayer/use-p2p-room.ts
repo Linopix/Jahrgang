@@ -21,6 +21,8 @@ export interface P2PRoomHandle {
   broadcast: (data: unknown) => void;
   send: (data: unknown, peerId?: string) => void;
   dropPeer: (peerId: string) => void;
+  setHub: (id: string | null) => void;
+  roster: () => { id: string; name: string }[];
   inspect: () => ReturnType<P2PRoom["inspect"]> | null;
   onMessage: (
     fn: (from: string, data: unknown, channel: "state" | "reliable") => void,
@@ -68,6 +70,8 @@ export function useP2PRoom(options: UseP2PRoomOptions = {}): P2PRoomHandle {
     [],
   );
   const dropPeer = useCallback((peerId: string) => roomRef.current?.dropPeer(peerId), []);
+  const setHub = useCallback((id: string | null) => roomRef.current?.setHub(id), []);
+  const roster = useCallback(() => roomRef.current?.rosterList() ?? [], []);
   const inspect = useCallback(() => roomRef.current?.inspect() ?? null, []);
   const onMessage = useCallback(
     (fn: (from: string, data: unknown, channel: "state" | "reliable") => void) => {
@@ -79,5 +83,5 @@ export function useP2PRoom(options: UseP2PRoomOptions = {}): P2PRoomHandle {
     [],
   );
 
-  return { selfId, room, peers, joined, broadcast, send, dropPeer, inspect, onMessage };
+  return { selfId, room, peers, joined, broadcast, send, dropPeer, setHub, roster, inspect, onMessage };
 }

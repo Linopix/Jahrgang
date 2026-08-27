@@ -100,6 +100,11 @@ export function PlayScreen() {
     "title",
     suggestMode !== "off" && (kind === "both" || kind === "title"),
   );
+  const remoteSongs = useRemoteHints(
+    artistGuess,
+    "songs",
+    suggestMode === "on" && (kind === "both" || kind === "title") && artistGuess.trim().length >= 2,
+  );
   const songs = useMemo(
     () =>
       mergeNamePairs([
@@ -109,8 +114,9 @@ export function PlayScreen() {
         CATALOG,
         extra,
         remoteTitles,
+        remoteSongs,
       ]),
-    [deck, players, current, extra, remoteTitles],
+    [deck, players, current, extra, remoteTitles, remoteSongs],
   );
   const artists = useMemo(
     () =>
@@ -457,7 +463,7 @@ export function PlayScreen() {
   );
 }
 
-function useRemoteHints(query: string, kind: "artist" | "title", enabled: boolean) {
+function useRemoteHints(query: string, kind: "artist" | "title" | "songs", enabled: boolean) {
   const [rows, setRows] = useState<NamePair[]>([]);
   useEffect(() => {
     if (!enabled || query.trim().length < 2) {

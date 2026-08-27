@@ -1,3 +1,5 @@
+import type { CupGroupSize, CupQualify } from "@/lib/tournament/types";
+
 export type EraId =
   | "all"
   | "classic"
@@ -66,6 +68,7 @@ export type TokenCount = 0 | 1 | 2;
 
 export type NextRoundPolicy = "host" | "all";
 export type SuggestMode = "on" | "off" | "loose";
+export type StageAudio = "stage" | "all";
 
 export type Phase =
   | "home"
@@ -207,6 +210,10 @@ export interface RoomConfig {
   chat: boolean;
   tv: boolean;
   suggest: SuggestMode;
+  stageAudio: StageAudio;
+  cup: boolean;
+  cupSize: CupGroupSize;
+  cupQualify: CupQualify;
 }
 
 export const ERA_IDS: EraId[] = [
@@ -461,6 +468,17 @@ export function parseSuggest(value: unknown): SuggestMode {
   return isSuggestMode(value) ? value : DEFAULT_SUGGEST;
 }
 
+export const STAGE_AUDIO_IDS: StageAudio[] = ["stage", "all"];
+export const DEFAULT_STAGE_AUDIO: StageAudio = "stage";
+
+export function isStageAudio(value: unknown): value is StageAudio {
+  return value === "stage" || value === "all";
+}
+
+export function parseStageAudio(value: unknown): StageAudio {
+  return isStageAudio(value) ? value : DEFAULT_STAGE_AUDIO;
+}
+
 export const NEXT_ROUND_OPTIONS = ["host", "all"] as const;
 export const NEXT_ROUND_LABELS: Record<NextRoundPolicy, string> = {
   host: "Nur Host",
@@ -513,6 +531,10 @@ export const DEFAULT_ROOM_CONFIG: RoomConfig = {
   chat: true,
   tv: false,
   suggest: DEFAULT_SUGGEST,
+  stageAudio: DEFAULT_STAGE_AUDIO,
+  cup: false,
+  cupSize: "auto",
+  cupQualify: 2,
 };
 
 export function isPlayVariant(value: unknown): value is PlayVariant {

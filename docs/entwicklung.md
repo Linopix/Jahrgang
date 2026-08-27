@@ -25,7 +25,7 @@ Node 22. Dann [http://127.0.0.1:8080](http://127.0.0.1:8080) — nicht `localhos
 | --- | --- |
 | `npm run dev` | Spiel lokal, lädt bei Dateiänderung neu |
 | `npx tsc --noEmit` | Typen prüfen, schnellster Smoke-Test |
-| `node --experimental-strip-types --test src/lib/game/*.test.ts src/lib/tv/tv.test.ts src/lib/spotify/spotify.test.ts src/lib/og/invite.test.ts` | Spielregeln, Packs, Online, Einladungsbild |
+| `node --experimental-strip-types --test src/lib/game/*.test.ts src/lib/tv/tv.test.ts src/lib/spotify/spotify.test.ts src/lib/og/invite.test.ts src/lib/tournament/tournament.test.ts` | Spielregeln, Packs, Online, Einladungsbild, Turnier |
 | `npm test` | Dieselben Spiele-Tests plus ein paar Gerüst-Checks |
 | `npm run build` | Produktionsbuild |
 
@@ -108,6 +108,7 @@ src/
   lib/game/               Spielkern (Start hier)
   lib/multiplayer/        WebRTC-Mesh
   lib/tv/                 Bigscreen / Discord-Bühne
+  lib/tournament/         Turnier (Gruppen + K.o.), hinter TOURNAMENT_LIVE
   lib/spotify/            Optional, hinter SPOTIFY_LIVE
   lib/og/                 Einladungsbilder
   styles.css              Farben, Themes, Bewegung
@@ -115,6 +116,7 @@ docs/
   entwicklung.md          diese Datei
   voraussetzungen.md      was du können solltest
   musikdienste.md         Spotify und andere Dienste
+  turnier.md              Turnier-Modus, Flag, P2P-Failover
 ```
 
 `src/lib/auth`, `src/lib/account`, `migrations/` gehören zum App-Gerüst. Konten sind **aus** (`ACCOUNT_LIVE = false`). Daran musst du fürs Spiel nicht arbeiten. Spotify-Dateien bleiben, auch wenn `SPOTIFY_LIVE` gerade `false` ist — das Feature ist nur zugeklappt.
@@ -127,12 +129,12 @@ Ein paar Dateien (`PreviewHostBridge`, `scripts/with-app-env.mjs`) kommen noch a
 
 | Thema | Datei | Kurz |
 | --- | --- | --- |
-| Nadel und UI-Klänge | [`audio.ts`](../src/lib/game/audio.ts), [`public/sfx/`](../public/sfx/) | Preview ist ein `HTMLAudioElement`. Vinyl-Start, falsch, Joker liegen als mp3. Lobby-Musik ist synthetisch (Web Audio), kein Streaming. |
+| Nadel und UI-Klänge | [`audio.ts`](../src/lib/game/audio.ts), [`public/sfx/`](../public/sfx/) | Preview ist ein `HTMLAudioElement`. Vinyl-Start, falsch, Joker liegen als mp3. Lobby-Musik ist synthetisch (Web Audio), kein Streaming. Bigscreen: Host stellt vor dem Start `stageAudio` auf `stage` (nur Bühne) oder `all` (Bühne und Handys). Nach dem Start gilt der Wert für alle. UI-Klänge folgen der bestehenden Stummschaltung. Podest: `sfxPodium` Platz 3, 2, dann 1. |
 | Tipp vergleichen | [`guess.ts`](../src/lib/game/guess.ts) | Kleine Tippfehler, „The Beatles“ / „Beatles“, Klammern. Kenner darf leer lassen (überspringen). |
-| Autocomplete | [`guess.ts`](../src/lib/game/guess.ts), [`names.ts`](../src/lib/game/names.ts) | Host-Option `suggest`: an / aus / schwach, nur wenn Interpret und Titel geraten werden. Extra-Namen: Katalog, `names-data.json`, MusicBrainz (`searchNameHints`, `refreshNames` alle 24 h). `npm run sync:names` schreibt die JSON-Datei. |
+| Autocomplete | [`guess.ts`](../src/lib/game/guess.ts), [`names.ts`](../src/lib/game/names.ts) | Host-Option `suggest`: an / aus / schwach, nur wenn Interpret und Titel geraten werden. An: der Interpret grenzt die Titel ein; alle Titel dieses Interpreten kommen aus Katalog plus MusicBrainz (`kind: "songs"`, Limit 100). Schwach: der Interpret grenzt nicht ein. Aus: keine Liste. Extra-Namen: Katalog, `names-data.json`, MusicBrainz. `npm run sync:names` schreibt die JSON-Datei. |
+| Raumcode | [`room-code.ts`](../src/lib/game/room-code.ts), [`qr.ts`](../src/lib/qr.ts) | Vier Zeichen, ohne 0/O/1/I. Link `/i/AB12`. `?host=1` ist der Claim für das Steuergerät im Bigscreen. QR ist schwarz auf weiß. Unter localhost versucht die Lobby die LAN-Adresse fürs Handy. Grok-Vorschau-Hosts zeigen die öffentliche Adresse. |
 | Reaktionen | [`reactions.ts`](../src/lib/game/reactions.ts), [`reaction-dock.tsx`](../src/components/game/reaction-dock.tsx) | `{ t: "react" }`. Host kann Emoji in der Lobby aus. |
 | Chat | [`chat.ts`](../src/lib/game/chat.ts) | `{ t: "chat" }` / `chat-del`. Filter: `moderation.ts`. |
-| Raumcode | [`room-code.ts`](../src/lib/game/room-code.ts) | Vier Zeichen, ohne 0/O/1/I. Link `/i/AB12`. `?host=1` ist der Claim für das Steuergerät im Bigscreen. |
 | Einladungsbild | [`src/lib/og/`](../src/lib/og/) | Startseite ≠ Raum.link. Discord/WhatsApp holen `/api/og`. |
 | Discord-Overlay | [`discord/presence.ts`](../src/lib/discord/presence.ts) | Rich Presence, wenn das Spiel in Discord eingebettet läuft. |
 
@@ -149,7 +151,7 @@ Alles Wichtige in [`types.ts`](../src/lib/game/types.ts).
 | `Player` | `timeline`, `tokens` (Joker), `misses`, `quiz` |
 | `PlayVariant` | Kenner, Zeitstrahl, Blind, … |
 | `EraId` | Ein Pack: `eighties`, `pop`, `likes`, … |
-| `RoomConfig` | Was die Lobby einstellt und der Host sendet |
+| `RoomConfig` | Was die Lobby einstellt und der Host sendet. `stageAudio`: `stage` oder `all`. `cup` / `cupSize` / `cupQualify`: Turnier. |
 | `GameSnapshot` | Kompletter Rundstand, geht übers Netz |
 | `Phase` | Siehe Tabelle oben |
 
@@ -241,6 +243,19 @@ Auf der Bühne: `tv-stage.tsx`. Am Steuergerät: normales Play.
 
 ---
 
+## Turnier
+
+`TOURNAMENT_LIVE` ist an. In der Online-Lobby erscheint der Schalter „Turnier“. Standard bleibt eine normale Runde (`RoomConfig.cup = false`).
+
+Ablauf und Datenmodell: **[turnier.md](turnier.md)**. Kurz:
+
+- Gruppen zu 3 oder 4, automatisch aus der Personenzahl. Eine Jahrgang-Runde pro Gruppe.
+- Qualifikation (Platz 1 oder 1+2) ins K.o., Freilose auf die nächste Zweierpotenz.
+- Der Host rechnet (`completeMatch`), alle Geräte bekommen `{ t: "cup", tournament }`.
+- Ab etwa 8 Personen im Turnier: Stern-Topologie (nur Verbindung zum Host). Host-Ausfall über Signaling-Roster und dieselbe Nachfolge wie bisher.
+
+---
+
 ## Screens und wer sie steuert
 
 [`app.tsx`](../src/components/game/app.tsx) ist der einzige Umschalter. Neue Ansicht? Phase oder `online.status` erweitern, dann hier einhängen — nicht irgendwo `window.location`.
@@ -260,6 +275,7 @@ Kleine Dateien, große Wirkung. Nicht „heimlich“ im UI verstecken.
 | `SPOTIFY_LIVE` | `src/lib/spotify/flags.ts` | `false` | Login, Likes-Pack, Premium-Wiedergabe |
 | `TV_LIVE` | `src/lib/tv/flags.ts` | `true` | Bigscreen |
 | `ACCOUNT_LIVE` | `src/lib/account/flags.ts` | `false` | Konto / Rangliste |
+| `TOURNAMENT_LIVE` | `src/lib/tournament/flags.ts` | `true` | Turnier in der Online-Lobby |
 
 Spotify einrichten: **[musikdienste.md](musikdienste.md)**. Ohne Flag bleibt der Abend gleich (iTunes + Deezer).
 

@@ -289,6 +289,8 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   html,
@@ -347,7 +349,7 @@
   border-radius: var(--radius-md);
   background: var(--color-raised);
   padding-inline: 1rem;
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: var(--color-fg);
   box-shadow: var(--shadow-border);
   outline: none;
@@ -943,3 +945,12 @@
     transition: none;
   }
 }
+
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="hidden"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+

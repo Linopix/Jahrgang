@@ -33,6 +33,16 @@ const STEPS = [
     title: "Online",
     body: "Der Host vergibt einen vierstelligen Code. Der Host stellt in der Lobby ein, wer die nächste Runde startet und ob Chat und Emoji an sind. Falscher Anzeigename: rauswerfen und neu beitreten.",
   },
+  {
+    n: "07",
+    title: "Punkte",
+    body: "Die Platzierung folgt der Zahl der Karten auf der Linie. Bei gleicher Kartenzahl entscheiden die Ratepunkte: je richtig erkanntem Titel und Interpreten ein Punkt. Falsche Angaben bringen keinen Abzug. Kenner: Titel und Interpret beide richtig geben zusätzlich einen Joker und das Cover. Am Abend zählen zuerst die Siege, danach die Summe aus Karten und Ratepunkten über alle Runden. Falsch gelegte Karten wandern unter den Stapel und bleiben ohne Wert.",
+  },
+  {
+    n: "08",
+    title: "Turnier",
+    body: "Optional in der Online-Lobby. Ab vier Personen: Gruppen zu drei oder vier, eine Runde pro Gruppe. Platzierung wie sonst nach Karten, dann Ratepunkten. Die eingestellte Zahl (Platz 1 oder Platz 1 und 2) kommt ins K.o. Fehlt ein Gegner, gibt es ein Freilos. Gleichstand in einer K.o.-Begegnung wird mit Ziel 2 gestochen.",
+  },
 ];
 
 type RulesDialogProps = {

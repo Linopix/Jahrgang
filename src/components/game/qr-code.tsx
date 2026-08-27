@@ -14,16 +14,18 @@ export function QrCode({
   const matrix = useMemo(() => (value ? encodeQr(value) : []), [value]);
   const n = matrix.length;
   if (!n) return null;
-  const pad = 3;
+  const pad = 4;
   const box = n + pad * 2;
   return (
     <svg
       viewBox={`${-pad} ${-pad} ${box} ${box}`}
       role="img"
       aria-label={label}
-      className={cn("rounded-lg bg-surface text-fg shadow-lift", className)}
+      shapeRendering="crispEdges"
+      className={cn("rounded-lg shadow-lift", className)}
     >
-      <path d={qrPath(matrix)} fill="currentColor" />
+      <rect x={-pad} y={-pad} width={box} height={box} fill="#fff" />
+      <path d={qrPath(matrix)} fill="#111" />
     </svg>
   );
 }

@@ -15,6 +15,7 @@ import { GenreArt, PackArt } from "@/components/game/pack-art";
 import { MenuSelect } from "@/components/game/menu-select";
 import { noteMixYears, notePack, noteVariant } from "@/lib/gags";
 import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
+import { TOURNAMENT_LIVE, CUP_MIN, cupPreview } from "@/lib/tournament";
 import { useSpotify } from "@/lib/spotify/session";
 import { SpotifyConnect, useSpotifyConnected } from "./spotify-connect";
 import {
@@ -177,7 +178,7 @@ function PlaylistField({
         autoComplete="off"
         spellCheck={false}
         rows={4}
-        className="mt-3 w-full rounded-md bg-surface px-4 py-3 text-sm text-fg shadow-border outline-none transition-[box-shadow] placeholder:text-subtle focus:ring-2 focus:ring-primary/70"
+        className="field mt-3 h-auto py-3"
       />
       <div className="mt-2 flex justify-end">
         <Button
@@ -941,6 +942,61 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
                 on={value.chat}
                 onChange={(chat) => onChange({ chat })}
               />
+              {value.tv ? (
+                <SwitchRow
+                  label="Ton auf den Handys"
+                  hint={
+                    value.stageAudio === "all"
+                      ? "Bigscreen und alle Handys spielen den Titel."
+                      : "Nur das Bigscreen-Gerät spielt den Titel."
+                  }
+                  on={value.stageAudio === "all"}
+                  onChange={(on) => onChange({ stageAudio: on ? "all" : "stage" })}
+                />
+              ) : null}
+            </div>
+          ) : null}
+          {online && TOURNAMENT_LIVE ? (
+            <div className="mt-5">
+              <div className={SWITCH_PANEL}>
+                <SwitchRow
+                  label="Turnier"
+                  hint={
+                    value.cup
+                      ? "Gruppenphase, danach K.o. Eine Runde pro Gruppe."
+                      : "Eine normale Runde mit allen im Raum."
+                  }
+                  on={value.cup}
+                  onChange={(cup) => onChange({ cup })}
+                />
+              </div>
+              {value.cup ? (
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <p className="mb-2 text-sm text-muted">Gruppengröße</p>
+                    <Segment
+                      items={["auto", 3, 4] as const}
+                      value={value.cupSize}
+                      onChange={(cupSize) => onChange({ cupSize })}
+                      label={(item) => (item === "auto" ? "Auto" : `${item}er`)}
+                    />
+                  </div>
+                  <div>
+                    <p className="mb-2 text-sm text-muted">Weiter pro Gruppe</p>
+                    <Segment
+                      items={[1, 2] as const}
+                      value={value.cupQualify}
+                      onChange={(cupQualify) => onChange({ cupQualify })}
+                      label={(item) => (item === 1 ? "Platz 1" : "Platz 1 und 2")}
+                    />
+                  </div>
+                  <p className="text-sm text-muted">
+                    {players < CUP_MIN
+                      ? `Mindestens ${CUP_MIN} Personen.`
+                      : cupPreview(players, value.cupSize, value.cupQualify)}
+                  </p>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </section>
@@ -1004,6 +1060,7 @@ export function roomConfigSummary(config: RoomConfig) {
           ? "ohne Chat"
           : null;
   const extra = social ? ` · ${social}` : "";
+  const cup = config.cup ? " · Turnier" : "";
   const extraPacks = parseEras(config.era, config.extraEra, config.eras);
   const packLabel = extraPacks.map((id) => ERA_LABELS[id]).join(" + ");
   const more = extraPacks.filter((id) => id !== extraPacks[0]).map((id) => ERA_LABELS[id]);
@@ -1011,10 +1068,10 @@ export function roomConfigSummary(config: RoomConfig) {
   const open = isOpenPlay(config);
   const goal = open ? `${clampPool(config.pool)} im Stapel` : `${clampTarget(config.target)} Karten`;
   if (extraPacks.includes("playlist") && config.playlistLabel) {
-    return `${VARIANT_LABELS[config.variant]} · ${goal} · ${joker} · ${round} · ${config.playlistLabel}${moreLabel}${extra}`;
+    return `${VARIANT_LABELS[config.variant]} · ${goal} · ${joker} · ${round} · ${config.playlistLabel}${moreLabel}${extra}${cup}`;
   }
   if (extraPacks.includes("mix")) {
-    return `${VARIANT_LABELS[config.variant]} · ${goal} · ${joker} · ${round} · Mix ${config.mixFrom}–${config.mixTo} · ${GENRE_LABELS[config.mixGenre]}${moreLabel}${extra}`;
+    return `${VARIANT_LABELS[config.variant]} · ${goal} · ${joker} · ${round} · Mix ${config.mixFrom}–${config.mixTo} · ${GENRE_LABELS[config.mixGenre]}${moreLabel}${extra}${cup}`;
   }
-  return `${VARIANT_LABELS[config.variant]} · ${goal} · ${joker} · ${round} · ${packLabel}${extra}`;
+  return `${VARIANT_LABELS[config.variant]} · ${goal} · ${joker} · ${round} · ${packLabel}${extra}${cup}`;
 }

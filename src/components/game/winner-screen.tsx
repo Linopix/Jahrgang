@@ -8,6 +8,7 @@ import {
   requestAgain,
   requestBackToLobby,
   requestEndEvening,
+  requestFinishCupMatch,
   requestLeave,
 } from "@/lib/game/online-actions";
 import { rankPlayers } from "@/lib/game/engine";
@@ -27,6 +28,8 @@ import { submitBoard, useAccount } from "@/lib/account/client";
 import { useIsAdmin } from "@/lib/tv/mode";
 import { cn } from "@/lib/utils";
 import { ConfettiBurst, Podium } from "./podium";
+import { TournamentBoard } from "./tournament-board";
+import { TOURNAMENT_LIVE, currentMatch } from "@/lib/tournament";
 
 function formatDuration(ms: number) {
   if (ms <= 0) return "—";
@@ -86,6 +89,9 @@ export function WinnerScreen() {
   const nextRound = useOnline((s) => s.nextRound);
   const pending = useOnline((s) => s.pending);
   const selfId = useOnline((s) => s.selfId);
+  const tournament = useOnline((s) => s.tournament);
+  const cupOn = TOURNAMENT_LIVE && Boolean(useOnline((s) => s.cup));
+  const cupMatch = cupOn ? currentMatch(tournament) : null;
   const account = useAccount((s) => s.user);
   const mayStart = !online || canStartNextRound();
   const original = guessKind(variant, custom) !== "none";
@@ -97,9 +103,14 @@ export function WinnerScreen() {
   const [view, setView] = useState<"podium" | "board">("podium");
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setView("board"), 3400);
+    const timer = window.setTimeout(() => setView("board"), 4500);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (!cupOn || !isHost) return;
+    requestFinishCupMatch();
+  }, [cupOn, isHost, players]);
 
   useEffect(() => {
     const mine =
@@ -193,6 +204,12 @@ export function WinnerScreen() {
         </ol>
       ) : null}
 
+      {cupOn && tournament ? (
+        <div className="mt-8 rounded-xl bg-surface p-4 shadow-border">
+          <TournamentBoard t={tournament} compact />
+        </div>
+      ) : null}
+
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         {online ? (
           <>
@@ -201,16 +218,28 @@ export function WinnerScreen() {
                 size="lg"
                 className="flex-1"
                 disabled={pending}
-                onClick={() => void requestAgain()}
+                onClick={() => {
+                  if (cupOn && tournament?.status === "done") {
+                    requestBackToLobby();
+                    return;
+                  }
+                  void requestAgain();
+                }}
               >
-                Weiter spielen
+                {cupOn
+                  ? tournament?.status === "done"
+                    ? "Zur Lobby"
+                    : cupMatch?.stechen
+                      ? "Stechen"
+                      : "Nächstes Spiel"
+                  : "Weiter spielen"}
               </Button>
             ) : (
               <p className="flex-1 self-center text-center text-sm text-muted">
-                {NEXT_ROUND_BLURB[nextRound]}
+                {cupOn ? "Nächstes Spiel vom Host." : NEXT_ROUND_BLURB[nextRound]}
               </p>
             )}
-            {mayStart ? (
+            {mayStart && !cupOn ? (
               <Button size="lg" variant="secondary" className="flex-1" onClick={requestBackToLobby}>
                 {isHost ? "Zur Lobby" : "Zurück zur Lobby"}
               </Button>
@@ -218,7 +247,7 @@ export function WinnerScreen() {
             <Button size="lg" variant="secondary" className="flex-1" onClick={requestLeave}>
               Raum verlassen
             </Button>
-            {series.some((row) => row.wins > 0 || row.points > 0) && mayStart ? (
+            {series.some((row) => row.wins > 0 || row.points > 0) && mayStart && !cupOn ? (
               <Button size="lg" variant="ghost" className="flex-1" onClick={requestEndEvening}>
                 Abend beenden
               </Button>

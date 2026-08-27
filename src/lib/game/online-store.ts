@@ -20,15 +20,26 @@ import {
   parseEras,
   parseExtraEra,
   parseSuggest,
+  parseStageAudio,
   type CustomRules,
   type EraId,
   type GenreId,
   type NextRoundPolicy,
   type PlayVariant,
   type RoomConfig,
+  type StageAudio,
   type SuggestMode,
   type TokenCount,
 } from "./types";
+import {
+  DEFAULT_CUP_QUALIFY,
+  DEFAULT_CUP_SIZE,
+  parseCupQualify,
+  parseCupSize,
+  type CupGroupSize,
+  type CupQualify,
+  type Tournament,
+} from "@/lib/tournament";
 import { isBlocked, stripControls, cleanName, safeName } from "./moderation";
 import { TV_LIVE } from "@/lib/tv/flags";
 import { TV_STAGE_NAME, type TvStep } from "@/lib/tv/names";
@@ -136,6 +147,11 @@ type OnlineStore = {
   chat: boolean;
   tv: boolean;
   suggest: SuggestMode;
+  stageAudio: StageAudio;
+  cup: boolean;
+  cupSize: CupGroupSize;
+  cupQualify: CupQualify;
+  tournament: Tournament | null;
   stagePlays: boolean;
   adminId: string;
   tvStep: TvStep;
@@ -159,6 +175,7 @@ type OnlineStore = {
   setIdentity: (selfId: string, hostIfCreator: boolean) => void;
   setMembers: (members: OnlineMember[]) => void;
   setConfig: (config: RoomConfig) => void;
+  setTournament: (tournament: Tournament | null) => void;
   setTvStep: (step: TvStep) => void;
   skipTvClaim: () => void;
   setStagePlays: (on: boolean) => void;
@@ -195,6 +212,11 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   chat: true,
   tv: false,
   suggest: DEFAULT_ROOM_CONFIG.suggest,
+  stageAudio: DEFAULT_ROOM_CONFIG.stageAudio,
+  cup: false,
+  cupSize: DEFAULT_CUP_SIZE,
+  cupQualify: DEFAULT_CUP_QUALIFY,
+  tournament: null,
   stagePlays: false,
   adminId: "",
   tvStep: "invite",
@@ -325,6 +347,8 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       claimOpen: false,
       claimIntent: false,
       hostLive: true,
+      cup: false,
+      tournament: null,
     });
   },
 
@@ -399,8 +423,14 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       chat: config.chat !== false,
       tv: TV_LIVE && Boolean(config.tv),
       suggest: parseSuggest(config.suggest),
+      stageAudio: parseStageAudio(config.stageAudio),
+      cup: Boolean(config.cup),
+      cupSize: parseCupSize(config.cupSize),
+      cupQualify: parseCupQualify(config.cupQualify),
+      tournament: config.cup ? get().tournament : null,
     });
   },
+  setTournament: (tournament) => set({ tournament }),
   setTvStep: (step) => set({ tvStep: step }),
   skipTvClaim: () => {
     if (!get().claimOpen) return;
@@ -441,6 +471,10 @@ export function roomConfigFrom(
     | "chat"
     | "tv"
     | "suggest"
+    | "stageAudio"
+    | "cup"
+    | "cupSize"
+    | "cupQualify"
   >,
 ): RoomConfig {
   return {
@@ -462,6 +496,10 @@ export function roomConfigFrom(
     chat: state.chat !== false,
     tv: TV_LIVE && Boolean(state.tv),
     suggest: parseSuggest(state.suggest),
+    stageAudio: parseStageAudio(state.stageAudio),
+    cup: Boolean(state.cup),
+    cupSize: parseCupSize(state.cupSize),
+    cupQualify: parseCupQualify(state.cupQualify),
   };
 }
 

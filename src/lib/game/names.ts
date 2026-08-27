@@ -2,10 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import type { NamePair } from "./guess.ts";
 import { mergeNamePairs } from "./guess.ts";
 import seeded from "./names-data.json";
+import { hintLimit, hintQuery, MAX_HINTS, MAX_SONGS, type HintKind } from "./name-query.ts";
+
+export { hintLimit, hintQuery, MAX_HINTS, MAX_SONGS };
 
 const KEY = "jg-names-v1";
 const MAX_AGE = 24 * 60 * 60 * 1000;
-const MAX_HINTS = 8;
 const UA = "Jahrgang/1.0 (jahrgang.game@icloud.com)";
 
 type Cache = { at: number; songs: NamePair[] };
@@ -143,14 +145,15 @@ export const loadNameIndex = createServerFn({ method: "POST" }).handler(async ()
 });
 
 export const searchNameHints = createServerFn({ method: "POST" })
-  .validator((data: { q: string; kind: "artist" | "title" }) => data)
+  .validator((data: { q: string; kind: HintKind }) => data)
   .handler(async ({ data }): Promise<NamePair[]> => {
     const q = data.q.trim().slice(0, 48);
     if (q.length < 2) return [];
+    const limit = hintLimit(data.kind);
     try {
       if (data.kind === "artist") {
         const json = (await mbGet(
-          `artist?query=${encodeURIComponent(`artist:${q}*`)}&fmt=json&limit=${MAX_HINTS}`,
+          `artist?query=${encodeURIComponent(hintQuery("artist", q))}&fmt=json&limit=${limit}`,
         )) as { artists?: MbArtist[] };
         return mergeNamePairs(
           (json.artists ?? []).map((row) => {
@@ -160,7 +163,7 @@ export const searchNameHints = createServerFn({ method: "POST" })
         );
       }
       const json = (await mbGet(
-        `recording?query=${encodeURIComponent(`recording:${q}*`)}&fmt=json&limit=${MAX_HINTS}`,
+        `recording?query=${encodeURIComponent(hintQuery(data.kind, q))}&fmt=json&limit=${limit}`,
       )) as { recordings?: MbRecording[] };
       return mergeNamePairs([
         (json.recordings ?? []).flatMap((row) => {
@@ -187,5 +190,3 @@ export async function refreshNames(force = false) {
   writeStored({ at: Date.now(), songs });
   return songs;
 }
-
-export { MAX_HINTS };

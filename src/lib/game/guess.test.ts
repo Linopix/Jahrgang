@@ -70,6 +70,8 @@ test("title suggestions follow the typed artist even if it is wrong", () => {
   assert.deepEqual(queen, ["Bohemian Rhapsody"]);
   const idle = suggestTitles("", "michael jackson", songs);
   assert.ok(idle.includes("Beat It"));
+  assert.ok(idle.includes("Billie Jean"));
+  assert.equal(idle.length, 2);
   assert.ok(titlesForArtist("", songs).includes("Obscure Cut"));
   assert.deepEqual(suggestTitles("boh", "Queen", songs, 8, "loose"), ["Bohemian Rhapsody"]);
   assert.deepEqual(suggestTitles("boh", "Queen", songs, 8, "off"), []);
