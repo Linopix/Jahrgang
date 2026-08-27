@@ -9,7 +9,7 @@ import { markPreviewHintSeen, previewHintSeen } from "@/lib/game/preview-hint";
 import { packSize, songsForEras } from "@/lib/game/packs";
 import { countFittingFor } from "@/lib/game/extras";
 import { getFreshSongs, subscribeFresh } from "@/lib/game/fresh";
-import { dealCount, pileStatus, type PileStatus } from "@/lib/game/engine";
+import { dealCount, pileStatus, cupPileStatus, type PileStatus } from "@/lib/game/engine";
 import { sfxSlide, sfxTick } from "@/lib/game/audio";
 import { GenreArt, PackArt } from "@/components/game/pack-art";
 import { MenuSelect } from "@/components/game/menu-select";
@@ -755,6 +755,13 @@ export function optionsPile(value: RoomConfig, players: number) {
   const pile = pileCount(value, liveExtras());
   const open = isOpenPlay(value);
   const pool = value.variant === "custom" ? clampPool(value.pool) : undefined;
+  if (TOURNAMENT_LIVE && value.cup) {
+    return {
+      pile,
+      need: typeof pile === "number" ? pile : 0,
+      status: cupPileStatus(pile, players) as PileStatus,
+    };
+  }
   return {
     pile,
     need: dealCount(players, value.target, open, pool),
@@ -772,6 +779,14 @@ function PileNote({
   solo?: boolean;
 }) {
   const { pile, need, status } = optionsPile(value, players);
+  if (TOURNAMENT_LIVE && value.cup && (status === "ok" || status === "tight")) {
+    return (
+      <p className="mt-3 rounded-md bg-raised px-3 py-2 text-sm text-muted shadow-border">
+        Turnier: {pile} Titel in den Packs. Der Stapel nimmt alle, für die eine Hörprobe gefunden
+        wird. Ohne Hörprobe fallen Titel beim Start weg.
+      </p>
+    );
+  }
   if (solo && status !== "empty") return null;
   if (status === "ok") return null;
   if (status === "unknown") {
@@ -805,8 +820,9 @@ function PileNote({
 
 export function GameOptions({ value, onChange, online, players = 2, solo = false }: GameOptionsProps) {
   const custom = value.custom ?? DEFAULT_CUSTOM;
+  const cup = TOURNAMENT_LIVE && value.cup;
   const showTarget = value.variant !== "custom" || !custom.open;
-  const showPool = value.variant === "custom";
+  const showPool = value.variant === "custom" && !cup;
   const libraryCount = useSpotify((s) => s.libraryCount);
   const library = useSpotify((s) => s.library);
   const [fresh, setFresh] = useState(getFreshSongs);
@@ -871,7 +887,9 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
         </section>
 
         <section>
-          <h2 className="text-sm font-medium text-fg">{showTarget ? "Ziel und Joker" : "Stapel und Joker"}</h2>
+          <h2 className="text-sm font-medium text-fg">
+            {showTarget ? "Ziel und Joker" : showPool ? "Stapel und Joker" : "Joker"}
+          </h2>
           <div className="mt-3 grid gap-4">
             {showTarget ? (
               <SnapSlider
@@ -908,8 +926,12 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
           <p className="mt-2 text-sm text-muted">
             {value.variant === "custom"
               ? custom.open
-                ? "Kein Kartenziel. Der Stapel läuft sich leer — Größe oben einstellen."
-                : "Karten bis zum Sieg. Der Stapel kann größer sein als das Ziel."
+                ? cup
+                  ? "Kein Kartenziel. Der Stapel ist das ganze Pack."
+                  : "Kein Kartenziel. Der Stapel läuft sich leer — Größe oben einstellen."
+                : cup
+                  ? "Karten bis zum Sieg. Der Stapel ist das ganze Pack."
+                  : "Karten bis zum Sieg. Der Stapel kann größer sein als das Ziel."
               : value.variant === "original"
                 ? "Kenner startet ohne Joker. Beides richtig gibt einen dazu."
                 : "Karten bis zum Sieg · Joker pro Person."}

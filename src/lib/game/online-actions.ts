@@ -7,7 +7,7 @@ import type { OnlineMessage } from "./protocol";
 import { isAdmin, isTvRoom, isTvScreen, playerSeats } from "@/lib/tv/mode";
 import { pickSuccessor, type TvStep } from "@/lib/tv/names";
 import { nextHostId } from "./hosting";
-import { rankPlayers } from "./engine";
+import { rankPlayers, songsFromBoard } from "./engine";
 import { useSessionExit } from "./session-exit";
 import { noteDebug } from "./debug";
 import {
@@ -302,6 +302,7 @@ async function requestStartCup() {
   const tables: Record<string, GameSnapshot> = {};
   const speakers: Record<string, string> = {};
   netSend({ t: "loading" } satisfies OnlineMessage);
+  let pile = online.cupPile.slice();
   for (const match of batch) {
     const ids = new Set(match.playerIds);
     const matchSeats = seats.filter((row) => ids.has(row.id));
@@ -327,6 +328,8 @@ async function requestStartCup() {
       eras: online.eras,
       pool: online.pool,
       suggest: online.suggest,
+      fullPile: true,
+      readyPile: pile.length ? pile : undefined,
     });
     if (!ok) {
       const error = useGame.getState().loadError ?? "Start fehlgeschlagen.";
@@ -336,7 +339,12 @@ async function requestStartCup() {
       netSend({ t: "start-failed", error } satisfies OnlineMessage);
       return;
     }
-    tables[match.id] = useGame.getState().snapshot();
+    const snap = useGame.getState().snapshot();
+    if (!pile.length) {
+      pile = songsFromBoard(snap.players, snap.current, snap.deck);
+      online.setCupPile(pile);
+    }
+    tables[match.id] = snap;
     speakers[match.id] = match.playerIds[0] ?? "";
   }
   t = skipByes(t);

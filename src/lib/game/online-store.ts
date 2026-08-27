@@ -31,6 +31,7 @@ import {
   type SuggestMode,
   type TokenCount,
   type GameSnapshot,
+  type ResolvedSong,
 } from "./types";
 import {
   DEFAULT_CUP_AUDIO,
@@ -166,6 +167,7 @@ type OnlineStore = {
   cupTables: Record<string, GameSnapshot>;
   cupBoards: CupBoardCard[];
   cupSpeakers: Record<string, string>;
+  cupPile: ResolvedSong[];
   cupIntent: boolean;
   stagePlays: boolean;
   adminId: string;
@@ -196,6 +198,7 @@ type OnlineStore = {
     boards?: CupBoardCard[],
     speakers?: Record<string, string>,
   ) => void;
+  setCupPile: (pile: ResolvedSong[]) => void;
   setTvStep: (step: TvStep) => void;
   skipTvClaim: () => void;
   setStagePlays: (on: boolean) => void;
@@ -242,6 +245,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   cupTables: {},
   cupBoards: [],
   cupSpeakers: {},
+  cupPile: [],
   cupIntent: false,
   stagePlays: false,
   adminId: "",
@@ -279,6 +283,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       cupTables: {},
       cupBoards: [],
       cupSpeakers: {},
+      cupPile: [],
     });
   },
 
@@ -330,6 +335,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       cupTables: {},
       cupBoards: [],
       cupSpeakers: {},
+      cupPile: [],
     });
     persistNow(get());
   },
@@ -394,6 +400,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       cupTables: {},
       cupBoards: [],
       cupSpeakers: {},
+      cupPile: [],
     });
   },
 
@@ -475,6 +482,16 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       cupFlow: parseCupFlow(config.cupFlow),
       cupAudio: parseCupAudio(config.cupAudio, parseCupFlow(config.cupFlow)),
       tournament: config.cup ? get().tournament : null,
+      cupPile:
+        config.cup &&
+        get().era === config.era &&
+        get().playlistUrl === (config.playlistUrl ?? "") &&
+        get().mixFrom === config.mixFrom &&
+        get().mixTo === config.mixTo &&
+        get().mixGenre === config.mixGenre &&
+        JSON.stringify(get().eras) === JSON.stringify(eras)
+          ? get().cupPile
+          : [],
     });
   },
   setTournament: (tournament) => set({ tournament }),
@@ -484,6 +501,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       ...(boards ? { cupBoards: boards } : {}),
       ...(speakers ? { cupSpeakers: speakers } : {}),
     }),
+  setCupPile: (pile) => set({ cupPile: Array.isArray(pile) ? pile : [] }),
   setTvStep: (step) => set({ tvStep: step }),
   skipTvClaim: () => {
     if (!get().claimOpen) return;

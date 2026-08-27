@@ -127,6 +127,8 @@ export interface SetupConfig {
   eras?: EraId[];
   pool?: number;
   suggest?: SuggestMode;
+  fullPile?: boolean;
+  readyPile?: ResolvedSong[];
 }
 
 export interface SeriesStanding {

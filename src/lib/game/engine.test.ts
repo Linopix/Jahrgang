@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { canPlace, cardsNeeded, dealCount, pileStatus, rankPlayers, turnsUntilFirstWin } from "./engine.ts";
+import { canPlace, cardsNeeded, cupPileStatus, dealCount, pileStatus, rankPlayers, songsFromBoard, turnsUntilFirstWin } from "./engine.ts";
 import { DEFAULT_TARGET, DEFAULT_VARIANT, VARIANT_IDS, defaultTokensFor, parseEras, type Player } from "./types.ts";
 
 test("kenner is first, zeitstrahl second, ten cards default", () => {
@@ -84,6 +84,29 @@ test("pile status flags a short pack for four at eight cards", () => {
   assert.equal(pileStatus(null, 4, 8, false), "unknown");
   assert.equal(pileStatus(36, 4, 8, true, 48), "short");
   assert.equal(pileStatus(48, 4, 8, true, 48), "tight");
+});
+
+test("normal deal still caps at 80, cup pile does not", () => {
+  assert.equal(dealCount(8, 16, false, 200), 80);
+  assert.equal(cupPileStatus(200, 8), "ok");
+});
+
+test("songsFromBoard keeps unique titles from timelines and deck", () => {
+  const a = { id: "a", title: "A", artist: "X", year: 1980, previewUrl: "a" };
+  const b = { id: "b", title: "B", artist: "Y", year: 1981, previewUrl: "b" };
+  const c = { id: "c", title: "C", artist: "Z", year: 1982, previewUrl: "c" };
+  const pile = songsFromBoard(
+    [
+      { id: "p1", name: "Eins", timeline: [a], tokens: 0, misses: 0, quiz: 0 },
+      { id: "p2", name: "Zwei", timeline: [a], tokens: 0, misses: 0, quiz: 0 },
+    ],
+    b,
+    [c, b],
+  );
+  assert.deepEqual(
+    pile.map((row) => row.id),
+    ["a", "b", "c"],
+  );
 });
 
 test("rank prefers more cards then more quiz hits", () => {

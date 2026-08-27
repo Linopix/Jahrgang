@@ -308,6 +308,7 @@ export const useGame = create<GameStore>((set, get) => ({
     const variant = config.variant ?? DEFAULT_VARIANT;
     const custom = parseCustom(config.custom);
     const tokens = config.tokens ?? defaultTokensFor(variant);
+    const fullPile = Boolean(config.fullPile);
     set({
       phase: "loading",
       mode: config.mode,
@@ -315,8 +316,8 @@ export const useGame = create<GameStore>((set, get) => ({
       target: clampTarget(config.target),
       variant,
       custom,
-      lastSetup: config,
-      loadProgress: { done: 0, total: POOL_SIZE },
+      lastSetup: { ...config, readyPile: undefined },
+      loadProgress: { done: 0, total: fullPile ? 0 : POOL_SIZE },
       loadError: null,
     });
     try {
@@ -334,85 +335,101 @@ export const useGame = create<GameStore>((set, get) => ({
         name,
       }));
       const rules = rulesFor(variant, custom);
-      const wanted = variant === "custom" ? clampPool(config.pool, DEFAULT_POOL) : undefined;
-      const needed = dealCount(playerCount, clampTarget(config.target), rules.open, wanted, POOL_MAX);
-      const packs = parseEras(config.era, config.extraEra, config.eras);
-      let imported: PlaylistTrack[] = [];
-      if (packs.includes("playlist") && !config.playlistUrl) {
-        set({
-          phase: "setup",
-          loadError: "Bitte einen öffentlichen Spotify- oder Deezer-Link übernehmen.",
-        });
-        return false;
-      }
-      if (packs.includes("playlist") && config.playlistUrl) {
-        try {
-          imported = await loadPlaylistSongs({ data: { url: config.playlistUrl } });
-        } catch {
-          imported = [];
-        }
-      }
-      let library: PlaylistTrack[] = [];
-      if (SPOTIFY_LIVE && useSpotify.getState().user) {
-        try {
-          library = await loadSpotifyLibrary();
-        } catch {
-          library = [];
-        }
-      }
-      if (packs.includes("likes") && imported.length === 0 && library.length === 0) {
-        set({
-          phase: "setup",
-          loadError: "Bei Spotify anmelden, dann liegen deine Titel bereit. Oder ein anderes Pack wählen.",
-        });
-        return false;
-      }
-      const mix = {
-        from: config.mixFrom ?? DEFAULT_MIX_FROM,
-        to: config.mixTo ?? DEFAULT_MIX_TO,
-        genre: config.mixGenre ?? "all",
-      };
-      const catalogPool = fisherYates(songsForEras(packs, mix));
-      const extras = fisherYates([...imported, ...library, ...getFreshSongs()]);
-      const merged = mergeExtraSongsFor(catalogPool, extras, packs, mix);
-      const pool: Array<CatalogSong | PlaylistTrack> = merged.pool;
-      const resolved: ResolvedSong[] = [];
-      const seen = new Set<string>();
-      set({ loadProgress: { done: 0, total: needed } });
-
-      for (const song of pool) {
-        if (resolved.length >= needed) break;
-        if (seen.has(song.id)) continue;
-        const ready = "previewUrl" in song ? song.previewUrl : undefined;
-        if (ready) {
-          seen.add(song.id);
-          resolved.push({
-            ...song,
-            previewUrl: ready,
-            artworkUrl: "artworkUrl" in song ? song.artworkUrl : undefined,
+      const readyPile = Array.isArray(config.readyPile)
+        ? config.readyPile.filter((song) => song?.id)
+        : [];
+      const wanted = !fullPile && variant === "custom" ? clampPool(config.pool, DEFAULT_POOL) : undefined;
+      let resolved: ResolvedSong[] = [];
+      if (readyPile.length >= playerCount + 4) {
+        resolved = fisherYates(readyPile.slice());
+        set({ loadProgress: { done: resolved.length, total: resolved.length } });
+      } else {
+        const packs = parseEras(config.era, config.extraEra, config.eras);
+        let imported: PlaylistTrack[] = [];
+        if (packs.includes("playlist") && !config.playlistUrl) {
+          set({
+            phase: "setup",
+            loadError: "Bitte einen öffentlichen Spotify- oder Deezer-Link übernehmen.",
           });
-          set({ loadProgress: { done: Math.min(resolved.length, needed), total: needed } });
+          return false;
         }
-      }
+        if (packs.includes("playlist") && config.playlistUrl) {
+          try {
+            imported = await loadPlaylistSongs({ data: { url: config.playlistUrl } });
+          } catch {
+            imported = [];
+          }
+        }
+        let library: PlaylistTrack[] = [];
+        if (SPOTIFY_LIVE && useSpotify.getState().user) {
+          try {
+            library = await loadSpotifyLibrary();
+          } catch {
+            library = [];
+          }
+        }
+        if (packs.includes("likes") && imported.length === 0 && library.length === 0) {
+          set({
+            phase: "setup",
+            loadError: "Bei Spotify anmelden, dann liegen deine Titel bereit. Oder ein anderes Pack wählen.",
+          });
+          return false;
+        }
+        const mix = {
+          from: config.mixFrom ?? DEFAULT_MIX_FROM,
+          to: config.mixTo ?? DEFAULT_MIX_TO,
+          genre: config.mixGenre ?? "all",
+        };
+        const catalogPool = fisherYates(songsForEras(packs, mix));
+        const extras = fisherYates([...imported, ...library, ...getFreshSongs()]);
+        const merged = mergeExtraSongsFor(catalogPool, extras, packs, mix);
+        const pool: Array<CatalogSong | PlaylistTrack> = merged.pool;
+        const needed = fullPile
+          ? pool.length
+          : dealCount(playerCount, clampTarget(config.target), rules.open, wanted, POOL_MAX);
+        const seen = new Set<string>();
+        set({ loadProgress: { done: 0, total: Math.max(needed, 1) } });
+        const batchSize = fullPile ? 24 : 8;
 
-      for (let i = 0; i < pool.length && resolved.length < needed; i += 8) {
-        const slice = pool.slice(i, i + 8).filter((song) => !seen.has(song.id));
-        slice.forEach((song) => seen.add(song.id));
-        if (slice.length === 0) continue;
-        const results = await resolvePreviews({ data: { queries: slice } });
-        for (const result of results) {
-          if (!result.previewUrl && !result.spotifyUri) continue;
-          const song = slice.find((row) => row.id === result.id);
-          if (!song) continue;
-          resolved.push({
-            ...song,
-            year: song.year || result.year || song.year,
-            previewUrl: result.previewUrl || "",
-            artworkUrl: result.artworkUrl ?? undefined,
-            spotifyUri: result.spotifyUri,
+        for (const song of pool) {
+          if (resolved.length >= needed) break;
+          if (seen.has(song.id)) continue;
+          const ready = "previewUrl" in song ? song.previewUrl : undefined;
+          if (ready) {
+            seen.add(song.id);
+            resolved.push({
+              ...song,
+              previewUrl: ready,
+              artworkUrl: "artworkUrl" in song ? song.artworkUrl : undefined,
+            });
+            set({ loadProgress: { done: Math.min(resolved.length, needed), total: needed } });
+          }
+        }
+
+        for (let i = 0; i < pool.length && resolved.length < needed; i += batchSize) {
+          const slice = pool.slice(i, i + batchSize).filter((song) => !seen.has(song.id));
+          slice.forEach((song) => seen.add(song.id));
+          if (slice.length === 0) continue;
+          const results = await resolvePreviews({ data: { queries: slice } });
+          for (const result of results) {
+            if (!result.previewUrl && !result.spotifyUri) continue;
+            const song = slice.find((row) => row.id === result.id);
+            if (!song) continue;
+            resolved.push({
+              ...song,
+              year: song.year || result.year || song.year,
+              previewUrl: result.previewUrl || "",
+              artworkUrl: result.artworkUrl ?? undefined,
+              spotifyUri: result.spotifyUri,
+            });
+          }
+          set({
+            loadProgress: {
+              done: fullPile ? Math.min(i + batchSize, needed) : Math.min(resolved.length, needed),
+              total: needed,
+            },
           });
         }
-        set({ loadProgress: { done: Math.min(resolved.length, needed), total: needed } });
       }
 
       if (resolved.length < playerCount + 4) {
@@ -443,6 +460,7 @@ export const useGame = create<GameStore>((set, get) => ({
         roundStats: emptyStats(now),
         stats: keepSession ? get().stats : emptyStats(now),
         phase: "listen",
+        lastSetup: { ...config, readyPile: undefined },
         loadProgress: { done: resolved.length, total: resolved.length },
       });
       cuePreview(current, variant, custom);

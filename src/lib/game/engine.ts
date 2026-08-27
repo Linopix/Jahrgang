@@ -88,6 +88,30 @@ export function pileStatus(
   return "ok";
 }
 
+/** Turnier: der Stapel ist das ganze Pack. Es zählt nur, ob genug Hörproben da sind. */
+export function cupPileStatus(pile: number | null, playerCount: number): PileStatus {
+  if (pile === null) return "unknown";
+  if (pile <= 0) return "empty";
+  if (pile < Math.max(1, playerCount) + 4) return "short";
+  return "ok";
+}
+
+export function songsFromBoard(players: Player[], current: ResolvedSong | null, deck: ResolvedSong[]): ResolvedSong[] {
+  const out: ResolvedSong[] = [];
+  const seen = new Set<string>();
+  const add = (song: ResolvedSong | null | undefined) => {
+    if (!song?.id || seen.has(song.id)) return;
+    seen.add(song.id);
+    out.push(song);
+  };
+  for (const player of players) {
+    for (const song of player.timeline ?? []) add(song);
+  }
+  add(current);
+  for (const song of deck) add(song);
+  return out;
+}
+
 export function turnsUntilFirstWin(playerCount: number, target: number): number {
   const n = Math.max(1, playerCount);
   const extras = Math.max(1, target - 1);

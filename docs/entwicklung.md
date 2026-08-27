@@ -362,7 +362,7 @@ Wenn du `canPlace`, Zielkarten oder Host-Nachfolge anfasst: Test zuerst oder dir
 ## Typische Fallen
 
 **„Die Runde endet nach vier Karten.“**  
-Deck zu klein. `dealCount` braucht grob `Spieler × (Ziel + 1)`. Packs mischen oder Custom-Stapel größer stellen — nicht „einfach weiterziehen“.
+Deck zu klein. `dealCount` braucht grob `Spieler × (Ziel + 1)`. Packs mischen oder Custom-Stapel größer stellen — nicht „einfach weiterziehen“. Im Turnier gilt das nicht: dort ist der Stapel das ganze Pack.
 
 **„Host am Handy ist nicht Host.“**  
 Im Bigscreen ist die Bühne Mesh-Host. Admin ist das erste Steuergerät (`adminId`). Rechte übergeben: `pass-admin`.

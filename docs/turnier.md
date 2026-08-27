@@ -19,6 +19,8 @@ Darstellung, QR und CSS: **[turnier-ui.md](turnier-ui.md)**.
 
 Eine Begegnung ist eine normale Jahrgang-Runde nur mit den Personen dieser Gruppe oder diesem K.o.-Paar.
 
+Der Stapel einer Begegnung enthält **alle Titel der gewählten Packs, für die eine Hörprobe gefunden wird**. Es gibt keine Kürzung auf 80 Titel wie in einer normalen Runde. Die Hörproben werden beim ersten Start geladen und für die weiteren Begegnungen des Abends wiederverwendet. Wer Pack, Mix oder Playlist ändert, löst den Vorrat neu.
+
 ---
 
 ## Steuerung und Netz
