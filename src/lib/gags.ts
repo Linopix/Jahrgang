@@ -367,7 +367,7 @@ const NAME_GAGS: NameGag[] = [
   { id: "cro", test: (n) => hasWord(n, "cro"), text: "Cro. Easy, das Jahr nicht." },
   { id: "rick", test: (n) => hasAny(n, ["rick", "astley"]), text: "Never gonna give you up." },
   { id: "hitster", test: (n) => n.includes("hitster"), text: "Wir kennen uns nicht." },
-  { id: "grok", test: (n) => hasWord(n, "grok"), text: "Ich bin nur der Beifahrer." },
+  { id: "onkelamoG", test: (n) => hasWord(n, "onkelamoG"), text: "GIG Amo Was geht" },
   { id: "jahrgang", test: (n) => hasWord(n, "jahrgang"), text: "Sehr witzig. Setz dich." },
   { id: "linopix", test: (n) => hasWord(n, "linopix"), text: "Der Hausherr. Hehe." },
   { id: "dj", test: (n) => n === "dj" || hasWord(n, "dj"), text: "DJ. Kopfhörer an, Meinung aus." },
