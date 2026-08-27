@@ -33,13 +33,13 @@
 
 Jeder fängt mit einer offenen Karte an. Dann kommt ein neuer Titel — ohne Namen, ohne Jahr. Du hörst ihn und suchst den Platz auf deiner Linie. Sitzt das Jahr, bleibt die Karte. Liegt sie falsch, geht sie zurück.
 
-Joker: Jahrzehnt sehen oder überspringen. Ziel sind 6, 8 oder 10 Karten — oder Custom ohne Ziel, bis der Stapel leer ist.
+Joker: Jahrzehnt sehen oder überspringen. Ziel sind zehn Karten, wie beim bekannten Original — oder 6, 8, 12 und mehr. Custom ohne Ziel, bis der Stapel leer ist.
 
 | Spiel | Was passiert |
 | --- | --- |
+| Kenner | Interpret und Titel, wenn du sie weißt. Beides richtig: Cover und ein Joker. |
 | Zeitstrahl | Nur das Jahr. Cover darfst du sehen. |
 | Blind | Dasselbe, Cover bleibt zu. |
-| Kenner | Interpret und Titel, wenn du sie weißt. Beides richtig: Cover und ein Joker. |
 | Star | Nur den Interpreten. |
 | Titel | Nur den Songtitel. |
 | Verrückter | Raten, Cover zu, keine Jahreszahlen, links ist später. Die Platte spinnt am Tempo. |

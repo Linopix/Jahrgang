@@ -5,9 +5,9 @@ import {
   liveAccessToken,
   originOf,
   publicUser,
-  readSession,
   refreshSession,
   sessionCookie,
+  spotifyConfigured,
 } from "@/lib/spotify/oauth.server";
 
 export const Route = createFileRoute("/api/spotify")({
@@ -18,7 +18,10 @@ export const Route = createFileRoute("/api/spotify")({
         const session = await refreshSession(request);
         const headers = new Headers({ "content-type": "application/json" });
         if (session) headers.set("set-cookie", sessionCookie(originOf(request), session));
-        return new Response(JSON.stringify({ user: publicUser(session) }), { headers });
+        return new Response(
+          JSON.stringify({ user: publicUser(session), configured: spotifyConfigured() }),
+          { headers },
+        );
       },
       POST: async ({ request }) => {
         if (!SPOTIFY_LIVE) return Response.json({ error: "aus" }, { status: 503 });

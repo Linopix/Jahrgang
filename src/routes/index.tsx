@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { GameApp } from "@/components/game/app";
 import { normalizeRoomCode, wantsHostClaim } from "@/lib/game/room-code";
 import { useOnline } from "@/lib/game/online-store";
+import { readSeat } from "@/lib/game/seat";
 
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -20,7 +21,8 @@ function Home() {
     if (code.length !== 4) return;
     const current = useOnline.getState();
     if (current.status !== "off" && current.status !== "entry") return;
-    current.openEntry(code, { claim: wantsHostClaim(host) });
+    if (readSeat(code)) current.resumeSeat();
+    else current.openEntry(code, { claim: wantsHostClaim(host) });
   }, [room, host]);
 
   return <GameApp />;

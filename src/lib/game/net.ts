@@ -1,3 +1,5 @@
+import { noteDebug } from "./debug";
+
 type Send = (data: unknown, peerId?: string) => void;
 type Drop = (peerId: string) => void;
 
@@ -12,6 +14,11 @@ export function bindNet(next: { send: Send; selfId: string; dropPeer?: Drop } | 
 }
 
 export function netSend(data: unknown, peerId?: string) {
+  const kind =
+    data && typeof data === "object" && "t" in data && typeof (data as { t: unknown }).t === "string"
+      ? (data as { t: string }).t
+      : "data";
+  noteDebug("out", kind, peerId ?? "all");
   send?.(data, peerId);
 }
 

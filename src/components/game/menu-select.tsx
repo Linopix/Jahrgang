@@ -19,6 +19,8 @@ type MenuSelectProps<T extends string> = {
   placeholder?: string;
   ariaLabel: string;
   name?: string;
+  defaultOpen?: boolean;
+  onDismiss?: () => void;
 };
 
 const TRIGGER =
@@ -39,8 +41,10 @@ export function MenuSelect<T extends string>({
   placeholder = "Wählen",
   ariaLabel,
   name,
+  defaultOpen = false,
+  onDismiss,
 }: MenuSelectProps<T>) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [box, setBox] = useState<PanelBox>({ left: 0, width: 320, maxHeight: 352 });
   const triggerRef = useRef<HTMLButtonElement>(null);
   const current = items.find((item) => item.id === value);
@@ -69,6 +73,7 @@ export function MenuSelect<T extends string>({
     if (!open) return;
     setOpen(false);
     sfxTick();
+    onDismiss?.();
   }
 
   function openMenu() {
@@ -82,6 +87,7 @@ export function MenuSelect<T extends string>({
 
   useEffect(() => {
     if (!open) return;
+    place();
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();

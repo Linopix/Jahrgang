@@ -1,6 +1,23 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { canPlace, cardsNeeded, dealCount, pileStatus, turnsUntilFirstWin } from "./engine.ts";
+import { DEFAULT_TARGET, DEFAULT_VARIANT, VARIANT_IDS, defaultTokensFor, parseEras } from "./types.ts";
+
+test("kenner is first, zeitstrahl second, ten cards default", () => {
+  assert.equal(VARIANT_IDS[0], "original");
+  assert.equal(VARIANT_IDS[1], "timeline");
+  assert.equal(DEFAULT_VARIANT, "original");
+  assert.equal(DEFAULT_TARGET, 10);
+  assert.equal(defaultTokensFor("original"), 0);
+  assert.equal(defaultTokensFor("timeline"), 2);
+});
+
+test("pack list keeps order, drops duplicates, all stays alone", () => {
+  assert.deepEqual(parseEras("eighties", "pop"), ["eighties", "pop"]);
+  assert.deepEqual(parseEras("eighties", "pop", ["pop", "eighties", "rock"]), ["pop", "eighties", "rock"]);
+  assert.deepEqual(parseEras("all", "pop"), ["all"]);
+  assert.deepEqual(parseEras("eighties", "eighties"), ["eighties"]);
+});
 
 test("forward timeline rejects earlier year on the right", () => {
   const line = [{ year: 1980 }, { year: 2000 }];
@@ -20,11 +37,17 @@ test("wild reverse timeline wants later on the left", () => {
   assert.equal(canPlace(line, 2, 1970, true), true);
 });
 
-test("four players at default target get a full race", () => {
+test("four players at eight cards get a full race", () => {
   const n = cardsNeeded(4, 8, false);
   const play = n - 4;
   assert.equal(n, 36);
   assert.ok(play >= turnsUntilFirstWin(4, 8));
+});
+
+test("default ten cards is a longer race than eight", () => {
+  assert.equal(cardsNeeded(4, 10, false), 44);
+  assert.ok(cardsNeeded(4, 10, false) > cardsNeeded(4, 8, false));
+  assert.ok(dealCount(4, 10, false) >= turnsUntilFirstWin(4, 10));
 });
 
 test("two players still have a short table", () => {

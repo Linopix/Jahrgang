@@ -6,6 +6,10 @@ import type { RoomConfig } from "./types";
 import type { OnlineMessage } from "./protocol";
 import { isAdmin, isTvRoom, isTvScreen, playerSeats } from "@/lib/tv/mode";
 import { pickSuccessor, type TvStep } from "@/lib/tv/names";
+import { nextHostId } from "./hosting";
+import { rankPlayers } from "./engine";
+import { useSessionExit } from "./session-exit";
+import { noteDebug } from "./debug";
 
 function skipIds() {
   return useOnline
@@ -63,6 +67,15 @@ export function requestEnd() {
     return;
   }
   netSend({ t: "action", kind: "end" } satisfies OnlineMessage);
+}
+
+export function requestSelectSlot(index: number) {
+  const game = useGame.getState();
+  const online = useOnline.getState();
+  if (online.status === "playing" && !canControlTurn()) return;
+  game.selectSlot(index);
+  if (online.status !== "playing") return;
+  netSend({ t: "aim", slot: useGame.getState().selectedSlot } satisfies OnlineMessage);
 }
 
 export function requestPlace(guess?: SongGuess) {
@@ -180,6 +193,7 @@ export async function requestStartOnline() {
     mixGenre: online.mixGenre,
     custom: online.custom,
     extraEra: online.extraEra,
+    eras: online.eras,
     pool: online.pool,
   });
   if (!ok) {
@@ -226,8 +240,51 @@ export function requestBackToLobby() {
 
 export function requestLeave() {
   const online = useOnline.getState();
+  const game = useGame.getState();
+  const playing =
+    game.phase === "listen" || game.phase === "reveal" || game.phase === "winner" || game.phase === "loading";
+  if (playing) {
+    const player =
+      game.players.find((row) => row.id === online.selfId) ??
+      game.players.find((row) => row.name === online.selfName) ??
+      null;
+    const ranked = rankPlayers(game.players);
+    const place = player ? ranked.findIndex((row) => row.id === player.id) + 1 : 0;
+    useSessionExit.getState().showLeft({
+      name: player?.name || online.selfName || "Du",
+      player,
+      place,
+      stats: game.stats,
+      roundStats: game.roundStats,
+      series: game.series,
+    });
+  }
   if (online.role === "host") {
-    netSend({ t: "host-left" } satisfies OnlineMessage);
+    const successor = nextHostId(
+      online.members.map((row) => ({
+        id: row.id,
+        live: row.connectionState !== "failed" && row.connectionState !== "disconnected",
+      })),
+      online.selfId,
+      online.tv ? online.selfId : "",
+    );
+    const adminLive = online.members.some(
+      (row) =>
+        row.id === online.adminId &&
+        row.id !== online.selfId &&
+        row.connectionState !== "failed" &&
+        row.connectionState !== "disconnected",
+    );
+    if (successor && successor !== online.selfId) {
+      noteDebug("out", "host-take", successor);
+      netSend({
+        t: "host-take",
+        hostId: successor,
+        adminId: adminLive ? online.adminId : successor,
+      } satisfies OnlineMessage);
+    } else {
+      netSend({ t: "host-left" } satisfies OnlineMessage);
+    }
   } else if (isAdmin()) {
     const successor = pickSuccessor(
       online.members.map((row) => ({
@@ -241,9 +298,19 @@ export function requestLeave() {
       netSend({ t: "pass-admin", id: successor } satisfies OnlineMessage);
     }
   }
-  useGame.getState().openHome();
+  game.openHome();
   online.leaveRoom();
   clearRoomFromUrl();
+}
+
+export function requestEndEvening() {
+  const series = useGame.getState().series;
+  if (!series.length) return;
+  useSessionExit.getState().showEvening(series);
+  if (useOnline.getState().status !== "off") {
+    noteDebug("out", "evening");
+    netSend({ t: "evening" } satisfies OnlineMessage);
+  }
 }
 
 export function requestKick(peerId: string) {

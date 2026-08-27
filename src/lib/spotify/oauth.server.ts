@@ -1,5 +1,5 @@
 import { createHash, createHmac, randomBytes } from "node:crypto";
-import { SPOTIFY_LIVE } from "./flags";
+import { SPOTIFY_LIVE } from "./flags.ts";
 
 const SESSION = "jg_spotify";
 const PKCE = "jg_sp_pkce";
@@ -53,10 +53,19 @@ function verify(token: string) {
   return ok === 0 ? payload : null;
 }
 
+/** Spotify rejects `localhost` as redirect URI; loopback must be 127.0.0.1. */
+export function loopbackHost(host: string) {
+  const match = host.match(/^(localhost)(:\d+)?$/i);
+  if (match) return `127.0.0.1${match[2] ?? ""}`;
+  return host;
+}
+
 export function originOf(request: Request) {
   const url = new URL(request.url);
   const proto = request.headers.get("x-forwarded-proto") ?? url.protocol.replace(":", "");
-  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? url.host;
+  const host = loopbackHost(
+    request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? url.host,
+  );
   return `${proto}://${host}`;
 }
 

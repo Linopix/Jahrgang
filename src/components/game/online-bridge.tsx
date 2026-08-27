@@ -1,15 +1,19 @@
 import { useEffect, useRef } from "react";
 import { useP2PRoom } from "@/lib/multiplayer";
-import { clearRoomFromUrl, p2pRoomId } from "@/lib/game/room-code";
+import { p2pRoomId } from "@/lib/game/room-code";
 import { isOnlineMessage, type MemberWire, type OnlineMessage } from "@/lib/game/protocol";
 import { bindNet, netDrop } from "@/lib/game/net";
 import { useGame } from "@/lib/game/store";
 import { useOnline, type OnlineMember } from "@/lib/game/online-store";
 import { requestStartOnline } from "@/lib/game/online-actions";
-import { DEFAULT_NEXT_ROUND, DEFAULT_ROOM_CONFIG, DEFAULT_TOKENS, DEFAULT_VARIANT, isNextRoundPolicy, isPlayVariant, isTokenCount, parseCustom } from "@/lib/game/types";
+import { DEFAULT_NEXT_ROUND, DEFAULT_ROOM_CONFIG, DEFAULT_VARIANT, defaultTokensFor, isNextRoundPolicy, isPlayVariant, isTokenCount, parseCustom } from "@/lib/game/types";
 import { receiveReaction } from "@/lib/game/reactions";
-import { receiveChat } from "@/lib/game/chat";
+import { applyChatDelete, receiveChat } from "@/lib/game/chat";
 import { takeClaim, pickSuccessor } from "@/lib/tv/names";
+import { safeName } from "@/lib/game/moderation";
+import { HOST_GRACE_MS, shouldTakeHost } from "@/lib/game/hosting";
+import { bindMeshInspect, noteDebug } from "@/lib/game/debug";
+import { useSessionExit } from "@/lib/game/session-exit";
 import type { PeerInfo } from "@/lib/multiplayer";
 
 const JOIN_TIMEOUT_MS = 14000;
@@ -30,9 +34,9 @@ export function OnlineBridge() {
 }
 
 function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
-  const p2p = useP2PRoom({ room: p2pRoomId(roomCode), name });
+  const presetId = useOnline.getState().selfId;
+  const p2p = useP2PRoom({ room: p2pRoomId(roomCode), name, selfId: presetId || undefined });
   const role = useOnline((s) => s.role);
-  const hostId = useOnline((s) => s.hostId);
   const members = useOnline((s) => s.members);
   const era = useOnline((s) => s.era);
   const target = useOnline((s) => s.target);
@@ -46,6 +50,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   const mixGenre = useOnline((s) => s.mixGenre);
   const custom = useOnline((s) => s.custom);
   const extraEra = useOnline((s) => s.extraEra);
+  const eras = useOnline((s) => s.eras);
   const pool = useOnline((s) => s.pool);
   const emoji = useOnline((s) => s.emoji);
   const chat = useOnline((s) => s.chat);
@@ -63,6 +68,11 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   }, [p2p.send, p2p.selfId, p2p.dropPeer]);
 
   useEffect(() => {
+    bindMeshInspect(() => p2p.inspect());
+    return () => bindMeshInspect(null);
+  }, [p2p.inspect]);
+
+  useEffect(() => {
     useOnline.setState({ selfId: p2p.selfId });
     if (role === "host") {
       useOnline.getState().setIdentity(p2p.selfId, true);
@@ -72,9 +82,77 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   useEffect(() => {
     if (!p2p.joined) return;
     if (role === "guest") {
-      p2p.send({ t: "hello", name, claim: useOnline.getState().claimIntent });
+      p2p.send({ t: "hello", name, claim: useOnline.getState().claimIntent, resume: true });
+    } else if (role === "host" && useGame.getState().phase === "home") {
+      p2p.send({ t: "sync-request" });
     }
   }, [p2p.joined, p2p.send, role, name]);
+
+  const hostWasLive = useRef(true);
+  useEffect(() => {
+    if (role !== "guest") {
+      useOnline.getState().setHostLive(true);
+      hostWasLive.current = true;
+      return;
+    }
+    const hostId = useOnline.getState().hostId;
+    const peer = p2p.peers.find((row) => row.id === hostId);
+    const live = Boolean(peer && peer.connectionState === "connected");
+    useOnline.getState().setHostLive(live);
+    if (live && !hostWasLive.current && p2p.joined) {
+      p2p.send({ t: "hello", name, resume: true, claim: useOnline.getState().claimIntent });
+      noteDebug("note", "host-back", hostId);
+    }
+    hostWasLive.current = live;
+  }, [p2p.peers, p2p.joined, p2p.send, role, name]);
+
+  useEffect(() => {
+    if (role === "host") return;
+    const hostId = useOnline.getState().hostId;
+    if (!hostId) return;
+    const peer = p2p.peers.find((row) => row.id === hostId);
+    const live = Boolean(peer && peer.connectionState === "connected");
+    if (live) return;
+    const timer = window.setTimeout(() => {
+      const online = useOnline.getState();
+      const members = [
+        { id: p2p.selfId, live: true },
+        ...p2p.peers.map((row) => ({
+          id: row.id,
+          live: row.connectionState === "connected",
+        })),
+      ];
+      if (
+        !shouldTakeHost({
+          selfId: p2p.selfId,
+          hostId: online.hostId,
+          hostLive: false,
+          members,
+          tvId: online.tv ? online.hostId : "",
+        })
+      ) {
+        return;
+      }
+      const adminLive = members.some((row) => row.id === online.adminId && row.live);
+      const oldHost = online.hostId;
+      const wasTv = online.tv;
+      online.becomeHost(adminLive ? online.adminId : p2p.selfId);
+      if (wasTv && oldHost !== p2p.selfId) {
+        useOnline.setState({ tv: false, stagePlays: false });
+      }
+      noteDebug("note", "host-take", p2p.selfId);
+      sendRef.current({
+        t: "host-take",
+        hostId: p2p.selfId,
+        adminId: adminLive ? online.adminId : p2p.selfId,
+      });
+      const game = useGame.getState();
+      if (game.phase === "listen" || game.phase === "reveal" || game.phase === "winner" || game.phase === "loading") {
+        sendRef.current({ t: "state", snapshot: game.snapshot() });
+      }
+    }, HOST_GRACE_MS);
+    return () => window.clearTimeout(timer);
+  }, [p2p.peers, p2p.selfId, role]);
 
   useEffect(() => {
     if (role !== "guest" || status !== "connecting") return;
@@ -100,17 +178,22 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
     for (const peer of p2p.peers) {
       if (kicked.has(peer.id)) continue;
       const prev = known.get(peer.id);
+      const connected = peer.connectionState === "connected";
       next.push({
         id: peer.id,
         name: prev?.name || peer.name || "Gast",
         connectionState: peerState(peer),
+        droppedAt: connected ? undefined : prev?.droppedAt ?? Date.now(),
       });
     }
+    const now = Date.now();
     for (const prev of known.values()) {
       if (prev.id === selfId) continue;
       if (next.some((m) => m.id === prev.id)) continue;
-      if (status === "playing") {
-        next.push({ ...prev, connectionState: "disconnected" });
+      const droppedAt = prev.droppedAt ?? now;
+      const wait = now - droppedAt < HOST_GRACE_MS || status === "playing";
+      if (wait) {
+        next.push({ ...prev, connectionState: "disconnected", droppedAt });
       }
     }
     useOnline.getState().setMembers(next.slice(0, 9));
@@ -178,6 +261,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       mixGenre,
       custom,
       extraEra,
+      eras,
       pool,
       emoji,
       chat,
@@ -185,7 +269,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       stagePlays: useOnline.getState().stagePlays,
     };
     p2p.send(msg);
-  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, extraEra, pool, emoji, chat, tv, members, adminId, tvStep, stagePlays]);
+  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, extraEra, eras, pool, emoji, chat, tv, members, adminId, tvStep, stagePlays]);
 
   useEffect(() => {
     return p2p.onMessage((from, data, channel) => {
@@ -197,14 +281,6 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       });
     });
   }, [p2p.onMessage, p2p.selfId, p2p.peers]);
-
-  useEffect(() => {
-    if (role !== "guest") return;
-    const hostPeer = p2p.peers.find((p) => p.id === hostId);
-    if (hostPeer?.connectionState === "failed") {
-      useOnline.getState().setError("Verbindung zum Host fehlgeschlagen. Anderes Netz versuchen.");
-    }
-  }, [p2p.peers, hostId, role]);
 
   return null;
 }
@@ -227,24 +303,31 @@ function handleMessage(
 ) {
   const online = useOnline.getState();
   const game = useGame.getState();
+  noteDebug("in", msg.t, from);
 
   if (msg.t === "hello" && online.role === "host") {
     if (online.kickedIds.includes(from)) {
       ctx.send({ t: "kick" }, from);
       return;
     }
-    if (online.status === "playing") {
+    const members = online.members.slice();
+    const existing = members.find((m) => m.id === from);
+    if (online.status === "playing" && !existing && !msg.resume) {
       ctx.send({ t: "start-failed", error: "Die Runde läuft bereits." }, from);
       return;
     }
-    const members = online.members.slice();
-    const existing = members.find((m) => m.id === from);
+    const name = safeName(msg.name || "", "Gast");
     if (existing) {
-      existing.name = msg.name || existing.name;
+      existing.name = name;
+      existing.connectionState = "connected";
+      existing.droppedAt = undefined;
     } else if (members.length < 9) {
-      members.push({ id: from, name: msg.name || "Gast", connectionState: "connecting" });
+      members.push({ id: from, name, connectionState: "connecting" });
     }
     online.setMembers(members);
+    if (online.status === "playing") {
+      ctx.send({ t: "state", snapshot: useGame.getState().snapshot() }, from);
+    }
     if (online.tv && online.claimOpen) {
       const claimed = takeClaim({
         claimOpen: true,
@@ -259,7 +342,11 @@ function handleMessage(
     return;
   }
 
-  if (msg.t === "lobby" && online.role === "guest") {
+  if (msg.t === "lobby") {
+    if (msg.hostId === ctx.selfId) return;
+    if (online.role === "host") {
+      useOnline.setState({ role: "guest" });
+    }
     online.setMembers(
       msg.members.map((m) => ({
         id: m.id,
@@ -271,7 +358,7 @@ function handleMessage(
       era: msg.era,
       target: msg.target,
       variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
-      tokens: isTokenCount(msg.tokens) ? msg.tokens : DEFAULT_TOKENS,
+      tokens: isTokenCount(msg.tokens) ? msg.tokens : defaultTokensFor(isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT),
       nextRound: isNextRoundPolicy(msg.nextRound) ? msg.nextRound : DEFAULT_NEXT_ROUND,
       playlistUrl: msg.playlistUrl ?? "",
       playlistLabel: msg.playlistLabel ?? "",
@@ -280,6 +367,7 @@ function handleMessage(
       mixGenre: msg.mixGenre ?? "all",
       custom: parseCustom(msg.custom),
       extraEra: msg.extraEra ?? null,
+      eras: msg.eras ?? [],
       pool: msg.pool ?? DEFAULT_ROOM_CONFIG.pool,
       emoji: msg.emoji !== false,
       chat: msg.chat !== false,
@@ -294,6 +382,7 @@ function handleMessage(
     if (online.status === "connecting" || online.status === "entry") {
       online.markLobby();
     }
+    online.persistSeat();
     return;
   }
 
@@ -303,7 +392,7 @@ function handleMessage(
         era: msg.era,
         target: msg.target,
         variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
-        tokens: isTokenCount(msg.tokens) ? msg.tokens : DEFAULT_TOKENS,
+        tokens: isTokenCount(msg.tokens) ? msg.tokens : defaultTokensFor(isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT),
         nextRound: isNextRoundPolicy(msg.nextRound) ? msg.nextRound : DEFAULT_NEXT_ROUND,
         playlistUrl: msg.playlistUrl ?? "",
         playlistLabel: msg.playlistLabel ?? "",
@@ -312,6 +401,7 @@ function handleMessage(
         mixGenre: msg.mixGenre ?? "all",
         custom: parseCustom(msg.custom),
         extraEra: msg.extraEra ?? null,
+        eras: msg.eras ?? [],
         pool: msg.pool ?? DEFAULT_ROOM_CONFIG.pool,
         emoji: msg.emoji !== false,
         chat: msg.chat !== false,
@@ -325,7 +415,7 @@ function handleMessage(
         era: msg.era,
         target: msg.target,
         variant: isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT,
-        tokens: isTokenCount(msg.tokens) ? msg.tokens : DEFAULT_TOKENS,
+        tokens: isTokenCount(msg.tokens) ? msg.tokens : defaultTokensFor(isPlayVariant(msg.variant) ? msg.variant : DEFAULT_VARIANT),
         nextRound: isNextRoundPolicy(msg.nextRound) ? msg.nextRound : DEFAULT_NEXT_ROUND,
         playlistUrl: msg.playlistUrl ?? "",
         playlistLabel: msg.playlistLabel ?? "",
@@ -334,6 +424,7 @@ function handleMessage(
         mixGenre: msg.mixGenre ?? "all",
         custom: parseCustom(msg.custom),
         extraEra: msg.extraEra ?? null,
+        eras: msg.eras ?? [],
         pool: msg.pool ?? DEFAULT_ROOM_CONFIG.pool,
         emoji: msg.emoji !== false,
         chat: msg.chat !== false,
@@ -419,11 +510,69 @@ function handleMessage(
   }
 
   if (msg.t === "host-left") {
-    game.resetBoard();
-    online.setError("Der Host hat den Raum verlassen.");
-    online.leaveRoom();
-    online.openEntry();
-    clearRoomFromUrl();
+    const members = [
+      { id: ctx.selfId, live: true },
+      ...online.members.map((row) => ({
+        id: row.id,
+        live: row.id !== from && row.connectionState !== "failed" && row.connectionState !== "disconnected",
+      })),
+    ];
+    if (
+      shouldTakeHost({
+        selfId: ctx.selfId,
+        hostId: from,
+        hostLive: false,
+        members,
+        tvId: online.tv ? from : "",
+      })
+    ) {
+      const adminLive = members.some((row) => row.id === online.adminId && row.live);
+      online.becomeHost(adminLive ? online.adminId : ctx.selfId);
+      if (online.tv) useOnline.setState({ tv: false, stagePlays: false });
+      ctx.send({
+        t: "host-take",
+        hostId: ctx.selfId,
+        adminId: adminLive ? online.adminId : ctx.selfId,
+      });
+    }
+    return;
+  }
+
+  if (msg.t === "host-take") {
+    if (!msg.hostId) return;
+    if (msg.hostId === ctx.selfId) {
+      online.becomeHost(msg.adminId);
+      return;
+    }
+    useOnline.setState({
+      role: "guest",
+      hostId: msg.hostId,
+      adminId: msg.adminId || msg.hostId,
+      hostLive: true,
+    });
+    online.persistSeat();
+    return;
+  }
+
+  if (msg.t === "sync-request") {
+    const ids = [ctx.selfId, ...online.members.map((row) => row.id)]
+      .filter((id) => id !== from)
+      .sort();
+    if (ids[0] !== ctx.selfId) return;
+    if (
+      game.phase === "listen" ||
+      game.phase === "reveal" ||
+      game.phase === "winner" ||
+      game.phase === "loading"
+    ) {
+      ctx.send({ t: "state", snapshot: game.snapshot() }, from);
+    }
+    return;
+  }
+
+  if (msg.t === "evening") {
+    if (from !== online.hostId && from !== online.adminId) return;
+    useSessionExit.getState().showEvening(game.series);
     return;
   }
 
@@ -437,7 +586,25 @@ function handleMessage(
   if (msg.t === "chat") {
     if (from === ctx.selfId) return;
     const member = online.members.find((row) => row.id === from);
-    receiveChat(msg.text, member?.name ?? "Gast");
+    receiveChat(msg.text, member?.name ?? "Gast", from, msg.id);
+    return;
+  }
+
+  if (msg.t === "chat-del") {
+    if (from === ctx.selfId) return;
+    applyChatDelete(msg.id, from);
+    return;
+  }
+
+  if (msg.t === "aim") {
+    const current = game.players[game.currentPlayerIndex];
+    if (!current || current.id !== from) return;
+    if (from === ctx.selfId) return;
+    if (game.phase !== "listen") return;
+    if (msg.slot !== null && (typeof msg.slot !== "number" || msg.slot < 0 || msg.slot > current.timeline.length)) {
+      return;
+    }
+    useGame.setState({ selectedSlot: msg.slot });
     return;
   }
 

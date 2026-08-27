@@ -120,6 +120,7 @@ export interface SetupConfig {
   mixGenre?: GenreId;
   custom?: CustomRules;
   extraEra?: EraId | null;
+  eras?: EraId[];
   pool?: number;
 }
 
@@ -198,6 +199,7 @@ export interface RoomConfig {
   mixGenre: GenreId;
   custom: CustomRules;
   extraEra: EraId | null;
+  eras: EraId[];
   pool: number;
   emoji: boolean;
   chat: boolean;
@@ -302,9 +304,9 @@ export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [
 ];
 
 export const VARIANT_IDS: PlayVariant[] = [
+  "original",
   "timeline",
   "blind",
-  "original",
   "star",
   "hook",
   "wild",
@@ -312,9 +314,9 @@ export const VARIANT_IDS: PlayVariant[] = [
 ];
 
 export const VARIANT_LABELS: Record<PlayVariant, string> = {
+  original: "Kenner",
   timeline: "Zeitstrahl",
   blind: "Blind",
-  original: "Kenner",
   star: "Star",
   hook: "Titel",
   wild: "Verrückter",
@@ -457,23 +459,27 @@ export const TARGET_MAX = 16;
 export const TARGET_STEP = 2;
 export const TARGET_OPTIONS = [6, 8, 10, 12, 14, 16] as const;
 export const TOKEN_OPTIONS = [0, 1, 2] as const;
-export const DEFAULT_TARGET = 8;
+export const DEFAULT_TARGET = 10;
 export const POOL_MIN = 24;
 export const POOL_MAX = 80;
 export const POOL_STEP = 4;
 export const DEFAULT_POOL = 40;
 export const DEFAULT_TOKENS: TokenCount = 2;
-export const DEFAULT_VARIANT: PlayVariant = "timeline";
+export const DEFAULT_VARIANT: PlayVariant = "original";
 export const DEFAULT_NEXT_ROUND: NextRoundPolicy = "host";
 export const DEFAULT_MIX_FROM = 1980;
 export const DEFAULT_MIX_TO = YEAR_MAX;
 export const SOLO_LIVES = 3;
 
+export function defaultTokensFor(variant: PlayVariant): TokenCount {
+  return variant === "original" ? 0 : DEFAULT_TOKENS;
+}
+
 export const DEFAULT_ROOM_CONFIG: RoomConfig = {
   era: "all",
   target: DEFAULT_TARGET,
   variant: DEFAULT_VARIANT,
-  tokens: DEFAULT_TOKENS,
+  tokens: defaultTokensFor(DEFAULT_VARIANT),
   nextRound: DEFAULT_NEXT_ROUND,
   playlistUrl: "",
   playlistLabel: "",
@@ -482,6 +488,7 @@ export const DEFAULT_ROOM_CONFIG: RoomConfig = {
   mixGenre: "all",
   custom: DEFAULT_CUSTOM,
   extraEra: null,
+  eras: ["all"],
   pool: DEFAULT_POOL,
   emoji: true,
   chat: true,
@@ -523,6 +530,30 @@ export function parseExtraEra(value: unknown, era?: EraId): EraId | null {
   if (!isEraId(value) || value === "playlist") return null;
   if (era && value === era) return null;
   return value;
+}
+
+export const MAX_PACKS = 4;
+
+export function parseEras(era: unknown, extra?: unknown, list?: unknown): EraId[] {
+  const fromList = Array.isArray(list) ? list.filter((id): id is EraId => isEraId(id)) : [];
+  const primary = isEraId(era) ? era : "all";
+  const second = parseExtraEra(extra, primary);
+  const raw = fromList.length > 0 ? fromList : ([primary, second].filter(Boolean) as EraId[]);
+  const seen = new Set<EraId>();
+  const out: EraId[] = [];
+  for (const id of raw) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+    if (out.length >= MAX_PACKS) break;
+  }
+  if (out[0] === "all") return ["all"];
+  return out.length > 0 ? out : ["all"];
+}
+
+export function packPatch(eras: EraId[]): Pick<RoomConfig, "era" | "extraEra" | "eras"> {
+  const next = parseEras(eras[0], eras[1], eras);
+  return { era: next[0] ?? "all", extraEra: next[1] ?? null, eras: next };
 }
 
 export function isGenreId(value: unknown): value is GenreId {

@@ -9,6 +9,7 @@ const REFRESH_MS = 15 * 60 * 1000;
 type SpotifyStore = {
   user: SpotifyUser | null;
   ready: boolean;
+  configured: boolean;
   libraryCount: number | null;
   library: CatalogSong[];
   hydrate: () => Promise<void>;
@@ -29,26 +30,32 @@ function armRefresh(hydrate: () => Promise<void>) {
 export const useSpotify = create<SpotifyStore>((set, get) => ({
   user: null,
   ready: !SPOTIFY_LIVE,
+  configured: false,
   libraryCount: null,
   library: [],
   hydrate: async () => {
     if (!SPOTIFY_LIVE) {
-      set({ user: null, ready: true, libraryCount: null, library: [] });
+      set({ user: null, ready: true, configured: false, libraryCount: null, library: [] });
       return;
     }
     try {
       const res = await fetch("/api/spotify");
-      const json = (await res.json()) as { user?: SpotifyUser | null; off?: boolean };
+      const json = (await res.json()) as {
+        user?: SpotifyUser | null;
+        off?: boolean;
+        configured?: boolean;
+      };
       if (json.off) {
-        set({ user: null, ready: true, libraryCount: null, library: [] });
+        set({ user: null, ready: true, configured: false, libraryCount: null, library: [] });
         return;
       }
+      const configured = json.configured !== false;
       const user = json.user ?? null;
       if (!user) {
-        set({ user: null, ready: true, libraryCount: null, library: [] });
+        set({ user: null, ready: true, configured, libraryCount: null, library: [] });
         return;
       }
-      set({ user, ready: true });
+      set({ user, ready: true, configured: true });
       try {
         const { peekSpotifyLibrary } = await import("./library");
         const peek = await peekSpotifyLibrary();
@@ -58,7 +65,7 @@ export const useSpotify = create<SpotifyStore>((set, get) => ({
       }
       armRefresh(get().hydrate);
     } catch {
-      set({ user: null, ready: true, libraryCount: null, library: [] });
+      set({ user: null, ready: true, configured: false, libraryCount: null, library: [] });
     }
   },
   login: () => {

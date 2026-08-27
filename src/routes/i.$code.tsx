@@ -4,6 +4,7 @@ import { GameApp } from "@/components/game/app";
 import { inviteCode } from "@/lib/og/meta";
 import { wantsHostClaim } from "@/lib/game/room-code";
 import { useOnline } from "@/lib/game/online-store";
+import { readSeat } from "@/lib/game/seat";
 
 export const Route = createFileRoute("/i/$code")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -26,7 +27,8 @@ function InviteJoin() {
     if (room.length !== 4) return;
     const current = useOnline.getState();
     if (current.status !== "off" && current.status !== "entry") return;
-    current.openEntry(room, { claim: wantsHostClaim(host) });
+    if (readSeat(room)) current.resumeSeat();
+    else current.openEntry(room, { claim: wantsHostClaim(host) });
   }, [code, host]);
 
   return <GameApp />;

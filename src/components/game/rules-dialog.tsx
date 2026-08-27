@@ -21,12 +21,12 @@ const STEPS = [
   {
     n: "04",
     title: "Aufdecken",
-    body: "Liegt sie falsch, geht sie zurück. Richtige Tipps beim Raten zählen extra. Zwei Titel aus demselben Jahr dürfen nebeneinander liegen.",
+    body: "Liegt sie falsch, geht sie unter den Stapel und kommt später wieder. Überspringen mit Joker ebenso. Richtig bleibt sie auf deiner Linie. Richtige Tipps beim Raten zählen extra. Zwei Titel aus demselben Jahr dürfen nebeneinander liegen.",
   },
   {
     n: "05",
     title: "Joker",
-    body: "Jahrzehnt anzeigen oder den Titel überspringen, je nachdem wie viele Joker ihr eingestellt habt. Kenner startet ohne, ein Joker kommt dazu wenn Interpret und Titel sitzen. Wer zuerst die Linie voll hat, gewinnt. Bei Custom könnt ihr auch ohne Ziel bis zum leeren Stapel spielen.",
+    body: "Jahrzehnt anzeigen oder den Titel überspringen, je nachdem wie viele Joker ihr eingestellt habt. Kenner startet ohne, ein Joker kommt dazu wenn Interpret und Titel sitzen. Ziel sind zehn Karten, wie beim bekannten Original — ihr könnt auf acht oder weniger gehen. Bei Custom könnt ihr auch ohne Ziel bis zum leeren Stapel spielen.",
   },
   {
     n: "06",
@@ -52,7 +52,7 @@ export function RulesDialog({ open, onOpenChange }: RulesDialogProps) {
                 So wird gespielt
               </Dialog.Title>
               <Dialog.Description className="mt-1 text-sm text-muted">
-                Zeitstrahl, Blind, Kenner, Star, Titel, Verrückter oder Custom.
+                Kenner, Zeitstrahl, Blind, Star, Titel, Verrückter oder Custom.
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>

@@ -3,8 +3,9 @@
  *
  * Setup: docs/musikdienste.md
  * 1. App at https://developer.spotify.com/dashboard (owner needs Premium)
- * 2. Redirect URIs:
- *    http://localhost:8080/api/spotify/callback
+ *    One Development-Mode app per account since Feb 2026 — reuse, don't create a second.
+ * 2. Redirect URIs, exact, no localhost:
+ *    http://127.0.0.1:8080/api/spotify/callback
  *    https://jahrgang.vercel.app/api/spotify/callback
  * 3. Env: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET
  *    optional SPOTIFY_REDIRECT_URI, SPOTIFY_MARKET=DE

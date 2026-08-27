@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown, ChevronUp, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { peekPlaylist } from "@/lib/game/playlist";
-import { packSize, songsForPacks } from "@/lib/game/packs";
-import { countFittingExtras } from "@/lib/game/extras";
+import { packSize, songsForEras } from "@/lib/game/packs";
+import { countFittingFor } from "@/lib/game/extras";
 import { getFreshSongs, subscribeFresh } from "@/lib/game/fresh";
 import { dealCount, pileStatus, type PileStatus } from "@/lib/game/engine";
 import { sfxHover, sfxSlide, sfxTick } from "@/lib/game/audio";
@@ -33,7 +34,9 @@ import {
   TARGET_STEP,
   clampPool,
   clampTarget,
-  parseExtraEra,
+  MAX_PACKS,
+  packPatch,
+  parseEras,
   VARIANT_BLURBS,
   VARIANT_IDS,
   VARIANT_LABELS,
@@ -57,53 +60,6 @@ type GameOptionsProps = {
   players?: number;
   solo?: boolean;
 };
-
-const CHIP =
-  "flex h-12 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium transition-[background-color,color,transform,box-shadow] duration-150 ease-out hover:-translate-y-px active:scale-[0.96]";
-
-const PACK_MENU = PACK_GROUPS.filter((group) => group.title !== "Eigene");
-const PACK_IDS = PACK_MENU.flatMap((group) => group.ids);
-const OWN_PACKS = ["mix", "playlist", "likes"] as const satisfies readonly EraId[];
-
-function SleeveChip({
-  selected,
-  label,
-  art,
-  packId,
-  genreId,
-  onSelect,
-}: {
-  selected: boolean;
-  label: string;
-  art: ReactNode;
-  packId?: string;
-  genreId?: string;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      data-pack={packId}
-      data-genre={genreId}
-      onMouseEnter={() => {
-        if (!selected) sfxHover();
-      }}
-      onClick={() => {
-        if (!selected) sfxTick();
-        onSelect();
-      }}
-      className={cn(
-        CHIP,
-        selected
-          ? "text-primary-fg bg-primary"
-          : "bg-raised text-fg shadow-border hover:bg-surface",
-      )}
-    >
-      {art}
-      <span className="truncate">{label}</span>
-    </button>
-  );
-}
 
 function Segment<T extends string | number>({
   items,
@@ -229,7 +185,6 @@ function PlaylistField({
       return;
     }
     onChange({
-      era: "playlist",
       playlistUrl: result.peek.url,
       playlistLabel: `${result.peek.title} · ${result.peek.count} Titel`,
     });
@@ -429,7 +384,7 @@ function MixField({
       <DualYearSlider
         from={value.mixFrom}
         to={value.mixTo}
-        onChange={(mixFrom, mixTo) => onChange({ era: "mix", mixFrom, mixTo })}
+        onChange={(mixFrom, mixTo) => onChange({ mixFrom, mixTo })}
       />
       <div>
         <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Genre</p>
@@ -437,7 +392,7 @@ function MixField({
           ariaLabel="Genre"
           name="genre"
           value={value.mixGenre}
-          onChange={(mixGenre) => onChange({ era: "mix", mixGenre })}
+          onChange={(mixGenre) => onChange({ mixGenre })}
           items={GENRE_IDS.map((id) => ({
             id,
             label: GENRE_LABELS[id],
@@ -533,102 +488,185 @@ function primaryPile(value: RoomConfig, extras: CatalogSong[] = liveExtras()) {
 }
 
 function pileCount(value: RoomConfig, extras: CatalogSong[] = liveExtras()) {
-  const extra = parseExtraEra(value.extraEra, value.era);
+  const packs = parseEras(value.era, value.extraEra, value.eras);
   const mix = mixOf(value);
-  if (value.era === "likes") {
-    const more = extra && extra !== "likes" ? packSize(extra, mix) : 0;
-    return extras.length + more;
+  const catalogSongs = songsForEras(packs, mix);
+  const fitting = countFittingFor(extras, packs, mix, new Set(catalogSongs.map((song) => song.id)));
+  if (packs.includes("playlist")) {
+    const listed = primaryPile({ ...value, era: "playlist" }, extras);
+    if (listed === null && catalogSongs.length === 0 && fitting === 0) return null;
+    return catalogSongs.length + (listed ?? 0) + fitting;
   }
-  if (value.era === "playlist") {
-    const base = primaryPile(value, extras);
-    const extraPack = extra && extra !== "likes" && extra !== "playlist" ? packSize(extra, mix) : 0;
-    const fitting = countFittingExtras(extras, value.era, extra, mix);
-    if (base === null) {
-      const n = extraPack + fitting;
-      return n > 0 ? n : null;
-    }
-    return base + extraPack + fitting;
-  }
-  const catalogSongs = songsForPacks(value.era, extra && extra !== "likes" ? extra : null, mix);
-  const fitting = countFittingExtras(
-    extras,
-    value.era,
-    extra,
-    mix,
-    new Set(catalogSongs.map((song) => song.id)),
-  );
   return catalogSongs.length + fitting;
 }
 
-function eraPatch(value: RoomConfig, era: EraId): Partial<RoomConfig> {
-  return {
-    era,
-    extraEra: era === "all" ? null : parseExtraEra(value.extraEra, era),
-  };
-}
-
-function ExtraPack({
-  value,
-  onChange,
-  players,
-}: {
-  value: RoomConfig;
-  onChange: (patch: Partial<RoomConfig>) => void;
-  players: number;
-}) {
-  const extra = parseExtraEra(value.extraEra, value.era);
-  const spotifyUser = useSpotifyConnected();
-  const libraryCount = useSpotify((s) => s.libraryCount);
-  const without = optionsPile({ ...value, extraEra: null }, players);
-  const short = without.status === "short" || without.status === "tight" || without.status === "empty";
-  if (value.era === "all") return null;
-  const extraItems = PACK_MENU.flatMap((group) =>
+function packItems(exclude: Set<EraId>, spotifyUser: boolean, libraryCount: number | null) {
+  const items = PACK_GROUPS.flatMap((group) =>
     group.ids
-      .filter((id) => id !== value.era)
+      .filter((id) => {
+        if (exclude.has(id)) return false;
+        if (id === "likes" && !SPOTIFY_LIVE) return false;
+        return true;
+      })
       .map((id) => ({
         id,
         group: group.title,
         label: ERA_LABELS[id],
-        blurb: `${ERA_BLURBS[id]} ${packSize(id)} Titel.`,
+        blurb:
+          id === "likes"
+            ? `${ERA_BLURBS[id]} ${libraryCount ?? 0} Titel.`
+            : id === "playlist" || id === "mix"
+              ? ERA_BLURBS[id]
+              : `${ERA_BLURBS[id]} ${packSize(id)} Titel.`,
         art: <PackArt id={id} className="size-7" />,
       })),
   );
-  if (SPOTIFY_LIVE && spotifyUser && value.era !== "likes") {
-    extraItems.push({
-      id: "likes" as EraId,
-      group: "Eigene",
-      label: ERA_LABELS.likes,
-      blurb: `${ERA_BLURBS.likes} ${libraryCount ?? 0} Titel.`,
-      art: <PackArt id="likes" className="size-7" />,
-    });
+  if (!spotifyUser) {
+    return items.filter((item) => item.id !== "likes");
   }
+  return items;
+}
+
+function PackList({
+  value,
+  onChange,
+  extras,
+  spotifyUser,
+  libraryCount,
+  login,
+}: {
+  value: RoomConfig;
+  onChange: (patch: Partial<RoomConfig>) => void;
+  extras: CatalogSong[];
+  spotifyUser: boolean;
+  libraryCount: number | null;
+  login: () => void;
+}) {
+  const packs = parseEras(value.era, value.extraEra, value.eras);
+  const mix = mixOf(value);
+  const [picker, setPicker] = useState<"add" | number | null>(null);
+  const taken = new Set(packs);
+  const addItems = packItems(taken, spotifyUser, libraryCount);
+  const canAdd = packs[0] !== "all" && packs.length < MAX_PACKS && addItems.length > 0;
+
+  function apply(next: EraId[]) {
+    sfxTick();
+    onChange(packPatch(next));
+  }
+
+  function move(index: number, dir: -1 | 1) {
+    const target = index + dir;
+    if (target < 0 || target >= packs.length) return;
+    const next = packs.slice();
+    const a = next[index];
+    const b = next[target];
+    if (a === undefined || b === undefined) return;
+    next[index] = b;
+    next[target] = a;
+    apply(next);
+  }
+
+  const pickerItems =
+    picker === "add"
+      ? addItems
+      : typeof picker === "number"
+        ? packItems(new Set(packs.filter((_, i) => i !== picker)), spotifyUser, libraryCount)
+        : [];
+
   return (
-    <div className="mt-4" data-extra-pack>
-      <h3 className="text-sm font-medium text-fg">Zweites Repertoire</h3>
-      <p className="mt-1 text-sm text-muted">
-        {extra
-          ? `${ERA_LABELS[value.era]} plus ${ERA_LABELS[extra]}. Doppelte Titel einmal.`
-          : short
-            ? "Das Pack reicht nicht für die Runde. Ein zweites dazu, der Stapel mischt beide."
-            : "Ein zweites Pack oder Genre dazu. Doppelte Titel einmal."}
-      </p>
-      <div className="mt-3">
+    <div className="mt-4 space-y-2">
+      {packs.map((id, index) => {
+        const n =
+          id === "playlist"
+            ? primaryPile({ ...value, era: "playlist" }, extras)
+            : id === "likes"
+              ? extras.length
+              : packSize(id, mix);
+        return (
+          <div
+            key={`${id}-${index}`}
+            className="flex h-14 items-center gap-2 rounded-md bg-raised px-2 shadow-border"
+          >
+            <button
+              type="button"
+              className="flex min-w-0 flex-1 items-center gap-3 rounded-sm px-1 text-left text-fg transition-colors duration-150 ease-out hover:bg-surface"
+              onClick={() => setPicker(index)}
+            >
+              <PackArt id={id} className="size-7 shrink-0" />
+              <span className="min-w-0 flex-1 truncate text-sm font-medium">{ERA_LABELS[id]}</span>
+              <span className="shrink-0 text-xs tabular-nums text-muted">
+                {n === null ? "…" : `${n}`}
+              </span>
+            </button>
+            <div className="flex shrink-0 items-center">
+              {packs.length > 1 ? (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Nach oben"
+                    disabled={index === 0}
+                    className="flex size-10 items-center justify-center text-muted transition-colors duration-150 ease-out hover:text-fg disabled:opacity-30"
+                    onClick={() => move(index, -1)}
+                  >
+                    <ChevronUp className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Nach unten"
+                    disabled={index === packs.length - 1}
+                    className="flex size-10 items-center justify-center text-muted transition-colors duration-150 ease-out hover:text-fg disabled:opacity-30"
+                    onClick={() => move(index, 1)}
+                  >
+                    <ChevronDown className="size-4" />
+                  </button>
+                </>
+              ) : null}
+              {packs.length > 1 ? (
+                <button
+                  type="button"
+                  aria-label="Pack entfernen"
+                  className="flex size-10 items-center justify-center text-muted transition-colors duration-150 ease-out hover:text-fg"
+                  onClick={() => apply(packs.filter((_, i) => i !== index))}
+                >
+                  <X className="size-4" />
+                </button>
+              ) : null}
+            </div>
+          </div>
+        );
+      })}
+      {picker !== null ? (
         <MenuSelect
-          ariaLabel="Zweites Repertoire"
-          name="extra-repertoire"
-          placeholder="Pack oder Stil dazu"
-          value={extra ?? undefined}
-          onChange={(next) => onChange({ extraEra: next })}
-          items={extraItems}
+          ariaLabel={picker === "add" ? "Pack dazu" : "Pack ersetzen"}
+          name="pack-picker"
+          placeholder={picker === "add" ? "Pack dazu" : "Pack ersetzen"}
+          defaultOpen
+          items={pickerItems}
+          onChange={(id) => {
+            if (id === "likes" && !spotifyUser) {
+              login();
+              setPicker(null);
+              return;
+            }
+            if (picker === "add") apply([...packs, id]);
+            else {
+              const next = packs.slice();
+              next[picker] = id;
+              apply(next);
+            }
+            notePack(id);
+            setPicker(null);
+          }}
+          onDismiss={() => setPicker(null)}
         />
-      </div>
-      {extra ? (
+      ) : canAdd ? (
         <button
           type="button"
-          className="mt-2 text-sm text-muted transition-colors duration-150 ease-out hover:text-fg"
-          onClick={() => onChange({ extraEra: null })}
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-md text-sm text-muted shadow-border transition-[background-color,color,transform] duration-150 ease-out hover:-translate-y-px hover:bg-raised hover:text-fg active:scale-[0.96]"
+          onClick={() => setPicker("add")}
         >
-          Nur {ERA_LABELS[value.era]}
+          <Plus className="size-4" />
+          Pack dazu
         </button>
       ) : null}
     </div>
@@ -702,19 +740,14 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
   useEffect(() => subscribeFresh(() => setFresh(getFreshSongs())), []);
   const extras = [...library, ...fresh];
   const pile = pileCount(value, extras);
-  const base = primaryPile(value, extras);
+  const packs = parseEras(value.era, value.extraEra, value.eras);
   const spotifyUser = useSpotifyConnected();
   const login = useSpotify((s) => s.login);
-  const extra = parseExtraEra(value.extraEra, value.era);
-  const ownPacks = OWN_PACKS.filter((id) => id !== "likes" || SPOTIFY_LIVE);
-  const extraFit = countFittingExtras(
+  const extraFit = countFittingFor(
     extras,
-    value.era,
-    extra,
+    packs,
     mixOf(value),
-    value.era === "likes" || value.era === "playlist"
-      ? undefined
-      : new Set(songsForPacks(value.era, extra && extra !== "likes" ? extra : null, mixOf(value)).map((song) => song.id)),
+    new Set(songsForEras(packs, mixOf(value)).map((song) => song.id)),
   );
   return (
     <div>
@@ -842,54 +875,24 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
               ? "Stapel offen"
               : pile === 0
                 ? "Kein Titel"
-                : extra && base !== null && pile > base
-                  ? `${pile} Titel (${base} + ${pile - base})`
-                  : `${pile} Titel im Stapel`}
+                : `${pile} Titel im Stapel`}
           </p>
         </div>
-        <p className="mt-1 text-sm text-muted">{ERA_BLURBS[value.era]}</p>
-        <div className="mt-4">
-          <MenuSelect
-            ariaLabel="Repertoire"
-            name="repertoire"
-            placeholder="Pack wählen"
-            value={PACK_IDS.includes(value.era) ? value.era : undefined}
-            onChange={(era) => {
-              notePack(era);
-              onChange(eraPatch(value, era));
-            }}
-            items={PACK_MENU.flatMap((group) =>
-              group.ids.map((id) => ({
-                id,
-                group: group.title,
-                label: ERA_LABELS[id],
-                blurb: `${ERA_BLURBS[id]} ${packSize(id)} Titel.`,
-                art: <PackArt id={id} className="size-7" />,
-              })),
-            )}
-          />
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {ownPacks.map((id) => (
-              <SleeveChip
-                key={id}
-                packId={id}
-                selected={value.era === id}
-                label={id === "likes" && !spotifyUser ? "Meine Titel" : ERA_LABELS[id]}
-                art={<PackArt id={id} />}
-                onSelect={() => {
-                  if (id === "likes" && !spotifyUser) {
-                    login();
-                    return;
-                  }
-                  notePack(id);
-                  onChange(eraPatch(value, id));
-                }}
-              />
-            ))}
-          </div>
-        </div>
-        {value.era === "playlist" ? <PlaylistField value={value} onChange={onChange} /> : null}
-        {value.era === "mix" ? <MixField value={value} onChange={onChange} /> : null}
+        <p className="mt-1 text-sm text-muted">
+          {packs.length > 1
+            ? packs.map((id) => ERA_LABELS[id]).join(" + ") + ". Doppelte Titel einmal."
+            : ERA_BLURBS[packs[0] ?? value.era]}
+        </p>
+        <PackList
+          value={value}
+          onChange={onChange}
+          extras={extras}
+          spotifyUser={Boolean(spotifyUser)}
+          libraryCount={libraryCount}
+          login={login}
+        />
+        {packs.includes("playlist") ? <PlaylistField value={value} onChange={onChange} /> : null}
+        {packs.includes("mix") ? <MixField value={value} onChange={onChange} /> : null}
         {SPOTIFY_LIVE ? (
           <div className="mt-4">
             <SpotifyConnect compact />
@@ -903,7 +906,11 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
             , die zum Pack passen.
           </p>
         ) : null}
-        {solo ? null : <ExtraPack value={value} onChange={onChange} players={players} />}
+        <p className="mt-3 text-sm text-muted">
+          Jeder startet mit einer offenen Karte. Der Rest liegt im Stapel. Richtig gelegt bleibt sie auf
+          der Linie. Falsch oder übersprungen legt sie sich unter den Stapel und kommt später wieder.
+          Das Ziel zählt Karten auf der Linie, nicht wie oft der Stapel umgeschlagen hat.
+        </p>
         <PileNote value={value} players={players} solo={solo} />
       </section>
     </div>
@@ -922,17 +929,17 @@ export function roomConfigSummary(config: RoomConfig) {
           ? "ohne Chat"
           : null;
   const extra = social ? ` · ${social}` : "";
-  const extraPack = parseExtraEra(config.extraEra, config.era);
-  const packLabel = extraPack
-    ? `${ERA_LABELS[config.era]} + ${ERA_LABELS[extraPack]}`
-    : ERA_LABELS[config.era];
+  const extraPacks = parseEras(config.era, config.extraEra, config.eras);
+  const packLabel = extraPacks.map((id) => ERA_LABELS[id]).join(" + ");
+  const more = extraPacks.filter((id) => id !== extraPacks[0]).map((id) => ERA_LABELS[id]);
+  const moreLabel = more.length ? ` + ${more.join(" + ")}` : "";
   const open = isOpenPlay(config);
   const goal = open ? `${clampPool(config.pool)} im Stapel` : `${clampTarget(config.target)} Karten`;
-  if (config.era === "playlist" && config.playlistLabel) {
-    return `${VARIANT_LABELS[config.variant]} · ${goal} · ${joker} · ${round} · ${config.playlistLabel}${extraPack ? ` + ${ERA_LABELS[extraPack]}` : ""}${extra}`;
+  if (extraPacks.includes("playlist") && config.playlistLabel) {
+    return `${VARIANT_LABELS[config.variant]} · ${goal} · ${joker} · ${round} · ${config.playlistLabel}${moreLabel}${extra}`;
   }
-  if (config.era === "mix") {
-    return `${VARIANT_LABELS[config.variant]} · ${goal} · ${joker} · ${round} · Mix ${config.mixFrom}–${config.mixTo} · ${GENRE_LABELS[config.mixGenre]}${extraPack ? ` + ${ERA_LABELS[extraPack]}` : ""}${extra}`;
+  if (extraPacks.includes("mix")) {
+    return `${VARIANT_LABELS[config.variant]} · ${goal} · ${joker} · ${round} · Mix ${config.mixFrom}–${config.mixTo} · ${GENRE_LABELS[config.mixGenre]}${moreLabel}${extra}`;
   }
   return `${VARIANT_LABELS[config.variant]} · ${goal} · ${joker} · ${round} · ${packLabel}${extra}`;
 }

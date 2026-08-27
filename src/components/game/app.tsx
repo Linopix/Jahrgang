@@ -14,6 +14,8 @@ import { RulesDialog } from "./rules-dialog";
 import { SetupScreen } from "./setup-screen";
 import { WinnerScreen } from "./winner-screen";
 import { TvPlayScreen, TvRevealScreen, TvWinnerScreen } from "./tv-stage";
+import { ExitScreen } from "./exit-screen";
+import { DebugOverlay } from "./debug-overlay";
 import { useTvScreen } from "@/lib/tv/mode";
 import { setLobbyWanted, unlockAudio } from "@/lib/game/audio";
 import { useGame } from "@/lib/game/store";
@@ -26,6 +28,7 @@ import { useAccount } from "@/lib/account/client";
 import { refreshFreshSongs } from "@/lib/game/fresh";
 import { VARIANT_LABELS } from "@/lib/game/types";
 import { shareUrl } from "@/lib/game/room-code";
+import { useSessionExit } from "@/lib/game/session-exit";
 
 export function GameApp() {
   const phase = useGame((s) => s.phase);
@@ -40,6 +43,13 @@ export function GameApp() {
   const hydrateAccount = useAccount((s) => s.hydrate);
   const account = useAccount((s) => s.user);
   const hydrateSpotify = useSpotify((s) => s.hydrate);
+  const exitKind = useSessionExit((s) => s.kind);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (/^\/i\//i.test(url.pathname) || url.searchParams.get("room")) return;
+    useOnline.getState().resumeSeat();
+  }, []);
 
   useEffect(() => {
     if (ACCOUNT_LIVE) void hydrateAccount();
@@ -127,21 +137,23 @@ export function GameApp() {
   return (
     <>
       <OnlineBridge />
-      {onlineStatus === "entry" ? <OnlineEntryScreen /> : null}
-      {onlineStatus === "connecting" && onlineRole === "guest" ? <OnlineConnectingScreen /> : null}
-      {onlineStatus === "lobby" || (onlineStatus === "connecting" && onlineRole === "host") ? (
+      {exitKind ? <ExitScreen /> : null}
+      {!exitKind && onlineStatus === "entry" ? <OnlineEntryScreen /> : null}
+      {!exitKind && onlineStatus === "connecting" && onlineRole === "guest" ? <OnlineConnectingScreen /> : null}
+      {!exitKind && (onlineStatus === "lobby" || (onlineStatus === "connecting" && onlineRole === "host")) ? (
         <OnlineLobbyScreen />
       ) : null}
-      {onlineStatus === "off" && phase === "home" ? <HomeScreen /> : null}
-      {localPhase && phase === "setup" ? <SetupScreen /> : null}
-      {localPhase && phase === "loading" ? <LoadingScreen /> : null}
-      {localPhase && phase === "listen" ? tvScreen && !tvMyTurn ? <TvPlayScreen /> : <PlayScreen /> : null}
-      {localPhase && phase === "reveal" ? tvScreen ? <TvRevealScreen /> : <RevealScreen /> : null}
-      {localPhase && phase === "winner" ? tvScreen ? <TvWinnerScreen /> : <WinnerScreen /> : null}
-      {onlineStatus === "playing" && phase === "home" ? <LoadingScreen /> : null}
+      {!exitKind && onlineStatus === "off" && phase === "home" ? <HomeScreen /> : null}
+      {!exitKind && localPhase && phase === "setup" ? <SetupScreen /> : null}
+      {!exitKind && localPhase && phase === "loading" ? <LoadingScreen /> : null}
+      {!exitKind && localPhase && phase === "listen" ? tvScreen && !tvMyTurn ? <TvPlayScreen /> : <PlayScreen /> : null}
+      {!exitKind && localPhase && phase === "reveal" ? tvScreen ? <TvRevealScreen /> : <RevealScreen /> : null}
+      {!exitKind && localPhase && phase === "winner" ? tvScreen ? <TvWinnerScreen /> : <WinnerScreen /> : null}
+      {!exitKind && onlineStatus === "playing" && phase === "home" ? <LoadingScreen /> : null}
       <ReactionDock />
       <ChatDock />
       <GagLayer />
+      <DebugOverlay />
       <RulesDialog open={rulesOpen} onOpenChange={setRulesOpen} />
     </>
   );

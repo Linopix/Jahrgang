@@ -187,6 +187,37 @@ export class P2PRoom {
     return [...this.peers.values()].map((s) => ({ ...s.info }));
   }
 
+  inspect() {
+    const ice = (this.opts.iceServers ?? defaultIceServers()).flatMap((row) =>
+      Array.isArray(row.urls) ? row.urls : [row.urls],
+    );
+    return {
+      selfId: this.opts.selfId,
+      room: this.opts.room,
+      closed: this.closed,
+      cursor: this.cursor,
+      everPolled: this.everPolled,
+      ice,
+      peers: [...this.peers.values()].map((slot) => ({
+        id: slot.info.id,
+        name: slot.info.name,
+        connectionState: slot.pc.connectionState,
+        iceConnectionState: slot.pc.iceConnectionState,
+        iceGatheringState: slot.pc.iceGatheringState,
+        signalingState: slot.pc.signalingState,
+        candidateType: slot.info.candidateType,
+        rttMs: slot.info.rttMs,
+        recoveryAttempts: slot.recoveryAttempts,
+        terminal: Boolean(slot.terminal),
+        lastProgressAt: slot.lastProgressAt,
+        channels: {
+          state: slot.state?.readyState ?? "missing",
+          reliable: slot.reliable?.readyState ?? "missing",
+        },
+      })),
+    };
+  }
+
   // ── signaling loop ─────────────────────────────────────────────────────────
 
   private schedulePoll(delay: number): void {

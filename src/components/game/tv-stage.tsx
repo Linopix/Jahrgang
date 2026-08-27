@@ -3,6 +3,7 @@ import { Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Vinyl } from "./vinyl";
 import { SongCard } from "./song-card";
+import { Timeline } from "./timeline";
 import {
   getMusicElement,
   isMuted,
@@ -15,6 +16,7 @@ import {
   requestNext,
   requestAgain,
   requestBackToLobby,
+  requestEndEvening,
 } from "@/lib/game/online-actions";
 import { currentPlayer, useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
@@ -45,6 +47,7 @@ export function TvPlayScreen() {
   const players = useGame((s) => s.players);
   const currentPlayerIndex = useGame((s) => s.currentPlayerIndex);
   const current = useGame((s) => s.current);
+  const selectedSlot = useGame((s) => s.selectedSlot);
   const variant = useGame((s) => s.variant);
   const custom = useGame((s) => s.custom);
   const target = useGame((s) => s.target);
@@ -122,6 +125,19 @@ export function TvPlayScreen() {
           ))}
         </ol>
       </div>
+
+      <section className="mt-6 min-h-0 shrink-0">
+        <p className="mb-2 text-xs font-medium tracking-[0.18em] text-muted uppercase">
+          Linie von {player.name}
+        </p>
+        <Timeline
+          songs={player.timeline}
+          selectedSlot={selectedSlot}
+          interactive={false}
+          showSlots
+          hideYear={rules.hideYear}
+        />
+      </section>
     </main>
   );
 }
@@ -203,6 +219,9 @@ export function TvWinnerScreen() {
           </Button>
           <Button size="lg" variant="secondary" onClick={requestBackToLobby}>
             Lobby
+          </Button>
+          <Button size="lg" variant="ghost" onClick={requestEndEvening}>
+            Abend
           </Button>
         </div>
       ) : (

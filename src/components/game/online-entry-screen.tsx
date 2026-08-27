@@ -7,6 +7,7 @@ import { useOnline } from "@/lib/game/online-store";
 import { notePlayerName, noteRoomCode } from "@/lib/gags";
 import { TV_LIVE } from "@/lib/tv/flags";
 import { TV_MODE_NAME, TV_STAGE_NAME } from "@/lib/tv/names";
+import { isBlocked } from "@/lib/game/moderation";
 import { cn } from "@/lib/utils";
 
 export function OnlineEntryScreen() {
@@ -21,7 +22,7 @@ export function OnlineEntryScreen() {
   const claimIntent = useOnline((s) => s.claimIntent);
   const [tv, setTv] = useState(false);
 
-  const named = selfName.trim().length > 0;
+  const named = selfName.trim().length > 0 && !isBlocked(selfName);
   const canOpenTv = TV_LIVE && tv;
   const canOpenRoom = canOpenTv || named;
 
@@ -84,6 +85,9 @@ export function OnlineEntryScreen() {
             else if (canOpenRoom) openRoom();
           }}
         />
+        {selfName.trim() && isBlocked(selfName) ? (
+          <p className="mt-2 text-sm text-muted">Der Name geht so nicht.</p>
+        ) : null}
       </label>
       )}
 

@@ -1,12 +1,12 @@
 import { create } from "zustand";
-import { songsForPack, songsForPacks } from "./packs";
+import { songsForEras } from "./packs";
 import { canPlace, dealCount, decadeLabel, fisherYates, insertSong, mergeSeries, tallySeries, winner } from "./engine";
 import { kennerBonus, scoreForVariant } from "./guess";
 import { loadPlaylistSongs, type PlaylistTrack } from "./playlist";
 import { loadSpotifyLibrary } from "@/lib/spotify/library";
 import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
 import { useSpotify } from "@/lib/spotify/session";
-import { mergeExtraSongs } from "./extras";
+import { mergeExtraSongsFor } from "./extras";
 import { getFreshSongs } from "./fresh";
 import { resolvePreviews } from "./preview";
 import {
@@ -24,21 +24,22 @@ import {
   unlockAudio,
 } from "./audio";
 import { isTvRemote } from "@/lib/tv/mode";
+import { safeName } from "./moderation";
 import {
   DEFAULT_CUSTOM,
   DEFAULT_MIX_FROM,
   DEFAULT_MIX_TO,
   DEFAULT_POOL,
   DEFAULT_TARGET,
-  DEFAULT_TOKENS,
   DEFAULT_VARIANT,
   POOL_MAX,
   SOLO_LIVES,
   clampPool,
   clampTarget,
+  defaultTokensFor,
   emptyStats,
   parseCustom,
-  parseExtraEra,
+  parseEras,
   rulesFor,
   type CatalogSong,
   type CustomRules,
@@ -137,8 +138,9 @@ function bumpStats(stats: SessionStats, patch: Partial<Omit<SessionStats, "start
 }
 
 function hydratePlayers(players: Player[]): Player[] {
-  return players.map((player) => ({
+  return players.map((player, i) => ({
     ...player,
+    name: safeName(player.name, `Spieler ${i + 1}`),
     tokens: player.tokens ?? 0,
     misses: player.misses ?? 0,
     quiz: player.quiz ?? 0,
@@ -305,7 +307,7 @@ export const useGame = create<GameStore>((set, get) => ({
     sfxVinylStart();
     const variant = config.variant ?? DEFAULT_VARIANT;
     const custom = parseCustom(config.custom);
-    const tokens = config.tokens ?? DEFAULT_TOKENS;
+    const tokens = config.tokens ?? defaultTokensFor(variant);
     set({
       phase: "loading",
       mode: config.mode,
@@ -320,8 +322,12 @@ export const useGame = create<GameStore>((set, get) => ({
     try {
       const names =
         config.mode === "solo"
-          ? [config.names[0]?.trim() || "Du"]
-          : config.names.filter((name) => name.trim()).slice(0, 8);
+          ? [safeName(config.names[0] || "", "Du")]
+          : config.names
+              .map((name) => name.trim())
+              .filter(Boolean)
+              .map((name, i) => safeName(name, `Spieler ${i + 1}`))
+              .slice(0, 8);
       const playerCount = Math.max(1, names.length);
       const seats = names.map((name, i) => ({
         id: config.ids?.[i] ?? `p-${i}`,
@@ -330,22 +336,22 @@ export const useGame = create<GameStore>((set, get) => ({
       const rules = rulesFor(variant, custom);
       const wanted = variant === "custom" ? clampPool(config.pool, DEFAULT_POOL) : undefined;
       const needed = dealCount(playerCount, clampTarget(config.target), rules.open, wanted, POOL_MAX);
+      const packs = parseEras(config.era, config.extraEra, config.eras);
       let imported: PlaylistTrack[] = [];
-      if (config.era === "playlist" && !config.playlistUrl) {
+      if (packs.includes("playlist") && !config.playlistUrl) {
         set({
           phase: "setup",
           loadError: "Bitte einen öffentlichen Spotify- oder Deezer-Link übernehmen.",
         });
         return false;
       }
-      if (config.era === "playlist" && config.playlistUrl) {
+      if (packs.includes("playlist") && config.playlistUrl) {
         try {
           imported = await loadPlaylistSongs({ data: { url: config.playlistUrl } });
         } catch {
           imported = [];
         }
       }
-      const extra = parseExtraEra(config.extraEra, config.era);
       let library: PlaylistTrack[] = [];
       if (SPOTIFY_LIVE && useSpotify.getState().user) {
         try {
@@ -354,7 +360,7 @@ export const useGame = create<GameStore>((set, get) => ({
           library = [];
         }
       }
-      if (config.era === "likes" && imported.length === 0 && library.length === 0) {
+      if (packs.includes("likes") && imported.length === 0 && library.length === 0) {
         set({
           phase: "setup",
           loadError: "Bei Spotify anmelden, dann liegen deine Titel bereit. Oder ein anderes Pack wählen.",
@@ -366,17 +372,9 @@ export const useGame = create<GameStore>((set, get) => ({
         to: config.mixTo ?? DEFAULT_MIX_TO,
         genre: config.mixGenre ?? "all",
       };
-      const catalogPool = fisherYates(
-        config.era === "likes"
-          ? extra && extra !== "likes"
-            ? songsForPack(extra, mix)
-            : []
-          : config.era === "playlist"
-            ? songsForPack(extra && extra !== "likes" ? extra : "all", mix)
-            : songsForPacks(config.era, extra !== "likes" ? extra : null, mix),
-      );
+      const catalogPool = fisherYates(songsForEras(packs, mix));
       const extras = fisherYates([...imported, ...library, ...getFreshSongs()]);
-      const merged = mergeExtraSongs(catalogPool, extras, config.era, extra, mix);
+      const merged = mergeExtraSongsFor(catalogPool, extras, packs, mix);
       const pool: Array<CatalogSong | PlaylistTrack> = merged.pool;
       const resolved: ResolvedSong[] = [];
       const seen = new Set<string>();

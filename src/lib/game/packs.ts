@@ -508,10 +508,21 @@ export function songsForPack(pack: EraId, mix?: MixFilter): CatalogSong[] {
 }
 
 export function songsForPacks(pack: EraId, extra?: EraId | null, mix?: MixFilter): CatalogSong[] {
-  const primary = songsForPack(pack, mix);
-  if (!extra || extra === pack || extra === "playlist" || extra === "likes") return primary;
-  const seen = new Set(primary.map((song) => song.id));
-  return primary.concat(songsForPack(extra, mix).filter((song) => !seen.has(song.id)));
+  return songsForEras(extra ? [pack, extra] : [pack], mix);
+}
+
+export function songsForEras(eras: EraId[], mix?: MixFilter): CatalogSong[] {
+  const seen = new Set<string>();
+  const out: CatalogSong[] = [];
+  for (const pack of eras) {
+    if (pack === "playlist" || pack === "likes") continue;
+    for (const song of songsForPack(pack, mix)) {
+      if (seen.has(song.id)) continue;
+      seen.add(song.id);
+      out.push(song);
+    }
+  }
+  return out;
 }
 
 export function packSize(pack: EraId, mix?: MixFilter): number {

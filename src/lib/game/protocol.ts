@@ -27,6 +27,7 @@ export type RoomConfigWire = {
   mixGenre?: GenreId;
   custom?: CustomRules;
   extraEra?: EraId | null;
+  eras?: EraId[];
   pool?: number;
   emoji?: boolean;
   chat?: boolean;
@@ -35,11 +36,7 @@ export type RoomConfigWire = {
 };
 
 export type OnlineMessage =
-  | {
-      t: "hello";
-      name: string;
-      claim?: boolean;
-    }
+  | { t: "hello"; name: string; claim?: boolean; resume?: boolean }
   | ({ t: "lobby"; hostId: string; adminId?: string; tvStep?: TvStep; members: MemberWire[] } & RoomConfigWire)
   | ({ t: "config" } & RoomConfigWire)
   | { t: "loading" }
@@ -55,8 +52,13 @@ export type OnlineMessage =
   | { t: "again" }
   | { t: "back-lobby" }
   | { t: "host-left" }
+  | { t: "host-take"; hostId: string; adminId?: string }
+  | { t: "sync-request" }
+  | { t: "evening" }
+  | { t: "aim"; slot: number | null }
   | { t: "react"; emoji: string }
-  | { t: "chat"; text: string }
+  | { t: "chat"; text: string; id?: string }
+  | { t: "chat-del"; id: string }
   | { t: "kick" }
   | { t: "admin-start" }
   | { t: "admin-kick"; id: string }
@@ -74,8 +76,13 @@ const KINDS = new Set([
   "again",
   "back-lobby",
   "host-left",
+  "host-take",
+  "sync-request",
+  "evening",
+  "aim",
   "react",
   "chat",
+  "chat-del",
   "kick",
   "admin-start",
   "admin-kick",

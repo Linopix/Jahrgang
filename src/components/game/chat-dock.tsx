@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle } from "lucide-react";
-import { CHAT_MAX, sendChat, useChat } from "@/lib/game/chat";
+import { CHAT_MAX, deleteChat, sendChat, useChat } from "@/lib/game/chat";
 import { useOnline } from "@/lib/game/online-store";
 import { unlockAudio } from "@/lib/game/audio";
 import { EmoteMark } from "./emote";
+import { useIsAdmin } from "@/lib/tv/mode";
 import { cn } from "@/lib/utils";
 
 export function ChatDock() {
@@ -14,6 +15,7 @@ export function ChatDock() {
   const open = useChat((s) => s.open);
   const setOpen = useChat((s) => s.setOpen);
   const reset = useChat((s) => s.reset);
+  const moderate = useIsAdmin();
   const [draft, setDraft] = useState("");
   const list = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -56,28 +58,41 @@ export function ChatDock() {
         <div className="pop-in mb-2 flex h-72 w-[min(20rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-xl bg-surface shadow-lift">
           <div className="flex items-center justify-between px-3 pt-2 pb-1">
             <p className="text-xs font-medium tracking-[0.16em] text-muted uppercase">Chat</p>
+            {moderate ? <p className="text-[0.65rem] tracking-[0.12em] text-subtle uppercase">Host kann löschen</p> : null}
           </div>
           <div ref={list} className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 py-1">
             {lines.length === 0 ? (
               <p className="pt-6 text-center text-xs text-subtle">Noch leer.</p>
             ) : (
               lines.map((line) => (
-                <p key={line.id} className="text-sm leading-snug">
-                  {line.name ? (
-                    <>
-                      <span className={cn("font-medium", line.self ? "text-primary" : "text-fg")}>
-                        {line.name}
-                      </span>
-                      <span className="text-muted"> · </span>
-                    </>
-                  ) : null}
-                  <span className="text-fg">
-                    {line.text.replace(/\s+/g, "").toLowerCase() === "schweinebein" ? (
-                      <EmoteMark id="schweinebein" className="size-6 align-text-bottom" />
-                    ) : (
-                      line.text
-                    )}
+                <p key={line.id} className="flex items-start gap-2 text-sm leading-snug">
+                  <span className="min-w-0 flex-1">
+                    {line.name ? (
+                      <>
+                        <span className={cn("font-medium", line.self ? "text-primary" : "text-fg")}>
+                          {line.name}
+                        </span>
+                        <span className="text-muted"> · </span>
+                      </>
+                    ) : null}
+                    <span className="text-fg">
+                      {line.text.replace(/\s+/g, "").toLowerCase() === "schweinebein" ? (
+                        <EmoteMark id="schweinebein" className="size-6 align-text-bottom" />
+                      ) : (
+                        line.text
+                      )}
+                    </span>
                   </span>
+                  {moderate && !line.self && line.from ? (
+                    <button
+                      type="button"
+                      className="shrink-0 text-xs text-subtle transition-colors duration-150 ease-out hover:text-fg"
+                      aria-label="Nachricht löschen"
+                      onClick={() => deleteChat(line.id)}
+                    >
+                      Löschen
+                    </button>
+                  ) : null}
                 </p>
               ))
             )}

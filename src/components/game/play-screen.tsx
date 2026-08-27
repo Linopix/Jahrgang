@@ -12,7 +12,7 @@ import {
   setMuted,
   unlockAudio,
 } from "@/lib/game/audio";
-import { canControlTurn, canEndGame, isOnlinePlay, requestDecade, requestEnd, requestLeave, requestPlace, requestSkip } from "@/lib/game/online-actions";
+import { canControlTurn, canEndGame, isOnlinePlay, requestDecade, requestEnd, requestLeave, requestPlace, requestSelectSlot, requestSkip } from "@/lib/game/online-actions";
 import { currentPlayer, useGame } from "@/lib/game/store";
 import { useOnline } from "@/lib/game/online-store";
 import { CATALOG } from "@/lib/game/catalog";
@@ -66,12 +66,12 @@ export function PlayScreen() {
   const variant = useGame((s) => s.variant);
   const custom = useGame((s) => s.custom);
   const deckLength = useGame((s) => s.deck.length);
-  const selectSlot = useGame((s) => s.selectSlot);
   const replay = useGame((s) => s.replay);
   const openHome = useGame((s) => s.openHome);
   const setRulesOpen = useGame((s) => s.setRulesOpen);
   const pending = useOnline((s) => s.pending);
   const selfId = useOnline((s) => s.selfId);
+  const hostLive = useOnline((s) => s.hostLive);
   const online = isOnlinePlay();
   const myTurn = canControlTurn();
   const tvRemote = useTvRemote();
@@ -187,6 +187,12 @@ export function PlayScreen() {
         </div>
       </header>
 
+      {online && !hostLive ? (
+        <p className="mt-3 rounded-md bg-raised px-3 py-2 text-center text-sm text-muted">
+          Host verbindet neu. Kurz warten.
+        </p>
+      ) : null}
+
       {mode === "party" ? (
         <ol className="mt-3 flex gap-2 overflow-x-auto pb-1">
           {players.map((row, i) => {
@@ -242,7 +248,7 @@ export function PlayScreen() {
         <h1 className="mt-1 font-display text-2xl font-medium text-fg sm:text-5xl">{player.name}</h1>
         <p className="mt-2 hidden max-w-md text-sm text-muted sm:block">
           {online && !myTurn
-            ? `${player.name} ist am Zug.`
+            ? `${player.name} legt gerade. Du siehst die Linie.`
             : kind === "both"
               ? rules.reverse
                 ? "Tipp ist freiwillig. Beides richtig: Cover und ein Joker. Links ist später."
@@ -377,9 +383,10 @@ export function PlayScreen() {
         <div className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
         <Timeline
           songs={player.timeline}
-          selectedSlot={myTurn ? selectedSlot : null}
-          onSelectSlot={myTurn ? selectSlot : undefined}
+          selectedSlot={selectedSlot}
+          onSelectSlot={myTurn ? requestSelectSlot : undefined}
           interactive={myTurn}
+          showSlots
           hideYear={rules.hideYear}
         />
         </div>

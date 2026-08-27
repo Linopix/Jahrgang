@@ -119,6 +119,10 @@ export function mergeSeries(
   });
 }
 
+export function rankSeries(series: SeriesStanding[]): SeriesStanding[] {
+  return series.slice().sort((a, b) => b.wins - a.wins || b.points - a.points);
+}
+
 export function tallySeries(
   series: SeriesStanding[],
   players: Player[],
@@ -138,7 +142,7 @@ export function tallySeries(
     if (champ && player.id === champ.id) row.wins += 1;
     map.set(player.id, row);
   }
-  return [...map.values()].sort((a, b) => b.wins - a.wins || b.points - a.points);
+  return rankSeries([...map.values()]);
 }
 
 export function uniqueYearsSpread(songs: CatalogSong[]): CatalogSong[] {

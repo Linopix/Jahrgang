@@ -73,24 +73,54 @@ Ja. Free reicht zum Mitspielen, zum Beitreten, zum Wohnzimmer und zum Stream. Fr
 
 ## Spotify einrichten
 
-Der Code ist schon da (`src/lib/spotify/`, Routen unter `/api/spotify/`). Aus ist er, bis du das Flag kippst.
+Der Code ist schon da (`src/lib/spotify/`, Routen unter `/api/spotify/`). Aus ist er, bis du das Flag kippst. Der Callback muss erreichbar sein, damit der Login später klappt — **Spotify prüft die URL beim Anlegen der App aber nicht**. Der Fehler *Something went wrong, we were not able to create your app* kommt vom Dashboard-Formular, nicht von Jahrgang.
 
 Seit März 2026 gilt bei Spotify: **wer die App im Dashboard anlegt, braucht selbst Premium** (Development Mode). Die Leute, die später im Spiel verbinden, nicht zwingend. Für mehr als ein paar Testnutzer beantragst du Extended Quota.
 
 ### 1. App im Dashboard
 
-1. [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) — mit deinem Premium-Konto.
-2. *Create app*. Name z. B. `Jahrgang`. Website die öffentliche URL.
-3. Redirect URIs, exakt, ohne Slash am Ende mehr als den Pfad:
+**Zuerst nachsehen, ob schon eine App da ist.** Seit Februar 2026 erlaubt Spotify nur **eine** Development-Mode-App pro Konto. Gelöschte Apps zählen oft noch mit. Eine zweite lässt sich nicht anlegen — oft genau mit *Something went wrong*. Dann die vorhandene App öffnen (oder warten, bis gelöschte wirklich weg sind) und nur Redirects / Website nachziehen.
+
+Wenn wirklich noch keine App existiert, **nicht** alles auf einmal eintragen. Offiziell reicht erst Name, Beschreibung, Haken — Redirects kommen danach in den Settings. Extra-Felder im Create-Dialog (Website, iOS, zwei URIs) sind der häufigste Grund, warum Save knallt, auch mit Premium und Zweitkonto.
+
+1. [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) — mit dem **Premium**-Konto, Mail bestätigt. Privates Fenster, VPN aus, nur dieses eine Konto angemeldet.
+2. *Create app*. Nur das:
+
+   | Feld | Wert |
+   | --- | --- |
+   | App name | `Jahrgang` |
+   | App description | `Musik-Zeitspiel. Hit hören, Jahr legen.` |
+   | Redirect URI | leer lassen, oder nur `http://127.0.0.1:8080/api/spotify/callback` |
+   | Website | leer |
+   | APIs | nur **Web API** — kein iOS, kein Android, kein Playback-SDK beim Anlegen |
+   | Terms | ankreuzen |
+
+   Dann *Create* / *Save*. Nichts sonst.
+3. Erst wenn die App existiert: *Settings* / *Edit*. Dort nacheinander adden, jedes Mal *Add*, dann *Save*:
 
    ```
-   http://localhost:8080/api/spotify/callback
-   https://DEINE-DOMAIN/api/spotify/callback
+   https://jahrgang.vercel.app/api/spotify/callback
+   http://127.0.0.1:8080/api/spotify/callback
    ```
 
-   Live bei uns: `https://jahrgang.vercel.app/api/spotify/callback`
-4. APIs: Web API. Für volle Titel zusätzlich Web Playback SDK.
-5. Client ID und Client Secret notieren. Secret nur auf dem Server.
+   Website: `https://jahrgang.vercel.app`  
+   Optional danach Web Playback SDK anhaken, für volle Titel.
+
+   **Kein `localhost`.** Seit April 2025 nur `127.0.0.1`. Kein `http://` vor der Live-Domain. Kein Slash extra am Ende.
+4. Client ID und Client Secret notieren. Secret nur auf dem Server.
+
+### Formular knallt trotzdem
+
+Das ist ein bekannter Spotify-Dashboard-Fehler, auch mit frischem Premium. Jahrgang kann ihn nicht umgehen. Reihenfolge:
+
+1. Dashboard leer? Wenn **irgendeine** App da ist — die nehmen, nicht neu anlegen.
+2. Create-Dialog wirklich nur Name + Text + Haken, eine Loopback-URI oder gar keine.
+3. Kein iOS/Android. Keine zweite URI im Create.
+4. Anderes Gerät / anderes Netz. Nach einem Premium-Kauf oft 15–30 Minuten warten.
+5. Konto, auf dem schon mal eine App lag (auch gelöscht): Limit sitzt oft noch. Zweites Konto hilft nur, wenn dort **nie** eine App existierte.
+6. Dann einfach später — das Formular fällt bei Spotify regelmäßig aus. Der erreichbare Callback ändert daran nichts. Spotify pinged die URL beim Create nicht.
+
+Ohne diese App bleibt Spotify in Jahrgang aus. Spielen, Packs, Charts und Online laufen trotzdem.
 
 ### 2. Umgebungsvariablen
 
@@ -105,6 +135,8 @@ Lokal in der Umgebung der Dev-Session, auf Vercel unter Project → Settings →
 
 Kein Secret ins Repo. `.env` gehört nicht ins Git.
 
+Ohne ID/Secret bleibt der Login tot, das Spiel nicht. Unter Repertoire steht dann kein Connect-Knopf, bis die Variablen am Server liegen.
+
 ### 3. Einschalten
 
 In [`src/lib/spotify/flags.ts`](../src/lib/spotify/flags.ts):
@@ -113,19 +145,20 @@ In [`src/lib/spotify/flags.ts`](../src/lib/spotify/flags.ts):
 export const SPOTIFY_LIVE = true;
 ```
 
-Dann deployen. Ohne ID/Secret bleibt der Login tot, das Spiel nicht.
+Dann deployen.
 
-Lokal: `npm run dev`, auf Start → Party oder Online → unter Repertoire verbinden. Nach dem Callback landest du wieder im Spiel, mit `?spotify=ok` in der URL.
+Lokal: `npm run dev` über `http://127.0.0.1:8080` (nicht `localhost`), auf Start → Party oder Online → unter Repertoire verbinden. Nach dem Callback landest du wieder im Spiel, mit `?spotify=ok` in der URL.
 
 ### 4. Quota
 
-Frisch angelegte Apps sind im Development Mode: wenige Testnutzer, du selbst brauchst Premium. Wenn Freundinnen ohne Eintrag im Dashboard verbinden sollen, [Extended Quota](https://developer.spotify.com/documentation/web-api/concepts/quota-modes) beantragen. Das Formular ist nervig, aber ohne geht der Login für Fremde nicht durch.
+Frisch angelegte Apps sind im Development Mode: fünf Testnutzer, du selbst brauchst Premium. Freundinnen müssen unter *User Management* in der App stehen, sonst kommt 403. Wenn mehr Leute ohne Eintrag verbinden sollen, [Extended Quota](https://developer.spotify.com/documentation/web-api/concepts/quota-modes) beantragen — das Formular nimmt seit Mai 2025 nur noch Organisationen.
 
 ### Scopes, die Jahrgang setzt
 
 `user-library-read`, `playlist-read-private`, `playlist-read-collaborative`, `user-top-read` fürs Pack. `streaming`, `user-modify-playback-state`, `user-read-playback-state` für den Player. Plus `user-read-private` / `user-read-email`, damit wir Free gegen Premium unterscheiden können.
 
 Weniger Scopes = weniger Player. Nicht kürzen, wenn du volle Titel willst.
+
 
 ---
 

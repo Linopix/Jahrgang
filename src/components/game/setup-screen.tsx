@@ -5,6 +5,7 @@ import { GameOptions, optionsPile } from "./game-options";
 import { useGame } from "@/lib/game/store";
 import { DEFAULT_ROOM_CONFIG, type RoomConfig } from "@/lib/game/types";
 import { notePlayerName } from "@/lib/gags";
+import { isBlocked } from "@/lib/game/moderation";
 
 const PARTY_NAMES = ["Alex", "Sam", "Kim", "Jo", "Mo", "Lee", "Nik", "Rae"];
 
@@ -24,6 +25,7 @@ export function SetupScreen() {
   );
   const pile = optionsPile(options, visibleNames.length);
   const pileBlocked = mode === "solo" ? pile.status === "empty" : pile.status === "short" || pile.status === "empty";
+  const nameBlocked = visibleNames.some((name) => Boolean(name.trim()) && isBlocked(name));
 
   return (
     <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pb-32 pt-8 lg:max-w-6xl lg:px-8 lg:pb-8">
@@ -94,6 +96,9 @@ export function SetupScreen() {
                   className="h-12 w-full rounded-md bg-raised px-4 text-sm text-fg shadow-border outline-none transition-[box-shadow] focus:ring-2 focus:ring-primary/70"
                   maxLength={18}
                 />
+                {name.trim() && isBlocked(name) ? (
+                  <p className="mt-1 text-xs text-muted">Der Name geht so nicht.</p>
+                ) : null}
               </label>
             ))}
           </section>
@@ -117,9 +122,9 @@ export function SetupScreen() {
             <Button
               size="lg"
               className="w-full lg:max-w-xs"
-              disabled={pileBlocked}
+              disabled={pileBlocked || nameBlocked}
               onClick={() => {
-                if (pileBlocked) return;
+                if (pileBlocked || nameBlocked) return;
                 void startGame({
                   mode,
                   names: visibleNames,
@@ -127,7 +132,7 @@ export function SetupScreen() {
                 });
               }}
             >
-              {pileBlocked ? "Zu wenig Titel" : "Platte auflegen"}
+              {nameBlocked ? "Name geht so nicht" : pileBlocked ? "Zu wenig Titel" : "Platte auflegen"}
             </Button>
           </div>
         </div>

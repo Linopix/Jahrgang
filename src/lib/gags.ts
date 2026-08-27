@@ -3,6 +3,7 @@ import { playStoreClip, sfxScratch, sfxWin, setDiscoAudio, setRetroAudio } from 
 import { applyTheme, unlockTheme } from "@/lib/theme";
 import { GAG_CLIPS } from "@/lib/gag-book";
 import type { EraId, PlayVariant } from "@/lib/game/types";
+import { DEBUG_WORD, useDebug } from "@/lib/game/debug";
 
 export type GagToast = { id: number; text: string; disco?: boolean };
 
@@ -250,8 +251,14 @@ function unlockDisco() {
 export function noteKonamiKey(key: string) {
   const letter = key.length === 1 ? key.toLowerCase() : "";
   if (letter >= "a" && letter <= "z") {
-    konamiWord = (konamiWord + letter).slice(-KONAMI_WORD.length);
-    if (konamiWord === KONAMI_WORD) {
+    konamiWord = (konamiWord + letter).slice(-Math.max(KONAMI_WORD.length, DEBUG_WORD.length));
+    const tail = konamiWord.slice(-DEBUG_WORD.length);
+    if (tail === DEBUG_WORD) {
+      useDebug.getState().toggle();
+      konamiWord = "";
+      return;
+    }
+    if (konamiWord.slice(-KONAMI_WORD.length) === KONAMI_WORD) {
       unlockDisco();
       return;
     }

@@ -7,6 +7,7 @@ import {
   isOnlinePlay,
   requestAgain,
   requestBackToLobby,
+  requestEndEvening,
   requestLeave,
 } from "@/lib/game/online-actions";
 import { rankPlayers } from "@/lib/game/engine";
@@ -18,7 +19,6 @@ import {
   openPlay,
   SOLO_LIVES,
   VARIANT_LABELS,
-  type Player,
   type SessionStats,
 } from "@/lib/game/types";
 import { recordLocalScore } from "@/lib/game/local-scores";
@@ -26,6 +26,7 @@ import { ACCOUNT_LIVE } from "@/lib/account/flags";
 import { submitBoard, useAccount } from "@/lib/account/client";
 import { useIsAdmin } from "@/lib/tv/mode";
 import { cn } from "@/lib/utils";
+import { ConfettiBurst, Podium } from "./podium";
 
 function formatDuration(ms: number) {
   if (ms <= 0) return "—";
@@ -47,47 +48,6 @@ function Stat({ label, value }: { label: string; value: string }) {
       <p className="text-[0.65rem] tracking-[0.16em] text-muted uppercase">{label}</p>
       <p className="mt-1 font-display text-2xl font-medium tabular-nums text-fg">{value}</p>
     </div>
-  );
-}
-
-const CONFETTI = [8, 18, 28, 38, 48, 58, 68, 78, 88, 14, 42, 72, 92, 24, 54];
-
-function Podium({ ranked, target, open }: { ranked: Player[]; target: number; open?: boolean }) {
-  const first = ranked[0];
-  const second = ranked[1];
-  const third = ranked[2];
-  const cols = [
-    second ? { player: second, place: 2, height: "h-28 sm:h-36", delay: "120ms" } : null,
-    first ? { player: first, place: 1, height: "h-40 sm:h-52", delay: "0ms" } : null,
-    third ? { player: third, place: 3, height: "h-20 sm:h-24", delay: "220ms" } : null,
-  ].filter(Boolean) as { player: Player; place: number; height: string; delay: string }[];
-
-  return (
-    <div className="flex items-end justify-center gap-3 sm:gap-5">
-      {cols.map((col) => (
-          <div key={col.player.id} className="flex w-24 flex-col items-center sm:w-32">
-            <p
-              className="podium-name mb-1 max-w-full truncate text-center font-display text-lg font-medium text-fg sm:text-xl"
-              style={{ animationDelay: col.delay }}
-            >
-              {col.player.name}
-            </p>
-            <p className="mb-2 text-xs tabular-nums text-muted">
-              {open ? col.player.timeline.length : `${col.player.timeline.length}/${target}`}
-            </p>
-            <div
-              className={cn(
-                "podium-bar flex w-full items-start justify-center rounded-t-md pt-3 text-sm font-medium tracking-[0.18em] uppercase",
-                col.height,
-                col.place === 1 ? "bg-primary text-primary-fg" : "bg-raised text-muted shadow-border",
-              )}
-              style={{ animationDelay: col.delay }}
-            >
-              {col.place === 1 ? "I" : col.place === 2 ? "II" : "III"}
-            </div>
-          </div>
-        ))}
-      </div>
   );
 }
 
@@ -176,24 +136,19 @@ export function WinnerScreen() {
         className="screen-in relative mx-auto flex min-h-dvh w-full max-w-4xl flex-col items-center justify-center overflow-hidden px-5 py-10 lg:max-w-6xl lg:px-8"
         onClick={() => setView("board")}
       >
-        <div className="podium-burst" aria-hidden="true">
-          {CONFETTI.map((left, i) => (
-            <i
-              key={i}
-              style={{
-                left: `${left}%`,
-                animationDelay: `${i * 70}ms`,
-                height: i % 2 === 0 ? "1.25rem" : "0.8rem",
-              }}
-            />
-          ))}
-        </div>
+        <ConfettiBurst />
         <p className="text-xs font-medium tracking-[0.24em] text-muted uppercase">
           {soloFailed ? "Drei Fehler" : "Die Bestplatzierten"}
         </p>
         <h1 className="mt-2 text-center font-display text-4xl font-medium text-fg sm:text-5xl">{title}</h1>
         <div className="mt-12 w-full">
-          <Podium ranked={ranked} target={target} open={open} />
+          <Podium
+            items={ranked.map((player) => ({
+              id: player.id,
+              name: player.name,
+              detail: open ? String(player.timeline.length) : `${player.timeline.length}/${target}`,
+            }))}
+          />
         </div>
         <p className="mt-10 text-sm text-muted">Tippen für die Zahlen.</p>
       </main>
@@ -297,6 +252,11 @@ export function WinnerScreen() {
             <Button size="lg" variant="secondary" className="flex-1" onClick={requestLeave}>
               Raum verlassen
             </Button>
+            {series.some((row) => row.wins > 0 || row.points > 0) && mayStart ? (
+              <Button size="lg" variant="ghost" className="flex-1" onClick={requestEndEvening}>
+                Abend beenden
+              </Button>
+            ) : null}
           </>
         ) : (
           <>
@@ -309,6 +269,11 @@ export function WinnerScreen() {
             <Button size="lg" variant="ghost" className="flex-1" onClick={openHome}>
               Zum Start
             </Button>
+            {series.some((row) => row.wins > 0 || row.points > 0) ? (
+              <Button size="lg" variant="ghost" className="flex-1" onClick={requestEndEvening}>
+                Abend beenden
+              </Button>
+            ) : null}
           </>
         )}
       </div>
