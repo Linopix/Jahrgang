@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { peekPlaylist } from "@/lib/game/playlist";
 import { packSize, songsForPacks } from "@/lib/game/packs";
@@ -102,8 +102,18 @@ function Segment<T extends string | number>({
   onChange: (next: T) => void;
   label: (item: T) => string;
 }) {
+  const index = Math.max(0, items.indexOf(value));
+  const count = items.length;
   return (
-    <div className="flex rounded-md bg-raised p-0.5 shadow-border" role="group">
+    <div className="relative flex rounded-md bg-raised p-0.5 shadow-border" role="group">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0.5 left-0.5 rounded-sm bg-primary transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+        style={{
+          width: `calc((100% - 0.25rem) / ${count})`,
+          transform: `translateX(${index * 100}%)`,
+        }}
+      />
       {items.map((item) => {
         const on = item === value;
         return (
@@ -118,8 +128,8 @@ function Segment<T extends string | number>({
               onChange(item);
             }}
             className={cn(
-              "h-8 min-w-0 flex-1 truncate rounded-sm px-2 text-xs font-medium transition-colors duration-150",
-              on ? "bg-primary text-primary-fg" : "text-muted hover:text-fg",
+              "relative z-10 h-8 min-w-0 flex-1 truncate rounded-sm px-2 text-xs font-medium transition-colors duration-200 motion-reduce:transition-none",
+              on ? "text-primary-fg" : "text-muted hover:text-fg",
             )}
           >
             {label(item)}
@@ -259,26 +269,76 @@ function SnapSlider({
   display: string;
   onChange: (next: number) => void;
 }) {
+  const [dragging, setDragging] = useState(false);
+  const [armed, setArmed] = useState(false);
+  const origin = useRef<number | null>(null);
+  const span = max - min;
+  const pct = span <= 0 ? 0 : ((value - min) / span) * 100;
+  const slide = armed && !dragging;
+
+  useEffect(() => {
+    setArmed(true);
+  }, []);
+
+  function endDrag() {
+    origin.current = null;
+    setDragging(false);
+  }
+
   return (
     <label className="block">
       <span className="flex items-baseline justify-between gap-3">
         <span className="text-sm text-muted">{label}</span>
         <span className="text-sm tabular-nums text-fg">{display}</span>
       </span>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        aria-label={label}
-        onChange={(event) => {
-          const next = Number(event.target.value);
-          if (next !== value) sfxTick();
-          onChange(next);
-        }}
-        className="range-single mt-2 w-full"
-      />
+      <div className="relative mt-2 h-11">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-[0.6875rem] top-1/2 h-1 -translate-y-1/2 overflow-hidden rounded-full bg-raised shadow-border"
+        >
+          <div
+            className={cn(
+              "h-full rounded-full bg-primary",
+              slide && "transition-[width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+            )}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute top-1/2 size-[1.375rem] -translate-y-1/2 rounded-full bg-primary shadow-[0_0_0_4px_var(--color-bg)]",
+            slide && "transition-[left] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+          )}
+          style={{ left: `calc(0.6875rem + (100% - 1.375rem) * ${pct / 100})` }}
+        />
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          aria-label={label}
+          className="absolute inset-0 z-10 m-0 h-full w-full cursor-pointer appearance-none bg-transparent opacity-0"
+          onPointerDown={(event) => {
+            origin.current = event.clientX;
+          }}
+          onPointerMove={(event) => {
+            if (origin.current == null) return;
+            if (Math.abs(event.clientX - origin.current) > 5) {
+              setDragging(true);
+              origin.current = null;
+            }
+          }}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onChange={(event) => {
+            const next = Number(event.target.value);
+            if (next !== value) sfxTick();
+            onChange(next);
+          }}
+        />
+      </div>
     </label>
   );
 }
