@@ -11,7 +11,7 @@ import { receiveReaction } from "@/lib/game/reactions";
 import { applyChatDelete, receiveChat } from "@/lib/game/chat";
 import { takeClaim, pickSuccessor } from "@/lib/tv/names";
 import { safeName } from "@/lib/game/moderation";
-import { HOST_GRACE_MS, shouldTakeHost, nextHostId } from "@/lib/game/hosting";
+import { HOST_GRACE_MS, shouldTakeHost, nextHostId, fromHost, fromControl, acceptsHostTake } from "@/lib/game/hosting";
 import { bindMeshInspect, noteDebug } from "@/lib/game/debug";
 import { useSessionExit } from "@/lib/game/session-exit";
 import type { PeerInfo } from "@/lib/multiplayer";
@@ -375,6 +375,17 @@ function roomConfigFromWire(msg: RoomConfigWire) {
   };
 }
 
+function liveRoster(selfId: string, hostId: string) {
+  const online = useOnline.getState();
+  return [
+    { id: selfId, live: true },
+    ...online.members.map((row) => ({
+      id: row.id,
+      live: row.id !== hostId && row.connectionState !== "failed" && row.connectionState !== "disconnected",
+    })),
+  ];
+}
+
 function handleMessage(
   from: string,
   msg: OnlineMessage,
@@ -435,13 +446,12 @@ function handleMessage(
 
   if (msg.t === "lobby") {
     if (msg.hostId === ctx.selfId) return;
-    if (online.role === "host") {
-      useOnline.setState({ role: "guest" });
-    }
+    if (from !== msg.hostId) return;
+    if (online.role === "host" && from !== ctx.selfId) return;
     online.setMembers(
       msg.members.map((m) => ({
         id: m.id,
-        name: m.name,
+        name: safeName(m.name, "Gast"),
         connectionState: m.id === ctx.selfId ? "self" : "connected",
       })),
     );
@@ -464,6 +474,7 @@ function handleMessage(
 
   if (msg.t === "config") {
     if (online.role === "guest") {
+      if (!fromControl(from, online.hostId, online.adminId)) return;
       online.setConfig(roomConfigFromWire(msg));
       if (typeof msg.stagePlays === "boolean") useOnline.setState({ stagePlays: msg.stagePlays });
       return;
@@ -491,12 +502,14 @@ function handleMessage(
   }
 
   if (msg.t === "loading" && online.role === "guest") {
+    if (!fromHost(from, online.hostId) && !fromControl(from, online.hostId, online.adminId)) return;
     useGame.setState({ phase: "loading", loadProgress: { done: 0, total: 1 } });
     online.markPlaying();
     return;
   }
 
   if (msg.t === "start-failed") {
+    if (!fromControl(from, online.hostId, online.adminId)) return;
     game.resetBoard();
     if (online.status === "connecting" || online.status === "entry") {
       online.leaveRoom();
@@ -510,6 +523,8 @@ function handleMessage(
   }
 
   if (msg.t === "state") {
+    if (online.role === "host") return;
+    if (!fromHost(from, online.hostId)) return;
     game.applySnapshot(msg.snapshot);
     online.markPlaying();
     online.setPending(false);
@@ -541,6 +556,7 @@ function handleMessage(
   }
 
   if (msg.t === "kick" && online.role === "guest") {
+    if (!fromControl(from, online.hostId, online.adminId)) return;
     const code = online.roomCode;
     game.resetBoard();
     online.leaveRoom();
@@ -550,6 +566,7 @@ function handleMessage(
   }
 
   if (msg.t === "host-left") {
+    if (from !== online.hostId) return;
     const members = [
       { id: ctx.selfId, live: true },
       ...online.members.map((row) => ({
@@ -580,6 +597,18 @@ function handleMessage(
 
   if (msg.t === "host-take") {
     if (!msg.hostId) return;
+    if (
+      !acceptsHostTake({
+        from,
+        claimedId: msg.hostId,
+        hostId: online.hostId,
+        hostLive: online.hostLive,
+        members: liveRoster(ctx.selfId, online.hostId),
+        tvId: online.tv ? online.hostId : "",
+      })
+    ) {
+      return;
+    }
     if (msg.hostId === ctx.selfId) {
       online.becomeHost(msg.adminId);
       return;
@@ -628,6 +657,7 @@ function handleMessage(
   if (msg.t === "cup") {
     if (!TOURNAMENT_LIVE) return;
     if (online.role === "host" && from !== ctx.selfId) return;
+    if (online.role !== "host" && !fromHost(from, online.hostId)) return;
     online.setTournament(parseTournament(msg.tournament) ?? msg.tournament ?? null);
     return;
   }
@@ -635,6 +665,7 @@ function handleMessage(
   if (msg.t === "cup-table") {
     if (!TOURNAMENT_LIVE) return;
     if (online.role === "host" && from !== ctx.selfId) return;
+    if (online.role !== "host" && !fromHost(from, online.hostId)) return;
     const tables = { ...online.cupTables, [msg.matchId]: msg.snapshot };
     online.setCupTables(tables);
     const self = online.selfId;
@@ -648,6 +679,7 @@ function handleMessage(
   if (msg.t === "cup-board") {
     if (!TOURNAMENT_LIVE) return;
     if (online.role === "host" && from !== ctx.selfId) return;
+    if (online.role !== "host" && !fromHost(from, online.hostId)) return;
     useOnline.setState({ cupBoards: msg.boards });
     return;
   }

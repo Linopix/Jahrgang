@@ -121,7 +121,8 @@ async function handleGet(url: URL): Promise<Response> {
       since: url.searchParams.get("since") ?? 0,
     });
   if (!parsed.success) return json({ error: "invalid query" }, 400);
-  const { room, peer, name, since } = parsed.data;
+  const { room, peer, since } = parsed.data;
+  const name = parsed.data.name.replace(/[\u0000-\u001F\u007F]/g, "").slice(0, 32);
 
   const sql = await getSql();
   await ensureSchema(sql);

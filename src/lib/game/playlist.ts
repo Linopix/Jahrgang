@@ -36,6 +36,15 @@ function headers() {
   };
 }
 
+function isDeezerApiUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname === "api.deezer.com";
+  } catch {
+    return false;
+  }
+}
+
 type SpotifyEmbedTrack = {
   title?: string;
   subtitle?: string;
@@ -126,6 +135,7 @@ async function fromDeezer(ref: Extract<PlaylistRef, { source: "deezer" }>): Prom
   }
   let nextUrl = body.tracks?.next;
   while (nextUrl && tracks.length < MAX_TRACKS) {
+    if (!isDeezerApiUrl(nextUrl)) break;
     const page = await fetch(nextUrl, { signal: AbortSignal.timeout(10000) });
     if (!page.ok) break;
     const json = (await page.json()) as { data?: DeezerTrack[]; next?: string };
@@ -292,7 +302,9 @@ async function hydrate(tracks: RawTrack[]): Promise<PlaylistTrack[]> {
 }
 
 export const peekPlaylist = createServerFn({ method: "POST" })
-  .validator((data: { url: string }) => data)
+  .validator((data: { url: string }) => ({
+    url: String(data?.url ?? "").trim().slice(0, 2000),
+  }))
   .handler(async ({ data }): Promise<{ ok: true; peek: PlaylistPeek } | { ok: false; error: string }> => {
     try {
       const loaded = await loadRaw(data.url);
@@ -328,7 +340,9 @@ export const peekPlaylist = createServerFn({ method: "POST" })
   });
 
 export const loadPlaylistSongs = createServerFn({ method: "POST" })
-  .validator((data: { url: string }) => data)
+  .validator((data: { url: string }) => ({
+    url: String(data?.url ?? "").trim().slice(0, 2000),
+  }))
   .handler(async ({ data }): Promise<PlaylistTrack[]> => {
     const loaded = await loadRaw(data.url);
     return hydrate(loaded.tracks);

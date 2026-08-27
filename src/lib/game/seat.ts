@@ -13,7 +13,11 @@ const KEY = "jahrgang-seat";
 const MAX_AGE_MS = 45 * 60 * 1000;
 
 export function makePeerId() {
-  return `p-${Math.random().toString(36).slice(2, 10)}`;
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  let id = "p-";
+  for (const b of bytes) id += b.toString(16).padStart(2, "0");
+  return id;
 }
 
 export function readSeat(room?: string): SeatRecord | null {

@@ -221,7 +221,14 @@ async function resolveOne(query: PreviewQuery): Promise<PreviewResult> {
 }
 
 export const resolvePreviews = createServerFn({ method: "POST" })
-  .validator((data: { queries: PreviewQuery[] }) => data)
+  .validator((data: { queries: PreviewQuery[] }) => ({
+    queries: (Array.isArray(data?.queries) ? data.queries : []).slice(0, 24).map((row) => ({
+      id: String(row?.id ?? "").slice(0, 80),
+      title: String(row?.title ?? "").slice(0, 120),
+      artist: String(row?.artist ?? "").slice(0, 120),
+      year: Number(row?.year) || 0,
+    })),
+  }))
   .handler(async ({ data }): Promise<PreviewResult[]> => {
     const queries = data.queries.slice(0, 24);
     const results: PreviewResult[] = [];

@@ -2,10 +2,10 @@ const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const PUBLIC_SITE = "https://jahrgang.vercel.app";
 
 export function makeRoomCode(): string {
+  const buf = new Uint8Array(4);
+  crypto.getRandomValues(buf);
   let code = "";
-  for (let i = 0; i < 4; i += 1) {
-    code += ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
-  }
+  for (const n of buf) code += ALPHABET[n % ALPHABET.length];
   return code;
 }
 
