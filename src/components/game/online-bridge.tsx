@@ -46,6 +46,7 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
   const mixGenre = useOnline((s) => s.mixGenre);
   const custom = useOnline((s) => s.custom);
   const extraEra = useOnline((s) => s.extraEra);
+  const pool = useOnline((s) => s.pool);
   const emoji = useOnline((s) => s.emoji);
   const chat = useOnline((s) => s.chat);
   const tv = useOnline((s) => s.tv);
@@ -138,12 +139,13 @@ function OnlineRoom({ roomCode, name }: { roomCode: string; name: string }) {
       mixGenre,
       custom,
       extraEra,
+      pool,
       emoji,
       chat,
       tv,
     };
     p2p.send(msg);
-  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, extraEra, emoji, chat, tv, members, adminId, tvStep]);
+  }, [role, status, p2p.selfId, p2p.send, p2p.peers, era, target, variant, tokens, nextRound, playlistUrl, playlistLabel, mixFrom, mixTo, mixGenre, custom, extraEra, pool, emoji, chat, tv, members, adminId, tvStep]);
 
   useEffect(() => {
     return p2p.onMessage((from, data, channel) => {
@@ -239,6 +241,7 @@ function handleMessage(
       mixGenre: msg.mixGenre ?? "all",
       custom: parseCustom(msg.custom),
       extraEra: msg.extraEra ?? null,
+      pool: msg.pool ?? DEFAULT_ROOM_CONFIG.pool,
       emoji: msg.emoji !== false,
       chat: msg.chat !== false,
       tv: Boolean(msg.tv),
@@ -269,6 +272,7 @@ function handleMessage(
         mixGenre: msg.mixGenre ?? "all",
         custom: parseCustom(msg.custom),
         extraEra: msg.extraEra ?? null,
+        pool: msg.pool ?? DEFAULT_ROOM_CONFIG.pool,
         emoji: msg.emoji !== false,
         chat: msg.chat !== false,
         tv: Boolean(msg.tv),
@@ -289,6 +293,7 @@ function handleMessage(
         mixGenre: msg.mixGenre ?? "all",
         custom: parseCustom(msg.custom),
         extraEra: msg.extraEra ?? null,
+        pool: msg.pool ?? DEFAULT_ROOM_CONFIG.pool,
         emoji: msg.emoji !== false,
         chat: msg.chat !== false,
         tv: Boolean(msg.tv),

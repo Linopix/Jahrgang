@@ -47,11 +47,26 @@ export function decadeLabel(year: number): string {
   return `${decade}er`;
 }
 
-export function cardsNeeded(playerCount: number, target: number, open: boolean, cap = 80): number {
+export function cardsNeeded(playerCount: number, target: number, open: boolean, cap = 80, pool?: number): number {
   const n = Math.max(1, playerCount);
-  if (open) return Math.min(cap, Math.max(16, n * 6));
+  if (open) {
+    const want = typeof pool === "number" && Number.isFinite(pool) ? pool : Math.max(16, n * 6);
+    return Math.min(cap, Math.max(n + 8, want));
+  }
   const goal = Math.max(2, target);
   return Math.min(cap, n * (goal + 1));
+}
+
+export function dealCount(
+  playerCount: number,
+  target: number,
+  open: boolean,
+  pool?: number,
+  cap = 80,
+): number {
+  const need = cardsNeeded(playerCount, target, open, cap, pool);
+  if (open || typeof pool !== "number" || !Number.isFinite(pool)) return need;
+  return Math.min(cap, Math.max(need, pool));
 }
 
 export type PileStatus = "ok" | "tight" | "short" | "empty" | "unknown";
@@ -61,12 +76,13 @@ export function pileStatus(
   playerCount: number,
   target: number,
   open: boolean,
+  pool?: number,
 ): PileStatus {
   if (pile === null) return "unknown";
   if (pile <= 0) return "empty";
   const n = Math.max(1, playerCount);
   if (pile < n + 4) return "short";
-  const need = cardsNeeded(n, target, open);
+  const need = dealCount(n, target, open, pool);
   if (pile < need) return "short";
   if (pile < need + n) return "tight";
   return "ok";

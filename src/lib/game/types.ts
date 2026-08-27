@@ -110,7 +110,7 @@ export interface SetupConfig {
   mode: GameMode;
   names: string[];
   ids?: string[];
-  target: 6 | 8 | 10;
+  target: number;
   era: EraId;
   variant: PlayVariant;
   tokens: TokenCount;
@@ -120,6 +120,7 @@ export interface SetupConfig {
   mixGenre?: GenreId;
   custom?: CustomRules;
   extraEra?: EraId | null;
+  pool?: number;
 }
 
 export interface SeriesStanding {
@@ -185,7 +186,7 @@ export interface GameSnapshot {
 
 export interface RoomConfig {
   era: EraId;
-  target: 6 | 8 | 10;
+  target: number;
   variant: PlayVariant;
   tokens: TokenCount;
   nextRound: NextRoundPolicy;
@@ -196,6 +197,7 @@ export interface RoomConfig {
   mixGenre: GenreId;
   custom: CustomRules;
   extraEra: EraId | null;
+  pool: number;
   emoji: boolean;
   chat: boolean;
   tv: boolean;
@@ -449,9 +451,16 @@ export const NEXT_ROUND_BLURB: Record<NextRoundPolicy, string> = {
 
 export const YEAR_MIN = 1960;
 export const YEAR_MAX = new Date().getFullYear();
-export const TARGET_OPTIONS = [6, 8, 10] as const;
+export const TARGET_MIN = 6;
+export const TARGET_MAX = 16;
+export const TARGET_STEP = 2;
+export const TARGET_OPTIONS = [6, 8, 10, 12, 14, 16] as const;
 export const TOKEN_OPTIONS = [0, 1, 2] as const;
 export const DEFAULT_TARGET = 8;
+export const POOL_MIN = 24;
+export const POOL_MAX = 80;
+export const POOL_STEP = 4;
+export const DEFAULT_POOL = 40;
 export const DEFAULT_TOKENS: TokenCount = 2;
 export const DEFAULT_VARIANT: PlayVariant = "timeline";
 export const DEFAULT_NEXT_ROUND: NextRoundPolicy = "host";
@@ -472,6 +481,7 @@ export const DEFAULT_ROOM_CONFIG: RoomConfig = {
   mixGenre: "all",
   custom: DEFAULT_CUSTOM,
   extraEra: null,
+  pool: DEFAULT_POOL,
   emoji: true,
   chat: true,
   tv: false,
@@ -483,6 +493,21 @@ export function isPlayVariant(value: unknown): value is PlayVariant {
 
 export function isTokenCount(value: unknown): value is TokenCount {
   return value === 0 || value === 1 || value === 2;
+}
+
+function snapRange(value: unknown, min: number, max: number, step: number, fallback: number) {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  const snapped = Math.round((n - min) / step) * step + min;
+  return Math.min(max, Math.max(min, snapped));
+}
+
+export function clampTarget(value: unknown, fallback = DEFAULT_TARGET) {
+  return snapRange(value, TARGET_MIN, TARGET_MAX, TARGET_STEP, fallback);
+}
+
+export function clampPool(value: unknown, fallback = DEFAULT_POOL) {
+  return snapRange(value, POOL_MIN, POOL_MAX, POOL_STEP, fallback);
 }
 
 export function isNextRoundPolicy(value: unknown): value is NextRoundPolicy {

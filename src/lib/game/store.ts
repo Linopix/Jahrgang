@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { songsForPack, songsForPacks } from "./packs";
-import { canPlace, cardsNeeded, decadeLabel, fisherYates, insertSong, mergeSeries, tallySeries, winner } from "./engine";
+import { canPlace, dealCount, decadeLabel, fisherYates, insertSong, mergeSeries, tallySeries, winner } from "./engine";
 import { scoreForVariant } from "./guess";
 import { loadPlaylistSongs, type PlaylistTrack } from "./playlist";
 import { loadSpotifyLibrary } from "@/lib/spotify/library";
@@ -24,10 +24,14 @@ import {
   DEFAULT_CUSTOM,
   DEFAULT_MIX_FROM,
   DEFAULT_MIX_TO,
+  DEFAULT_POOL,
   DEFAULT_TARGET,
   DEFAULT_TOKENS,
   DEFAULT_VARIANT,
+  POOL_MAX,
   SOLO_LIVES,
+  clampPool,
+  clampTarget,
   emptyStats,
   parseCustom,
   parseExtraEra,
@@ -302,7 +306,7 @@ export const useGame = create<GameStore>((set, get) => ({
       phase: "loading",
       mode: config.mode,
       era: config.era,
-      target: config.target,
+      target: clampTarget(config.target),
       variant,
       custom,
       lastSetup: config,
@@ -320,7 +324,8 @@ export const useGame = create<GameStore>((set, get) => ({
         name,
       }));
       const rules = rulesFor(variant, custom);
-      const needed = cardsNeeded(playerCount, config.target, rules.open, POOL_SIZE);
+      const wanted = variant === "custom" ? clampPool(config.pool, DEFAULT_POOL) : undefined;
+      const needed = dealCount(playerCount, clampTarget(config.target), rules.open, wanted, POOL_MAX);
       let imported: PlaylistTrack[] = [];
       if (config.era === "playlist" && !config.playlistUrl) {
         set({

@@ -4,10 +4,13 @@ import {
   DEFAULT_MIX_FROM,
   DEFAULT_MIX_TO,
   DEFAULT_NEXT_ROUND,
+  DEFAULT_POOL,
   DEFAULT_ROOM_CONFIG,
   DEFAULT_TARGET,
   DEFAULT_TOKENS,
   DEFAULT_VARIANT,
+  clampPool,
+  clampTarget,
   isEraId,
   isGenreId,
   isNextRoundPolicy,
@@ -65,7 +68,7 @@ type OnlineStore = {
   hostId: string;
   members: OnlineMember[];
   era: EraId;
-  target: 6 | 8 | 10;
+  target: number;
   variant: PlayVariant;
   tokens: TokenCount;
   nextRound: NextRoundPolicy;
@@ -76,6 +79,7 @@ type OnlineStore = {
   mixGenre: GenreId;
   custom: CustomRules;
   extraEra: EraId | null;
+  pool: number;
   emoji: boolean;
   chat: boolean;
   tv: boolean;
@@ -125,6 +129,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   mixGenre: "all",
   custom: DEFAULT_CUSTOM,
   extraEra: null,
+  pool: DEFAULT_POOL,
   emoji: true,
   chat: true,
   tv: false,
@@ -262,7 +267,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
   setConfig: (config) =>
     set({
       era: isEraId(config.era) ? config.era : DEFAULT_ROOM_CONFIG.era,
-      target: config.target,
+      target: clampTarget(config.target),
       variant: isPlayVariant(config.variant) ? config.variant : DEFAULT_VARIANT,
       tokens: isTokenCount(config.tokens) ? config.tokens : DEFAULT_TOKENS,
       nextRound: isNextRoundPolicy(config.nextRound) ? config.nextRound : DEFAULT_NEXT_ROUND,
@@ -273,6 +278,7 @@ export const useOnline = create<OnlineStore>((set, get) => ({
       mixGenre: isGenreId(config.mixGenre) ? config.mixGenre : "all",
       custom: parseCustom(config.custom),
       extraEra: parseExtraEra(config.extraEra, isEraId(config.era) ? config.era : undefined),
+      pool: clampPool(config.pool),
       emoji: config.emoji !== false,
       chat: config.chat !== false,
       tv: TV_LIVE && Boolean(config.tv),
@@ -305,6 +311,7 @@ export function roomConfigFrom(
     | "mixGenre"
     | "custom"
     | "extraEra"
+    | "pool"
     | "emoji"
     | "chat"
     | "tv"
@@ -323,6 +330,7 @@ export function roomConfigFrom(
     mixGenre: state.mixGenre,
     custom: parseCustom(state.custom),
     extraEra: parseExtraEra(state.extraEra, state.era),
+    pool: clampPool(state.pool),
     emoji: state.emoji !== false,
     chat: state.chat !== false,
     tv: TV_LIVE && Boolean(state.tv),

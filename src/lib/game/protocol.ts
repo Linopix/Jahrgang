@@ -16,7 +16,7 @@ export type MemberWire = {
 
 export type RoomConfigWire = {
   era: EraId;
-  target: 6 | 8 | 10;
+  target: number;
   variant: PlayVariant;
   tokens: TokenCount;
   nextRound: NextRoundPolicy;
@@ -27,6 +27,7 @@ export type RoomConfigWire = {
   mixGenre?: GenreId;
   custom?: CustomRules;
   extraEra?: EraId | null;
+  pool?: number;
   emoji?: boolean;
   chat?: boolean;
   tv?: boolean;

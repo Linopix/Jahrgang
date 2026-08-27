@@ -23,7 +23,7 @@ export function SetupScreen() {
     [mode, names, count],
   );
   const pile = optionsPile(options, visibleNames.length);
-  const pileBlocked = pile.status === "short" || pile.status === "empty";
+  const pileBlocked = mode === "solo" ? pile.status === "empty" : pile.status === "short" || pile.status === "empty";
 
   return (
     <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pb-32 pt-8 lg:max-w-6xl lg:px-8 lg:pb-8">
@@ -104,6 +104,7 @@ export function SetupScreen() {
             value={options}
             onChange={(patch) => setOptions((current) => ({ ...current, ...patch }))}
             players={visibleNames.length}
+            solo={mode === "solo"}
           />
         </div>
 

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { peekPlaylist } from "@/lib/game/playlist";
 import { packSize, songsForPacks } from "@/lib/game/packs";
-import { cardsNeeded, pileStatus, type PileStatus } from "@/lib/game/engine";
+import { dealCount, pileStatus, type PileStatus } from "@/lib/game/engine";
 import { sfxHover, sfxSlide, sfxTick } from "@/lib/game/audio";
 import { GenreArt, PackArt } from "@/components/game/pack-art";
 import { MenuSelect } from "@/components/game/menu-select";
@@ -12,6 +12,7 @@ import { useSpotify } from "@/lib/spotify/session";
 import { SpotifyConnect, useSpotifyConnected } from "./spotify-connect";
 import {
   DEFAULT_CUSTOM,
+  DEFAULT_POOL,
   ERA_BLURBS,
   ERA_LABELS,
   GENRE_BLURBS,
@@ -21,6 +22,14 @@ import {
   NEXT_ROUND_LABELS,
   NEXT_ROUND_OPTIONS,
   PACK_GROUPS,
+  POOL_MAX,
+  POOL_MIN,
+  POOL_STEP,
+  TARGET_MAX,
+  TARGET_MIN,
+  TARGET_STEP,
+  clampPool,
+  clampTarget,
   parseExtraEra,
   VARIANT_BLURBS,
   VARIANT_IDS,
@@ -42,6 +51,7 @@ type GameOptionsProps = {
   onChange: (patch: Partial<RoomConfig>) => void;
   online?: boolean;
   players?: number;
+  solo?: boolean;
 };
 
 const CHIP =
@@ -552,9 +562,8 @@ function ExtraPack({
   const spotifyUser = useSpotifyConnected();
   const libraryCount = useSpotify((s) => s.libraryCount);
   const without = optionsPile({ ...value, extraEra: null }, players);
-  const show =
-    Boolean(extra) || without.status === "short" || without.status === "tight" || without.status === "empty";
-  if (!show || value.era === "all") return null;
+  const short = without.status === "short" || without.status === "tight" || without.status === "empty";
+  if (value.era === "all") return null;
   const extraItems = PACK_MENU.flatMap((group) =>
     group.ids
       .filter((id) => id !== value.era)
@@ -581,7 +590,9 @@ function ExtraPack({
       <p className="mt-1 text-sm text-muted">
         {extra
           ? `${ERA_LABELS[value.era]} plus ${ERA_LABELS[extra]}. Doppelte Titel einmal.`
-          : "Das Pack reicht nicht. Ein zweites dazu, der Stapel mischt beide."}
+          : short
+            ? "Das Pack reicht nicht für die Runde. Ein zweites dazu, der Stapel mischt beide."
+            : "Ein zweites Pack oder Genre dazu. Doppelte Titel einmal."}
       </p>
       <div className="mt-3">
         <MenuSelect
@@ -614,21 +625,25 @@ function isOpenPlay(value: RoomConfig) {
 export function optionsPile(value: RoomConfig, players: number) {
   const pile = pileCount(value, useSpotify.getState().libraryCount);
   const open = isOpenPlay(value);
+  const pool = value.variant === "custom" ? clampPool(value.pool) : undefined;
   return {
     pile,
-    need: cardsNeeded(players, value.target, open),
-    status: pileStatus(pile, players, value.target, open) as PileStatus,
+    need: dealCount(players, value.target, open, pool),
+    status: pileStatus(pile, players, value.target, open, pool) as PileStatus,
   };
 }
 
 function PileNote({
   value,
   players,
+  solo,
 }: {
   value: RoomConfig;
   players: number;
+  solo?: boolean;
 }) {
   const { pile, need, status } = optionsPile(value, players);
+  if (solo && status !== "empty") return null;
   if (status === "ok") return null;
   if (status === "unknown") {
     return (
@@ -659,9 +674,10 @@ function PileNote({
   );
 }
 
-export function GameOptions({ value, onChange, online, players = 2 }: GameOptionsProps) {
+export function GameOptions({ value, onChange, online, players = 2, solo = false }: GameOptionsProps) {
   const custom = value.custom ?? DEFAULT_CUSTOM;
   const showTarget = value.variant !== "custom" || !custom.open;
+  const showPool = value.variant === "custom";
   const libraryCount = useSpotify((s) => s.libraryCount);
   const spotifyUser = useSpotifyConnected();
   const login = useSpotify((s) => s.login);
@@ -702,17 +718,28 @@ export function GameOptions({ value, onChange, online, players = 2 }: GameOption
         </section>
 
         <section>
-          <h2 className="text-sm font-medium text-fg">Ziel und Joker</h2>
+          <h2 className="text-sm font-medium text-fg">{showTarget ? "Ziel und Joker" : "Stapel und Joker"}</h2>
           <div className="mt-3 grid gap-5">
             {showTarget ? (
               <SnapSlider
                 label="Karten"
-                value={value.target}
-                min={6}
-                max={10}
-                step={2}
-                display={`${value.target}`}
-                onChange={(target) => onChange({ target: target as 6 | 8 | 10 })}
+                value={clampTarget(value.target)}
+                min={TARGET_MIN}
+                max={TARGET_MAX}
+                step={TARGET_STEP}
+                display={`${clampTarget(value.target)}`}
+                onChange={(target) => onChange({ target: clampTarget(target) })}
+              />
+            ) : null}
+            {showPool ? (
+              <SnapSlider
+                label="Stapel"
+                value={clampPool(value.pool ?? DEFAULT_POOL)}
+                min={POOL_MIN}
+                max={POOL_MAX}
+                step={POOL_STEP}
+                display={`${clampPool(value.pool ?? DEFAULT_POOL)} Titel`}
+                onChange={(pool) => onChange({ pool: clampPool(pool) })}
               />
             ) : null}
             <SnapSlider
@@ -728,8 +755,8 @@ export function GameOptions({ value, onChange, online, players = 2 }: GameOption
           <p className="mt-2 text-sm text-muted">
             {value.variant === "custom"
               ? custom.open
-                ? "Kein Kartenziel. Der Stapel läuft sich leer."
-                : "Karten bis zum Sieg, Regeln wie eingestellt."
+                ? "Kein Kartenziel. Der Stapel läuft sich leer — Größe oben einstellen."
+                : "Karten bis zum Sieg. Der Stapel kann größer sein als das Ziel."
               : "Karten bis zum Sieg · Joker pro Person."}
           </p>
         </section>
@@ -832,8 +859,8 @@ export function GameOptions({ value, onChange, online, players = 2 }: GameOption
             <SpotifyConnect compact />
           </div>
         ) : null}
-        <ExtraPack value={value} onChange={onChange} players={players} />
-        <PileNote value={value} players={players} />
+        {solo ? null : <ExtraPack value={value} onChange={onChange} players={players} />}
+        <PileNote value={value} players={players} solo={solo} />
       </section>
     </div>
   );
@@ -855,11 +882,13 @@ export function roomConfigSummary(config: RoomConfig) {
   const packLabel = extraPack
     ? `${ERA_LABELS[config.era]} + ${ERA_LABELS[extraPack]}`
     : ERA_LABELS[config.era];
+  const open = isOpenPlay(config);
+  const goal = open ? `${clampPool(config.pool)} im Stapel` : `${clampTarget(config.target)} Karten`;
   if (config.era === "playlist" && config.playlistLabel) {
-    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · ${config.playlistLabel}${extraPack ? ` + ${ERA_LABELS[extraPack]}` : ""}${extra}`;
+    return `${VARIANT_LABELS[config.variant]} · ${goal} · ${joker} · ${round} · ${config.playlistLabel}${extraPack ? ` + ${ERA_LABELS[extraPack]}` : ""}${extra}`;
   }
   if (config.era === "mix") {
-    return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · Mix ${config.mixFrom}–${config.mixTo} · ${GENRE_LABELS[config.mixGenre]}${extraPack ? ` + ${ERA_LABELS[extraPack]}` : ""}${extra}`;
+    return `${VARIANT_LABELS[config.variant]} · ${goal} · ${joker} · ${round} · Mix ${config.mixFrom}–${config.mixTo} · ${GENRE_LABELS[config.mixGenre]}${extraPack ? ` + ${ERA_LABELS[extraPack]}` : ""}${extra}`;
   }
-  return `${VARIANT_LABELS[config.variant]} · ${config.target} Karten · ${joker} · ${round} · ${packLabel}${extra}`;
+  return `${VARIANT_LABELS[config.variant]} · ${goal} · ${joker} · ${round} · ${packLabel}${extra}`;
 }

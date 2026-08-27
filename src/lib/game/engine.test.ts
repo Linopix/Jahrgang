@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { canPlace, cardsNeeded, pileStatus, turnsUntilFirstWin } from "./engine.ts";
+import { canPlace, cardsNeeded, dealCount, pileStatus, turnsUntilFirstWin } from "./engine.ts";
 
 test("forward timeline rejects earlier year on the right", () => {
   const line = [{ year: 1980 }, { year: 2000 }];
@@ -37,6 +37,17 @@ test("open play asks for a decent pile, not the cap", () => {
   assert.equal(cardsNeeded(4, 8, true, 80), 24);
 });
 
+test("custom pool lifts an open round", () => {
+  assert.equal(cardsNeeded(4, 8, true, 80, 48), 48);
+  assert.equal(dealCount(4, 8, false, 48), 48);
+  assert.equal(dealCount(4, 8, false), 36);
+});
+
+test("target sixteen needs more than ten", () => {
+  assert.equal(cardsNeeded(4, 16, false), 68);
+  assert.ok(dealCount(4, 16, false) > cardsNeeded(4, 10, false));
+});
+
 test("turns until first win is the first player's last extra", () => {
   assert.equal(turnsUntilFirstWin(4, 8), 25);
   assert.equal(turnsUntilFirstWin(4, 6), 17);
@@ -48,4 +59,6 @@ test("pile status flags a short pack for four at eight cards", () => {
   assert.equal(pileStatus(40, 4, 8, false), "ok");
   assert.equal(pileStatus(0, 4, 8, false), "empty");
   assert.equal(pileStatus(null, 4, 8, false), "unknown");
+  assert.equal(pileStatus(36, 4, 8, true, 48), "short");
+  assert.equal(pileStatus(48, 4, 8, true, 48), "tight");
 });

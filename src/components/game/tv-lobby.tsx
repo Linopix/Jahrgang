@@ -138,6 +138,7 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
   const mixGenre = useOnline((s) => s.mixGenre);
   const custom = useOnline((s) => s.custom);
   const extraEra = useOnline((s) => s.extraEra);
+  const pool = useOnline((s) => s.pool);
   const emoji = useOnline((s) => s.emoji);
   const chat = useOnline((s) => s.chat);
   const tv = useOnline((s) => s.tv);
@@ -158,6 +159,7 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
     mixGenre,
     custom,
     extraEra,
+    pool,
     emoji,
     chat,
     tv,
@@ -237,6 +239,7 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
   const mixGenre = useOnline((s) => s.mixGenre);
   const custom = useOnline((s) => s.custom);
   const extraEra = useOnline((s) => s.extraEra);
+  const pool = useOnline((s) => s.pool);
   const emoji = useOnline((s) => s.emoji);
   const chat = useOnline((s) => s.chat);
   const seats = playerSeats(members, hostId, tv);
@@ -254,6 +257,7 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
     mixGenre,
     custom,
     extraEra,
+    pool,
     emoji,
     chat,
     tv,
