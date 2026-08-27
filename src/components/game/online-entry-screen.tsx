@@ -1,10 +1,12 @@
-import { ChevronLeft, Radio } from "lucide-react";
+import { useState } from "react";
+import { ChevronLeft, Monitor, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Vinyl } from "./vinyl";
-import { unlockAudio } from "@/lib/game/audio";
+import { sfxTick, unlockAudio } from "@/lib/game/audio";
 import { useOnline } from "@/lib/game/online-store";
 import { notePlayerName, noteRoomCode } from "@/lib/gags";
 import { TV_LIVE } from "@/lib/tv/flags";
+import { cn } from "@/lib/utils";
 
 export function OnlineEntryScreen() {
   const selfName = useOnline((s) => s.selfName);
@@ -15,8 +17,14 @@ export function OnlineEntryScreen() {
   const createRoom = useOnline((s) => s.createRoom);
   const joinRoom = useOnline((s) => s.joinRoom);
   const leaveRoom = useOnline((s) => s.leaveRoom);
+  const [tv, setTv] = useState(false);
 
   const named = selfName.trim().length > 0;
+
+  function openRoom() {
+    unlockAudio();
+    createRoom(TV_LIVE && tv ? { tv: true } : undefined);
+  }
 
   return (
     <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 py-8 lg:max-w-5xl lg:justify-center lg:px-8">
@@ -59,11 +67,47 @@ export function OnlineEntryScreen() {
           onKeyDown={(event) => {
             if (event.key !== "Enter" || !named) return;
             event.preventDefault();
-            unlockAudio();
-            createRoom();
+            openRoom();
           }}
         />
       </label>
+
+      {TV_LIVE ? (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={tv}
+          onClick={() => {
+            setTv((value) => !value);
+            sfxTick();
+          }}
+          className="mt-5 flex min-h-12 w-full items-center justify-between gap-4 py-2 text-left"
+        >
+          <span className="min-w-0">
+            <span className="flex items-center gap-2 text-sm text-fg">
+              <Monitor className="size-4" />
+              TV-Abend
+            </span>
+            <span className="mt-0.5 block text-xs text-muted">
+              Dieser Bildschirm ist der Fernseher. Geraten wird auf den Handys.
+            </span>
+          </span>
+          <span
+            aria-hidden
+            className={cn(
+              "relative h-7 w-11 shrink-0 overflow-hidden rounded-full transition-colors duration-150 ease-out",
+              tv ? "bg-primary" : "bg-surface shadow-border",
+            )}
+          >
+            <span
+              className={cn(
+                "absolute top-0.5 left-0.5 size-6 rounded-full transition-transform duration-150 ease-out",
+                tv ? "translate-x-4 bg-primary-fg" : "bg-fg",
+              )}
+            />
+          </span>
+        </button>
+      ) : null}
 
       {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
 
@@ -71,28 +115,11 @@ export function OnlineEntryScreen() {
         size="lg"
         className="mt-6 w-full"
         disabled={!named}
-        onClick={() => {
-          unlockAudio();
-          createRoom();
-        }}
+        onClick={openRoom}
       >
-        <Radio className="size-4" />
-        Raum öffnen
+        {tv ? <Monitor className="size-4" /> : <Radio className="size-4" />}
+        {tv ? "Fernseher öffnen" : "Raum öffnen"}
       </Button>
-      {TV_LIVE ? (
-        <Button
-          size="lg"
-          variant="secondary"
-          className="mt-3 w-full"
-          disabled={!named}
-          onClick={() => {
-            unlockAudio();
-            createRoom({ tv: true });
-          }}
-        >
-          Fernseher
-        </Button>
-      ) : null}
 
       <div className="mt-8 flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />

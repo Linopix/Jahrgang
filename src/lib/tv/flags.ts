@@ -1,5 +1,5 @@
 /**
  * TV-Abend: Fernseher zeigt die Platte, Handys spielen.
- * Off until TV_LIVE is true.
+ * Host kann das beim Online-Abend einschalten.
  */
-export const TV_LIVE = false;
+export const TV_LIVE = true;
