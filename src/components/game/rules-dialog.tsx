@@ -6,32 +6,32 @@ const STEPS = [
   {
     n: "01",
     title: "Start",
-    body: "Jeder fängt mit einer offenen Karte an. Links ist früher, rechts später.",
+    body: "Jede Person hat eine Linie. Darauf liegt zu Beginn eine Karte, deren Jahr sichtbar ist. Standard: links früher, rechts später.",
   },
   {
     n: "02",
     title: "Hören",
-    body: "Es kommt ein neuer Titel, ohne Namen und ohne Jahr. Je nach Modus siehst du das Cover oder nicht. Bei Kenner darfst du Interpret und Titel tippen — musst du aber nicht.",
+    body: "Es kommt ein Titel ohne Namen und ohne Jahr. Ob Cover, Interpret oder Songtitel sichtbar sind, hängt vom Modus ab. Bei Kenner können Interpret und Titel eingegeben werden, müssen aber nicht.",
   },
   {
     n: "03",
     title: "Legen",
-    body: "Du suchst den Platz auf deiner Linie. Sitzt das Jahr, bleibt die Karte. Über Beenden kannst du den Abend vorzeitig schließen und den Stand sehen.",
+    body: "Die Karte wird in einen Zwischenraum der Linie gelegt. Passt das Jahr zur Sortierung, bleibt sie. Über Beenden kann die Runde vorzeitig geschlossen werden.",
   },
   {
     n: "04",
     title: "Aufdecken",
-    body: "Liegt sie falsch, geht sie unter den Stapel und kommt später wieder. Überspringen mit Joker ebenso. Richtig bleibt sie auf deiner Linie. Richtige Tipps beim Raten zählen extra. Zwei Titel aus demselben Jahr dürfen nebeneinander liegen.",
+    body: "Passt das Jahr nicht, wandert die Karte unter den Stapel und kommt später erneut. Überspringen mit Joker ebenso. Zwei Titel aus demselben Jahr dürfen nebeneinander liegen. Richtige Angaben beim Raten zählen extra.",
   },
   {
     n: "05",
-    title: "Joker",
-    body: "Jahrzehnt anzeigen oder den Titel überspringen, je nachdem wie viele Joker ihr eingestellt habt. Kenner startet ohne, ein Joker kommt dazu wenn Interpret und Titel sitzen. Ziel sind zehn Karten, wie beim bekannten Original — ihr könnt auf acht oder weniger gehen. Bei Custom könnt ihr auch ohne Ziel bis zum leeren Stapel spielen.",
+    title: "Joker und Ziel",
+    body: "Joker: Jahrzehnt anzeigen oder den aktuellen Titel überspringen. Kenner startet mit 0 Jokern; Interpret und Titel beide richtig bringen einen Joker und das Cover. Standardziel sind 10 Karten auf der Linie. Custom kann ohne Ziel bis zum leeren Stapel gespielt werden.",
   },
   {
     n: "06",
     title: "Online",
-    body: "Der Host schickt einen vierstelligen Code. Falscher Name: rauswerfen und neu beitreten. Wer die nächste Runde starten darf und ob Chat und Emoji an sind, stellt der Host in der Lobby ein.",
+    body: "Der Host vergibt einen vierstelligen Code. Der Host stellt in der Lobby ein, wer die nächste Runde startet und ob Chat und Emoji an sind. Falscher Anzeigename: rauswerfen und neu beitreten.",
   },
 ];
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { inferGenre, songsForPack, songsForPacks } from "./packs.ts";
-import { ERA_IDS, GENRE_IDS } from "./types.ts";
+import { ERA_IDS, GENRE_IDS, parseEras } from "./types.ts";
 
 test("each playable pack has enough songs for a round", () => {
   for (const id of ERA_IDS) {
@@ -48,4 +48,10 @@ test("second pack adds unique titles", () => {
   const both = songsForPacks("metal", "all");
   assert.ok(both.length > metal.length);
   assert.equal(both.length, new Set(both.map((song) => song.id)).size);
+});
+
+test("parseEras keeps mix and playlist next to Alles", () => {
+  assert.deepEqual(parseEras("all", null, ["all"]), ["all"]);
+  assert.deepEqual(parseEras("all", null, ["all", "playlist", "mix"]), ["all", "playlist", "mix"]);
+  assert.deepEqual(parseEras("eighties", null, ["eighties", "playlist"]), ["eighties", "playlist"]);
 });

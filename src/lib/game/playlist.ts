@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { matchCatalogSong, songId } from "./catalog.ts";
-import { lookupPreview, type PreviewResult } from "./preview";
+import { lookupPreview, type PreviewResult } from "./preview.ts";
 import { parsePlaylistInput, type ListedTrack, type PlaylistRef } from "./playlist-url";
 import type { CatalogSong } from "./types";
 import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
@@ -15,6 +15,7 @@ export type PlaylistTrack = CatalogSong & {
 export type PlaylistPeek = {
   title: string;
   count: number;
+  playable: number;
   url: string;
 };
 
@@ -187,6 +188,38 @@ async function loadRaw(url: string): Promise<{ title: string; tracks: RawTrack[]
   return { ...packed, url: url.trim() };
 }
 
+export async function countTracksWithPreview(
+  tracks: { title: string; artist: string; year?: number; previewUrl?: string }[],
+): Promise<number> {
+  let playable = 0;
+  const missing: { title: string; artist: string; year?: number }[] = [];
+  for (const track of tracks) {
+    if (track.previewUrl) playable += 1;
+    else missing.push(track);
+  }
+  const concurrency = 6;
+  for (let i = 0; i < missing.length; i += concurrency) {
+    const batch = missing.slice(i, i + concurrency);
+    const hits = await Promise.all(
+      batch.map(async (track) => {
+        try {
+          const found = await lookupPreview({
+            id: songId(track.title, track.artist, track.year ?? 0),
+            title: track.title,
+            artist: track.artist,
+            year: track.year ?? 0,
+          });
+          return Boolean(found.previewUrl);
+        } catch {
+          return false;
+        }
+      }),
+    );
+    playable += hits.filter(Boolean).length;
+  }
+  return playable;
+}
+
 async function hydrate(tracks: RawTrack[]): Promise<PlaylistTrack[]> {
   const out: PlaylistTrack[] = [];
   const pending: RawTrack[] = [];
@@ -269,11 +302,13 @@ export const peekPlaylist = createServerFn({ method: "POST" })
           error: "Zu wenige Titel. Mindestens vier werden gebraucht.",
         };
       }
+      const playable = await countTracksWithPreview(loaded.tracks);
       return {
         ok: true,
         peek: {
           title: loaded.title,
           count: loaded.tracks.length,
+          playable,
           url: loaded.url,
         },
       };

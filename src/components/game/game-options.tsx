@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Plus, X } from "lucide-react";
+import * as Dialog from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import { peekPlaylist } from "@/lib/game/playlist";
+import { markPreviewHintSeen, previewHintSeen } from "@/lib/game/preview-hint";
 import { packSize, songsForEras } from "@/lib/game/packs";
 import { countFittingFor } from "@/lib/game/extras";
 import { getFreshSongs, subscribeFresh } from "@/lib/game/fresh";
@@ -154,6 +156,58 @@ function SwitchRow({
   );
 }
 
+function playlistPlayable(label: string) {
+  const current = label.match(/(\d+)\s+von\s+(\d+)\s+mit Hörprobe/);
+  if (current) return Number(current[1]);
+  const legacy = label.match(/(\d+)\s*Titel/);
+  return legacy ? Number(legacy[1]) : null;
+}
+
+function PreviewHintDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  return (
+    <Dialog.Root
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) markPreviewHintSeen();
+        onOpenChange(next);
+      }}
+    >
+      <Dialog.Portal>
+        <Dialog.Overlay className="dialog-overlay fixed inset-0 z-50 bg-bg/80" />
+        <Dialog.Content className="dialog-panel fixed inset-x-3 top-1/2 z-50 max-h-[min(36rem,calc(100dvh-2rem))] w-auto max-w-lg -translate-y-1/2 overflow-y-auto rounded-xl bg-surface p-5 shadow-lift sm:inset-x-auto sm:left-1/2 sm:w-full sm:-translate-x-1/2 sm:p-7">
+          <Dialog.Title className="font-display text-2xl font-medium text-fg">
+            Fehlende Hörproben
+          </Dialog.Title>
+          <Dialog.Description className="mt-3 text-sm leading-relaxed text-muted">
+            Jahrgang kann nur Titel abspielen, für die eine Kurzvorschau erreichbar ist (in der Regel
+            30 Sekunden). Die Abfrage geht an iTunes und Deezer. Bei Spotify-Playlists wird zusätzlich
+            das Feld audioPreview der öffentlichen Einbettung gelesen. Die Spotify Web API liefert für
+            viele Titel kein preview_url. Fehlt die URL dort und gibt es keinen Treffer bei iTunes oder
+            Deezer, bleibt der Titel ohne Hörprobe und kommt nicht in den Stapel.
+          </Dialog.Description>
+          <p className="mt-3 text-sm leading-relaxed text-muted">
+            Typische Ursachen: der Rechteinhaber stellt keine Kurzvorschau bereit, der Titel ist im
+            deutschen Store-Katalog nicht vorhanden, oder es handelt sich um Spoken-Word-, Podcast-
+            oder Regionalversionen ohne passenden Store-Eintrag. Die übrigen Titel der Liste bleiben
+            spielbar.
+          </p>
+          <div className="mt-5 flex justify-end">
+            <Dialog.Close asChild>
+              <Button type="button">Verstanden</Button>
+            </Dialog.Close>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+
 function PlaylistField({
   value,
   onChange,
@@ -164,6 +218,8 @@ function PlaylistField({
   const [draft, setDraft] = useState(value.playlistUrl);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hintOpen, setHintOpen] = useState(false);
+  const playable = playlistPlayable(value.playlistLabel);
 
   useEffect(() => {
     setDraft(value.playlistUrl);
@@ -186,14 +242,19 @@ function PlaylistField({
     }
     onChange({
       playlistUrl: result.peek.url,
-      playlistLabel: `${result.peek.title} · ${result.peek.count} Titel`,
+      playlistLabel: `${result.peek.title} · ${result.peek.playable} von ${result.peek.count} mit Hörprobe`,
     });
+    if (result.peek.playable < result.peek.count && !previewHintSeen()) {
+      setHintOpen(true);
+    }
   }
+
+  const missing = playable !== null && value.playlistLabel.includes("von") && playable === 0;
 
   return (
     <div className="mt-3 rounded-xl bg-raised p-4 shadow-border" data-playlist-field>
       <p className="text-sm text-muted">
-        Öffentlichen Spotify- oder Deezer-Link einfügen, oder Zeilen: Interpret – Titel.
+        Öffentlichen Spotify- oder Deezer-Link einfügen oder Zeilen im Format Interpret – Titel.
       </p>
       <textarea
         value={draft}
@@ -212,11 +273,24 @@ function PlaylistField({
           disabled={pending}
           onClick={() => void apply()}
         >
-          {pending ? "Prüfen…" : draft.trim() ? "Übernehmen" : "Leeren"}
+          {pending ? "Hörproben prüfen…" : draft.trim() ? "Prüfen" : "Leeren"}
         </Button>
       </div>
       {value.playlistLabel ? <p className="mt-2 text-sm text-fg">{value.playlistLabel}</p> : null}
+      {value.playlistLabel.includes("von") && playable !== null ? (
+        <button
+          type="button"
+          className="mt-1 text-sm text-muted underline-offset-2 transition-colors duration-150 hover:text-fg hover:underline"
+          onClick={() => setHintOpen(true)}
+        >
+          Warum haben Titel keine Hörprobe?
+        </button>
+      ) : null}
+      {missing ? (
+        <p className="mt-2 text-sm text-danger">Kein Titel mit Hörprobe. Die Liste kann nicht gespielt werden.</p>
+      ) : null}
       {error ? <p className="mt-2 text-sm text-danger">{error}</p> : null}
+      <PreviewHintDialog open={hintOpen} onOpenChange={setHintOpen} />
     </div>
   );
 }
@@ -481,8 +555,7 @@ function liveExtras() {
 function primaryPile(value: RoomConfig, extras: CatalogSong[] = liveExtras()) {
   if (value.era === "likes") return extras.length;
   if (value.era === "playlist") {
-    const match = value.playlistLabel.match(/(\d+)\s*Titel/);
-    return match ? Number(match[1]) : null;
+    return playlistPlayable(value.playlistLabel);
   }
   return packSize(value.era, mixOf(value));
 }
@@ -515,9 +588,7 @@ function packItems(exclude: Set<EraId>, spotifyUser: boolean, libraryCount: numb
         blurb:
           id === "likes"
             ? `${ERA_BLURBS[id]} ${libraryCount ?? 0} Titel.`
-            : id === "playlist" || id === "mix"
-              ? ERA_BLURBS[id]
-              : `${ERA_BLURBS[id]} ${packSize(id)} Titel.`,
+            : `${ERA_BLURBS[id]} ${packSize(id)} Titel.`,
         art: <PackArt id={id} className="size-7" />,
       })),
   );
@@ -525,6 +596,59 @@ function packItems(exclude: Set<EraId>, spotifyUser: boolean, libraryCount: numb
     return items.filter((item) => item.id !== "likes");
   }
   return items;
+}
+
+function OwnSources({
+  value,
+  onChange,
+}: {
+  value: RoomConfig;
+  onChange: (patch: Partial<RoomConfig>) => void;
+}) {
+  const packs = parseEras(value.era, value.extraEra, value.eras);
+  const mixOn = packs.includes("mix");
+  const playlistOn = packs.includes("playlist");
+
+  function setOwn(id: "mix" | "playlist", on: boolean) {
+    const catalog = packs.filter((pack) => pack !== "mix" && pack !== "playlist");
+    const nextMix = id === "mix" ? on : mixOn;
+    const nextPlaylist = id === "playlist" ? on : playlistOn;
+    const ownSlots = Number(nextMix) + Number(nextPlaylist);
+    const kept =
+      catalog[0] === "all"
+        ? (["all"] as EraId[])
+        : catalog.slice(0, Math.max(0, MAX_PACKS - ownSlots));
+    const next = [...kept];
+    if (nextMix) next.push("mix");
+    if (nextPlaylist) next.push("playlist");
+    sfxTick();
+    onChange(packPatch(next.length ? next : ["all"]));
+    notePack(id);
+  }
+
+  return (
+    <div className="mt-4 rounded-xl bg-raised p-4 shadow-border">
+      <p className="text-sm font-medium text-fg">Mix und Playlist</p>
+      <p className="mt-1 text-sm text-muted">
+        Liegen außerhalb der Katalog-Liste. Mix setzt Zeitraum und Genre. Playlist lädt eine
+        öffentliche Liste und prüft, wie viele Titel eine Hörprobe haben.
+      </p>
+      <div className="mt-1 divide-y divide-border">
+        <SwitchRow
+          label="Mix"
+          hint={mixOn ? "Zeitraum und Genre sind aktiv." : "Aus."}
+          on={mixOn}
+          onChange={(on) => setOwn("mix", on)}
+        />
+        <SwitchRow
+          label="Playlist"
+          hint={playlistOn ? "Link oder Titelliste ist aktiv." : "Aus."}
+          on={playlistOn}
+          onChange={(on) => setOwn("playlist", on)}
+        />
+      </div>
+    </div>
+  );
 }
 
 function PackList({
@@ -543,21 +667,24 @@ function PackList({
   login: () => void;
 }) {
   const packs = parseEras(value.era, value.extraEra, value.eras);
+  const catalogPacks = packs.filter((id) => id !== "mix" && id !== "playlist");
+  const ownPacks = packs.filter((id) => id === "mix" || id === "playlist");
   const mix = mixOf(value);
   const [picker, setPicker] = useState<"add" | number | null>(null);
-  const taken = new Set(packs);
+  const taken = new Set(catalogPacks);
   const addItems = packItems(taken, spotifyUser, libraryCount);
-  const canAdd = packs[0] !== "all" && packs.length < MAX_PACKS && addItems.length > 0;
+  const canAdd =
+    catalogPacks[0] !== "all" && catalogPacks.length + ownPacks.length < MAX_PACKS && addItems.length > 0;
 
-  function apply(next: EraId[]) {
+  function apply(nextCatalog: EraId[]) {
     sfxTick();
-    onChange(packPatch(next));
+    onChange(packPatch([...nextCatalog.filter((id) => id !== "mix" && id !== "playlist"), ...ownPacks]));
   }
 
   function move(index: number, dir: -1 | 1) {
     const target = index + dir;
-    if (target < 0 || target >= packs.length) return;
-    const next = packs.slice();
+    if (target < 0 || target >= catalogPacks.length) return;
+    const next = catalogPacks.slice();
     const a = next[index];
     const b = next[target];
     if (a === undefined || b === undefined) return;
@@ -570,18 +697,16 @@ function PackList({
     picker === "add"
       ? addItems
       : typeof picker === "number"
-        ? packItems(new Set(packs.filter((_, i) => i !== picker)), spotifyUser, libraryCount)
+        ? packItems(new Set(catalogPacks.filter((_, i) => i !== picker)), spotifyUser, libraryCount)
         : [];
 
   return (
     <div className="mt-4 space-y-2">
-      {packs.map((id, index) => {
+      {catalogPacks.map((id, index) => {
         const n =
-          id === "playlist"
-            ? primaryPile({ ...value, era: "playlist" }, extras)
-            : id === "likes"
-              ? extras.length
-              : packSize(id, mix);
+          id === "likes"
+            ? extras.length
+            : packSize(id, mix);
         return (
           <div
             key={`${id}-${index}`}
@@ -599,7 +724,7 @@ function PackList({
               </span>
             </button>
             <div className="flex shrink-0 items-center">
-              {packs.length > 1 ? (
+              {catalogPacks.length > 1 ? (
                 <>
                   <button
                     type="button"
@@ -613,7 +738,7 @@ function PackList({
                   <button
                     type="button"
                     aria-label="Nach unten"
-                    disabled={index === packs.length - 1}
+                    disabled={index === catalogPacks.length - 1}
                     className="flex size-10 items-center justify-center text-muted transition-colors duration-150 ease-out hover:text-fg disabled:opacity-30"
                     onClick={() => move(index, 1)}
                   >
@@ -621,12 +746,12 @@ function PackList({
                   </button>
                 </>
               ) : null}
-              {packs.length > 1 ? (
+              {catalogPacks.length > 1 || ownPacks.length > 0 ? (
                 <button
                   type="button"
                   aria-label="Pack entfernen"
                   className="flex size-10 items-center justify-center text-muted transition-colors duration-150 ease-out hover:text-fg"
-                  onClick={() => apply(packs.filter((_, i) => i !== index))}
+                  onClick={() => apply(catalogPacks.filter((_, i) => i !== index))}
                 >
                   <X className="size-4" />
                 </button>
@@ -648,9 +773,9 @@ function PackList({
               setPicker(null);
               return;
             }
-            if (picker === "add") apply([...packs, id]);
+            if (picker === "add") apply([...catalogPacks, id]);
             else {
-              const next = packs.slice();
+              const next: EraId[] = catalogPacks.slice();
               next[picker] = id;
               apply(next);
             }
@@ -704,7 +829,7 @@ function PileNote({
   if (status === "unknown") {
     return (
       <p className="mt-3 rounded-md bg-raised px-3 py-2 text-sm text-muted shadow-border">
-        Liste übernehmen, dann sehen wir ob der Stapel reicht.
+        Liste übernehmen. Danach steht, wie viele Titel eine Hörprobe haben.
       </p>
     );
   }
@@ -891,6 +1016,7 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
           libraryCount={libraryCount}
           login={login}
         />
+        <OwnSources value={value} onChange={onChange} />
         {packs.includes("playlist") ? <PlaylistField value={value} onChange={onChange} /> : null}
         {packs.includes("mix") ? <MixField value={value} onChange={onChange} /> : null}
         {SPOTIFY_LIVE ? (
@@ -906,11 +1032,6 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
             , die zum Pack passen.
           </p>
         ) : null}
-        <p className="mt-3 text-sm text-muted">
-          Jeder startet mit einer offenen Karte. Der Rest liegt im Stapel. Richtig gelegt bleibt sie auf
-          der Linie. Falsch oder übersprungen legt sie sich unter den Stapel und kommt später wieder.
-          Das Ziel zählt Karten auf der Linie, nicht wie oft der Stapel umgeschlagen hat.
-        </p>
         <PileNote value={value} players={players} solo={solo} />
       </section>
     </div>

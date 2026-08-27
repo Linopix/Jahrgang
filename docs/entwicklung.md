@@ -89,18 +89,7 @@ flowchart LR
 
 Online dazwischen: `entry` → `connecting` → `lobby` → `playing`. Solange `useOnline.status` nicht `off` oder `playing` ist, siehst du Lobby statt Spiel.
 
-**Zug**
-
-1. Jeder startet mit **einer** offenen Karte auf der Linie.
-2. Der Rest ist der **Stapel** (`deck`). `current` ist die Karte oben.
-3. Wer dran ist, wählt einen Schlitz (`selectSlot` / `{ t: "aim" }` für Zuschauer).
-4. `confirmPlacement`: Jahr passt zwischen Nachbarn? Dann bleibt die Karte. Sonst wandert sie **unter** den Stapel.
-5. Überspringen (Joker) ebenso: aktuelle Karte nach unten, nächste oben.
-6. Jahrzehnt-Joker: Karte bleibt, du siehst nur die Dekade.
-7. Ziel zählt Karten **auf der Linie**, nicht wie oft der Stapel umgeschlagen hat.
-8. Linie voll oder Stapel leer → `winner`.
-
-Die pure Regel (ohne React) steht in [`engine.ts`](../src/lib/game/engine.ts): `canPlace`, `dealCount`, `winner`, `rankPlayers`. Tests in [`engine.test.ts`](../src/lib/game/engine.test.ts).
+Die Regelrechnung (ohne React) steht in [`engine.ts`](../src/lib/game/engine.ts): `canPlace`, `dealCount`, `winner`, `rankPlayers`. Tests in [`engine.test.ts`](../src/lib/game/engine.test.ts). `confirmPlacement` in [`store.ts`](../src/lib/game/store.ts) wendet sie an: passt das Jahr nicht, wandert die Karte unter den Stapel (`deck`). Das Ziel zählt `player.timeline.length`.
 
 ---
 
@@ -145,7 +134,7 @@ Ein paar Dateien (`PreviewHostBridge`, `scripts/with-app-env.mjs`) kommen noch a
 | Chat | [`chat.ts`](../src/lib/game/chat.ts) | `{ t: "chat" }` / `chat-del`. Filter: `moderation.ts`. |
 | Raumcode | [`room-code.ts`](../src/lib/game/room-code.ts) | Vier Zeichen, ohne 0/O/1/I. Link `/i/AB12`. `?host=1` ist der Claim fürs Wohnzimmer-Handy. |
 | Einladungsbild | [`src/lib/og/`](../src/lib/og/) | Startseite ≠ Raum.link. Discord/WhatsApp holen `/api/og`. |
-| Discord-Overlay | [`discord/presence.ts`](../src/lib/discord/presence.ts) | Nur wenn das Spiel in Discord steckt. Setzt Rich Presence, ändert keine Regeln. |
+| Discord-Overlay | [`discord/presence.ts`](../src/lib/discord/presence.ts) | Rich Presence, wenn das Spiel in Discord eingebettet läuft. |
 
 ---
 
@@ -191,7 +180,7 @@ Der Katalog ist eine lange Liste in [`catalog.ts`](../src/lib/game/catalog.ts):
 
 Daraus wird `CATALOG` mit einer `id` aus Titel+Interpret+Jahr. Genre steht nicht an der Zeile. [`packs.ts`](../src/lib/game/packs.ts) rät das Genre über Interpreten-Listen (`METAL_ARTISTS`, `SOUL_ARTISTS`, …) plus `song.genre`, falls gesetzt.
 
-**Packs kombinieren:** `RoomConfig.eras` ist die Liste, erste Stelle ist das Leitpack. `era` / `extraEra` bleiben für ältere Clients. `parseEras` / `packPatch` halten das synchron. Maximal vier. Pack `all` bleibt allein (der ganze Katalog).
+**Packs kombinieren:** `RoomConfig.eras` ist die Liste, erste Stelle ist das Leitpack. Mix und Playlist stehen nicht in `PACK_GROUPS`; sie werden über eigene Schalter gesetzt und können neben Katalog-Packs liegen. `era` / `extraEra` bleiben für ältere Clients. `parseEras` / `packPatch` halten das synchron. Maximal vier. Pack `all` schließt andere Katalog-Packs aus, Mix und Playlist dürfen daneben stehen.
 
 Beim Start mischt `startGame` in `store.ts`:
 
@@ -305,7 +294,7 @@ Jahr = Erscheinungsjahr, nach dem gelegt wird. Deutsch-Flag nur bei deutschsprac
 2. Filter in `songFitsPack` (`packs.ts`).
 3. Bei Genre: Interpreten in die passende `*_ARTISTS`-Menge oder `song.genre` am Katalogeintrag.
 
-UI zieht Packs aus `PACK_GROUPS`. Kein zweites Menü bauen.
+UI: Katalog-Packs aus `PACK_GROUPS`. Mix und Playlist über die Schalter unter der Liste, nicht über dasselbe Menü.
 
 ### Spielmodus
 

@@ -273,15 +273,15 @@ export const ERA_BLURBS: Record<EraId, string> = {
   dance: "Dance, Disco, elektronische Hits.",
   soul: "Soul, R&B, Funk.",
   metal: "Metal und härterer Rock.",
-  indie: "Indie und das, was nicht ins Stadion passt.",
-  latin: "Latin, Reggaeton und tropische Hits.",
+  indie: "Indie.",
+  latin: "Latin und Reggaeton.",
   schlager: "Schlager und Deutschpop.",
-  party: "Laut und bekannt, für den Abend.",
-  charts: "Große Single-Hits ab 2015.",
-  "rap-charts": "Hip-Hop-Hits der letzten Jahre.",
+  party: "Bekannte Tanz- und Partyhits.",
+  charts: "Single-Hits ab 2015.",
+  "rap-charts": "Hip-Hop-Hits ab 2015.",
   mix: "Zeitraum und Genre selbst wählen.",
-  playlist: "Öffentliche Spotify- oder Deezer-Playlist, oder eine Titelliste.",
-  likes: "Likes, Playlists und Top-Titel von deinem Spotify-Konto. Die rutschen auch in andere Packs, wenn sie passen.",
+  playlist: "Öffentliche Spotify- oder Deezer-Playlist oder eine Titelliste.",
+  likes: "Likes, Playlists und Top-Titel des angemeldeten Spotify-Kontos. Passende Titel kommen zusätzlich in die anderen Packs.",
 };
 
 export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [
@@ -299,7 +299,7 @@ export const PACK_GROUPS: { title: string; ids: EraId[] }[] = [
   },
   {
     title: "Eigene",
-    ids: ["mix", "playlist", "likes"],
+    ids: ["likes"],
   },
 ];
 
@@ -329,7 +329,7 @@ export const VARIANT_BLURBS: Record<PlayVariant, string> = {
   original: "Interpret und Titel, wenn du sie weißt. Beides richtig: Cover und ein Joker. Standard ohne Joker.",
   star: "Nur den Interpreten, dann legen.",
   hook: "Nur den Titel, dann legen.",
-  wild: "Raten, Cover zu, keine Jahreszahlen, links ist später — und die Platte spinnt am Tempo.",
+  wild: "Raten, Cover zu, keine Jahreszahlen auf der Linie, links ist später. Die Wiedergabe läuft schneller.",
   custom: "Raten, Cover, Linie, Tempo und Ziel stellst du selbst ein.",
 };
 
@@ -547,7 +547,18 @@ export function parseEras(era: unknown, extra?: unknown, list?: unknown): EraId[
     out.push(id);
     if (out.length >= MAX_PACKS) break;
   }
-  if (out[0] === "all") return ["all"];
+  if (out[0] === "all") {
+    const keep = raw.filter((id) => id === "mix" || id === "playlist" || id === "likes");
+    const next: EraId[] = ["all"];
+    const seenKeep = new Set<EraId>(["all"]);
+    for (const id of keep) {
+      if (seenKeep.has(id)) continue;
+      seenKeep.add(id);
+      next.push(id);
+      if (next.length >= MAX_PACKS) break;
+    }
+    return next;
+  }
   return out.length > 0 ? out : ["all"];
 }
 

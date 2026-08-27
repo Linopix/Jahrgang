@@ -29,23 +29,19 @@
   </tr>
 </table>
 
-## So läuft eine Runde
+## Spielmodi
 
-Jeder fängt mit einer offenen Karte an. Dann kommt ein neuer Titel — ohne Namen, ohne Jahr. Du hörst ihn und suchst den Platz auf deiner Linie. Sitzt das Jahr, bleibt die Karte. Liegt sie falsch, geht sie zurück.
-
-Joker: Jahrzehnt sehen oder überspringen. Ziel sind zehn Karten, wie beim bekannten Original — oder 6, 8, 12 und mehr. Custom ohne Ziel, bis der Stapel leer ist.
-
-| Spiel | Was passiert |
+| Spiel | Ablauf |
 | --- | --- |
-| Kenner | Interpret und Titel, wenn du sie weißt. Beides richtig: Cover und ein Joker. |
-| Zeitstrahl | Nur das Jahr. Cover darfst du sehen. |
-| Blind | Dasselbe, Cover bleibt zu. |
-| Star | Nur den Interpreten. |
-| Titel | Nur den Songtitel. |
-| Verrückter | Raten, Cover zu, keine Jahreszahlen, links ist später. Die Platte spinnt am Tempo. |
-| Custom | Raten, Cover, Linie, Tempo und Ziel stellst du selbst ein. |
+| Kenner | Interpret und Titel können angegeben werden. Beides richtig: Cover und ein Joker. |
+| Zeitstrahl | Nur das Jahr. Cover ist sichtbar. |
+| Blind | Wie Zeitstrahl, Cover bleibt verdeckt. |
+| Star | Nur den Interpreten angeben, dann legen. |
+| Titel | Nur den Songtitel angeben, dann legen. |
+| Verrückter | Raten, Cover verdeckt, keine Jahreszahlen auf der Linie, links ist später. Wiedergabe schneller. |
+| Custom | Raten, Cover, Linienrichtung, Tempo und Ziel werden einzeln eingestellt. |
 
-Repertoire: Jahrzehnt, Stil, Party, Charts — oder Mix und eine öffentliche Spotify- bzw. Deezer-Playlist.
+Repertoire: Jahrzehnt, Stil, Party, Charts. Mix und Playlist liegen außerhalb dieser Liste (Zeitraum/Genre bzw. öffentliche Spotify- oder Deezer-Liste). Beim Einfügen einer Playlist wird geprüft, für wie viele Titel eine Hörprobe erreichbar ist.
 
 <table>
   <tr>
@@ -60,7 +56,7 @@ Repertoire: Jahrzehnt, Stil, Party, Charts — oder Mix und eine öffentliche Sp
 
 ## Mit anderen
 
-Eine Person öffnet den Raum, die anderen kommen mit Code oder Link. Bis zu acht Geräte. Nur wer am Zug ist, legt — alle hören denselben Titel. Stimme bleibt in Discord, das Spiel im Browser.
+Eine Person öffnet den Raum, die anderen kommen mit Code oder Link. Bis zu acht Geräte. Nur wer am Zug ist, legt. Alle hören denselben Titel.
 
 Der Host stellt ein, wer die nächste Runde startet, und ob Chat und Emoji an sind.
 
@@ -92,9 +88,9 @@ Kleine Tippfehler beim Raten sind in Ordnung. „Beatles“ zählt für The Beat
 
 ## Musikdienste
 
-Spielen braucht kein Konto. iTunes und Deezer liefern die kurze Vorschau, eine öffentliche Playlist reicht als extra Stapel. Alle zwölf Stunden kommen frische Charts dazu.
+Spielen braucht kein Konto. iTunes und Deezer liefern die Kurzvorschau. Eine öffentliche Playlist kann als zusätzlicher Stapel dienen; beim Einfügen wird gezählt, für wie viele Titel eine Hörprobe vorliegt. Alle zwölf Stunden werden aktuelle Charts ergänzt.
 
-Spotify ist optional und immer **dein** Konto: Likes, Playlists und Top-Titel rutschen in die Packs, zu denen sie passen. Mit Premium volle Titel auf dem Gerät das spielt. Free reicht für Online, Wohnzimmer und Discord.
+Spotify ist optional und nutzt das Konto der spielenden Person: Likes, Playlists und Top-Titel werden den passenden Packs zugeordnet. Mit Premium laufen volle Titel auf dem Gerät, das gerade spielt. Ohne Premium bleibt Online, Wohnzimmer und Discord nutzbar.
 
 Einrichtung, Flag, Redirects, und warum Apple Music kein kleiner Schalter ist: **[docs/musikdienste.md](docs/musikdienste.md)**.
 
