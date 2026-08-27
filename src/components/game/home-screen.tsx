@@ -1,4 +1,4 @@
-import { Radio, Settings, User, Users } from "lucide-react";
+import { BookOpen, Radio, User, Users } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Vinyl } from "./vinyl";
@@ -8,7 +8,6 @@ import { unlockAudio } from "@/lib/game/audio";
 import { noteTitleClick, useGags } from "@/lib/gags";
 import { EggTally } from "./gag-layer";
 import { SpotifyConnect } from "./spotify-connect";
-import { openAppearance } from "./theme-picker";
 import { SPOTIFY_LIVE } from "@/lib/spotify/flags";
 import { cn } from "@/lib/utils";
 
@@ -24,19 +23,9 @@ export function HomeScreen() {
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-16">
       <div>
       <header className="stagger-in flex flex-col items-center text-center lg:items-start lg:text-left">
-        <div className="flex items-center gap-3">
-          <p className="text-xs font-medium tracking-[0.28em] text-muted uppercase">
-            Musik-Zeitspiel
-          </p>
-          <span className="text-subtle">·</span>
-          <button
-            type="button"
-            className="text-xs font-medium text-subtle transition-colors hover:text-fg"
-            onClick={() => setRulesOpen(true)}
-          >
-            Regeln
-          </button>
-        </div>
+        <p className="text-xs font-medium tracking-[0.28em] text-muted uppercase">
+          Musik-Zeitspiel
+        </p>
         <h1
           className={cn(
             "mt-3 font-display text-5xl font-medium tracking-tight text-fg sm:text-7xl",
@@ -96,13 +85,10 @@ export function HomeScreen() {
           size="lg"
           variant="secondary"
           className="w-full sm:col-span-2"
-          onClick={() => {
-            unlockAudio();
-            openAppearance();
-          }}
+          onClick={() => setRulesOpen(true)}
         >
-          <Settings className="size-4" />
-          Einstellungen
+          <BookOpen className="size-4" />
+          Regeln
         </Button>
       </div>
       </div>
