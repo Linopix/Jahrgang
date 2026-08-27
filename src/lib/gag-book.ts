@@ -85,7 +85,7 @@ export const GAG_GROUPS: GagGroup[] = [
       { id: "cro", label: "Cro" },
       { id: "rick", label: "Rick" },
       { id: "hitster", label: "Hitster" },
-      { id: "grok", label: "Grok" },
+      { id: "onkelamoG", label: "onkelamoG" },
       { id: "jahrgang", label: "Jahrgang" },
       { id: "linopix", label: "Linopix" },
       { id: "dj", label: "DJ" },
