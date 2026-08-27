@@ -15,4 +15,4 @@
  * server user. Their likes, playlists and top tracks join any pack they fit.
  * Public charts refresh on their own, without Spotify.
  */
-export const SPOTIFY_LIVE = false;
+export const SPOTIFY_LIVE = true;
