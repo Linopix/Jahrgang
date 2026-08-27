@@ -1,46 +1,11 @@
-import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Copy } from "lucide-react";
 import { POOL_MAX } from "@/lib/game/types";
-import { SITE } from "@/lib/og/meta";
 
 const CONTACT = "jahrgang.game@icloud.com";
-const HOERPROBEN_HASH = "hoerproben";
-const HOERPROBEN_URL = `${SITE}/hinweise#${HOERPROBEN_HASH}`;
 
 export const Route = createFileRoute("/hinweise")({
   component: HinweisePage,
 });
-
-function CopyHintLink({ url }: { url: string }) {
-  const [copied, setCopied] = useState(false);
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(url);
-    } catch {
-      window.prompt("Link kopieren:", url);
-    }
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1600);
-  }
-
-  return (
-    <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-      <code className="min-w-0 truncate rounded-md bg-raised px-3 py-2 text-xs text-fg shadow-border">
-        {url}
-      </code>
-      <button
-        type="button"
-        onClick={() => void copy()}
-        className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-sm bg-raised px-3.5 text-sm font-medium text-fg shadow-border transition-[opacity,transform] duration-150 ease-out hover:-translate-y-px"
-      >
-        {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-        {copied ? "Kopiert" : "Link kopieren"}
-      </button>
-    </div>
-  );
-}
 
 function HinweisePage() {
   return (
@@ -107,7 +72,7 @@ function HinweisePage() {
         </p>
       </section>
 
-      <section className="mt-10 scroll-mt-8 space-y-3" id={HOERPROBEN_HASH}>
+      <section className="mt-10 scroll-mt-8 space-y-3" id="hoerproben">
         <h2 className="font-display text-2xl font-medium text-fg">Fehlende Hörproben</h2>
         <p className="text-sm leading-relaxed text-muted">
           Jahrgang kann nur Titel abspielen, für die eine Kurzvorschau erreichbar ist. Das sind in
@@ -131,7 +96,6 @@ function HinweisePage() {
           Ohne Hörprobe kommt der Titel nicht in den Stapel. Die übrigen Titel der Liste bleiben
           spielbar. Jahrgang kann das für einzelne Titel nicht umgehen.
         </p>
-        <CopyHintLink url={HOERPROBEN_URL} />
       </section>
 
       <section className="mt-10 space-y-3">
