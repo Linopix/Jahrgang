@@ -95,7 +95,7 @@ export function OnlineLobbyScreen() {
   if (TV_LIVE && tv) return <TvLobbyScreen />;
 
   return (
-    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pb-28 pt-8 lg:max-w-6xl lg:px-8 lg:pb-8">
+    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pb-28 pt-6 lg:max-w-6xl lg:px-8 lg:pb-8">
       <button
         type="button"
         onClick={() => requestLeave()}
@@ -105,7 +105,7 @@ export function OnlineLobbyScreen() {
         Raum verlassen
       </button>
 
-      <p className="mt-6 text-xs font-medium tracking-[0.24em] text-muted uppercase">
+      <p className="mt-4 kicker">
         {isHost ? (tv ? TV_MODE_NAME : "Du hostest") : "Du bist dabei"}
       </p>
       <h1 className="mt-2 font-display text-4xl font-medium text-fg">{tv ? TV_MODE_NAME : "Lobby"}</h1>
@@ -121,16 +121,16 @@ export function OnlineLobbyScreen() {
 
       <div className="lg:mt-8 lg:grid lg:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)] lg:items-start lg:gap-12">
       <div>
-      <section className="mt-8 rounded-xl bg-surface px-5 py-6 text-center shadow-border lg:mt-0">
-        <p className="text-xs tracking-[0.22em] text-muted uppercase">Raumcode</p>
-        <p className="mt-3 font-mono text-5xl tracking-[0.28em] text-fg">{roomCode || "····"}</p>
+      <section className="mt-6 rounded-xl bg-surface px-4 py-5 text-center shadow-border lg:mt-0 sm:px-5 sm:py-6">
+        <p className="kicker">Raumcode</p>
+        <p className="mt-3 font-mono text-4xl tracking-[0.28em] text-fg sm:text-5xl">{roomCode || "····"}</p>
         {roomCode ? (
           <img
             src={`/api/og?room=${encodeURIComponent(roomCode)}`}
             alt={`Einladung Raum ${roomCode}`}
             width={1200}
             height={630}
-            className="mt-5 w-full rounded-lg shadow-border"
+            className="mt-4 hidden w-full rounded-lg shadow-border sm:block sm:max-h-40 sm:object-cover"
           />
         ) : null}
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
@@ -163,7 +163,7 @@ export function OnlineLobbyScreen() {
 
       {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
 
-      <section className="mt-8">
+      <section className="mt-6">
         <div className="flex items-baseline justify-between">
           <h2 className="text-sm font-medium text-fg">Im Raum</h2>
           <p className="text-xs tabular-nums text-subtle">{readyCount}/8</p>
@@ -236,7 +236,7 @@ export function OnlineLobbyScreen() {
       {isAdmin ? (
         <div>
           <GameOptions value={config} onChange={requestConfig} online players={Math.max(seats.length, need)} />
-          <div className="fixed inset-x-0 bottom-0 z-20 bg-bg/90 px-16 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:static lg:inset-auto lg:bg-transparent lg:px-0 lg:pt-8 lg:pb-0 lg:backdrop-blur-none">
+          <div className="fixed inset-x-0 bottom-0 z-20 bg-bg/90 px-16 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:static lg:inset-auto lg:bg-transparent lg:px-0 lg:pt-8 lg:pb-0 lg:backdrop-blur-none">
             <Button
               size="lg"
               className="w-full lg:max-w-xs"

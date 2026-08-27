@@ -6,6 +6,7 @@ import { useGame } from "@/lib/game/store";
 import { DEFAULT_ROOM_CONFIG, type RoomConfig } from "@/lib/game/types";
 import { notePlayerName } from "@/lib/gags";
 import { isBlocked } from "@/lib/game/moderation";
+import { cn } from "@/lib/utils";
 
 const PARTY_NAMES = ["Alex", "Sam", "Kim", "Jo", "Mo", "Lee", "Nik", "Rae"];
 
@@ -28,7 +29,7 @@ export function SetupScreen() {
   const nameBlocked = visibleNames.some((name) => Boolean(name.trim()) && isBlocked(name));
 
   return (
-    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pb-32 pt-8 lg:max-w-6xl lg:px-8 lg:pb-8">
+    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pb-28 pt-6 lg:max-w-6xl lg:px-8 lg:pb-8">
       <button
         type="button"
         onClick={openHome}
@@ -39,7 +40,7 @@ export function SetupScreen() {
       </button>
       <div className="lg:mt-6 lg:grid lg:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)] lg:items-start lg:gap-12">
         <div className="lg:sticky lg:top-8">
-          <h1 className="mt-6 font-display text-4xl font-medium text-fg lg:mt-0 lg:text-5xl">
+          <h1 className="mt-4 font-display text-4xl font-medium text-fg lg:mt-0 lg:text-5xl">
             {mode === "solo" ? "Solo" : "Partyabend"}
           </h1>
           <p className="mt-2 text-sm text-muted">
@@ -49,7 +50,7 @@ export function SetupScreen() {
           </p>
 
           {mode === "party" ? (
-            <section className="mt-8">
+            <section className="mt-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-medium text-fg">Spieler</h2>
                 <div className="flex items-center gap-2">
@@ -79,7 +80,7 @@ export function SetupScreen() {
             </section>
           ) : null}
 
-          <section className="mt-6 space-y-3">
+          <section className={cn("mt-5 grid gap-3", mode === "party" && "grid-cols-2")}>
             {visibleNames.map((name, i) => (
               <label key={i} className="block">
                 <span className="mb-1 block text-xs font-medium text-muted">
@@ -93,7 +94,7 @@ export function SetupScreen() {
                     setNames(next);
                     notePlayerName(event.target.value);
                   }}
-                  className="h-12 w-full rounded-md bg-raised px-4 text-sm text-fg shadow-border outline-none transition-[box-shadow] focus:ring-2 focus:ring-primary/70"
+                  className="field"
                   maxLength={18}
                 />
                 {name.trim() && isBlocked(name) ? (
@@ -118,7 +119,7 @@ export function SetupScreen() {
             <p className="mt-6 rounded-md bg-danger/15 px-3 py-2 text-sm text-fg">{loadError}</p>
           ) : null}
 
-          <div className="fixed inset-x-0 bottom-0 z-20 bg-bg/90 px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:static lg:inset-auto lg:bg-transparent lg:px-0 lg:pt-8 lg:pb-0 lg:backdrop-blur-none">
+          <div className="fixed inset-x-0 bottom-0 z-20 bg-bg/90 px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:static lg:inset-auto lg:bg-transparent lg:px-0 lg:pt-8 lg:pb-0 lg:backdrop-blur-none">
             <Button
               size="lg"
               className="w-full lg:max-w-xs"

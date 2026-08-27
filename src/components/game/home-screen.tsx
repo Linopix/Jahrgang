@@ -19,36 +19,36 @@ export function HomeScreen() {
   const scramble = useGags((s) => s.scramble);
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col justify-between px-5 py-8 sm:max-w-3xl sm:py-12 lg:max-w-6xl lg:justify-center lg:px-8">
+    <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col justify-center px-5 py-6 sm:max-w-3xl sm:py-12 lg:max-w-6xl lg:px-8">
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-16">
       <div>
       <header className="stagger-in flex flex-col items-center text-center lg:items-start lg:text-left">
-        <p className="text-xs font-medium tracking-[0.28em] text-muted uppercase">
+        <p className="kicker">
           Musik-Zeitspiel
         </p>
         <h1
           className={cn(
-            "mt-3 font-display text-5xl font-medium tracking-tight text-fg sm:text-7xl",
+            "mt-2 font-display text-5xl font-medium tracking-tight text-fg sm:text-7xl",
             scramble && "title-scramble",
           )}
           onClick={noteTitleClick}
         >
           Jahrgang
         </h1>
-        <p className="mt-4 max-w-md text-pretty text-base text-muted sm:text-lg">
+        <p className="mt-3 max-w-md text-pretty text-base text-muted sm:text-lg">
           Einen Hit hören und auf die Zeitlinie legen. Am Tisch, online oder allein.
         </p>
       </header>
 
-      <div className="stagger-in mx-auto mt-8 grid w-full max-w-sm grid-cols-1 gap-3 lg:mx-0 lg:max-w-md sm:grid-cols-2 lg:grid-cols-2">
+      <div className="stagger-in mx-auto mt-6 grid w-full max-w-sm grid-cols-2 gap-3 lg:mx-0 lg:max-w-md">
         {SPOTIFY_LIVE ? (
-          <div className="sm:col-span-2">
+          <div className="col-span-2">
             <SpotifyConnect />
           </div>
         ) : null}
         <Button
           size="lg"
-          className="w-full sm:col-span-2"
+          className="w-full col-span-2"
           onClick={() => {
             unlockAudio();
             openEntry();
@@ -84,7 +84,7 @@ export function HomeScreen() {
         <Button
           size="lg"
           variant="secondary"
-          className="w-full sm:col-span-2"
+          className="w-full col-span-2"
           onClick={() => setRulesOpen(true)}
         >
           <BookOpen className="size-4" />
@@ -93,11 +93,11 @@ export function HomeScreen() {
       </div>
       </div>
 
-      <div className="flex justify-center py-10 transition-transform duration-200 ease-soft hover:scale-[1.03] lg:py-0">
+      <div className="flex justify-center py-6 transition-transform duration-200 ease-soft hover:scale-[1.03] max-[640px]:py-4 lg:py-0">
         <Vinyl size="lg" spinning />
       </div>
       </div>
-      <p className="mt-8 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-subtle lg:mt-10 lg:justify-start lg:text-left">
+      <p className="mt-6 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-subtle lg:mt-10 lg:justify-start lg:text-left">
         <Link to="/hinweise" className="transition-colors duration-150 ease-out hover:text-fg">
           Hinweise
         </Link>

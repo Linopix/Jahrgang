@@ -62,10 +62,10 @@ export function RevealScreen() {
     (kind === "artist" || kind === "both" ? Number(lastResult.artistCorrect) : 0);
 
   return (
-    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col items-center justify-center px-5 py-10 text-center lg:max-w-3xl">
+    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col items-center justify-center px-5 py-8 text-center lg:max-w-3xl">
       <p
         className={cn(
-          "text-xs font-medium tracking-[0.24em] uppercase",
+          "kicker",
           lastResult.correct ? "text-success" : "text-danger",
         )}
       >

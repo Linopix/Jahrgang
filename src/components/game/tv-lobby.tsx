@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Check, ChevronLeft, Copy, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SwitchRow, SWITCH_PANEL } from "@/components/ui/switch-row";
 import { QrCode } from "./qr-code";
 import { Vinyl } from "./vinyl";
 import { GameOptions, optionsPile } from "./game-options";
@@ -64,36 +65,18 @@ function PlayAlongSwitch() {
   const role = useOnline((s) => s.role);
   if (role !== "host") return null;
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      onClick={() => requestStagePlays(!on)}
-      className="mt-5 flex min-h-12 w-full items-center justify-between gap-4 py-2 text-left"
-    >
-      <span className="min-w-0">
-        <span className="block text-sm text-fg">Dieser Bildschirm spielt mit</span>
-        <span className="mt-0.5 block text-xs text-muted">
-          {on
+    <div className={cn("mt-5", SWITCH_PANEL)}>
+      <SwitchRow
+        label="Dieser Bildschirm spielt mit"
+        hint={
+          on
             ? "Die Bühne hat einen Platz auf der Linie. Am Zug erscheinen die Knöpfe hier."
-            : "Nur Anzeige. Geraten wird auf den Handys."}
-        </span>
-      </span>
-      <span
-        aria-hidden
-        className={cn(
-          "relative h-7 w-11 shrink-0 overflow-hidden rounded-full transition-colors duration-200 ease-soft",
-          on ? "bg-primary" : "bg-surface shadow-border",
-        )}
-      >
-        <span
-          className={cn(
-            "absolute top-0.5 left-0.5 size-6 rounded-full transition-transform duration-200 ease-soft",
-            on ? "translate-x-4 bg-primary-fg" : "bg-fg",
-          )}
-        />
-      </span>
-    </button>
+            : "Nur Anzeige. Geraten wird auf den Handys."
+        }
+        on={on}
+        onChange={(next) => requestStagePlays(next)}
+      />
+    </div>
   );
 }
 
@@ -104,7 +87,7 @@ export function TvLobbyScreen() {
   const connecting = useOnline((s) => s.status) === "connecting";
 
   return (
-    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-5 py-8 lg:px-10">
+    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-5 py-6 lg:px-10">
       <button
         type="button"
         onClick={() => requestLeave()}
@@ -136,8 +119,8 @@ function ClaimStep({ connecting }: { connecting: boolean }) {
         <QrCode value={link} label="Host-QR" className="aspect-square w-full shadow-lift" />
       </div>
       <div>
-        <p className="text-xs font-medium tracking-[0.24em] text-muted uppercase">Bühne</p>
-        <h1 className="mt-2 font-display text-5xl font-medium text-fg">{TV_MODE_NAME}</h1>
+        <p className="tv-kicker">Bühne</p>
+        <h1 className="mt-2 tv-title">{TV_MODE_NAME}</h1>
         <p className="mt-4 max-w-xl text-lg text-muted">
           Zuerst das Steuergerät. QR scannen und Namen eintragen. Pack und Start liegen dort, dieser
           Bildschirm bleibt die Bühne.
@@ -221,8 +204,8 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
     return (
       <div className="mt-10 flex flex-1 flex-col items-center justify-center text-center">
         <Vinyl size="md" spinning />
-        <p className="mt-8 text-xs tracking-[0.24em] text-muted uppercase">{TV_MODE_NAME}</p>
-        <h1 className="mt-2 font-display text-5xl text-fg">Host stellt ein</h1>
+        <p className="mt-8 tv-kicker">{TV_MODE_NAME}</p>
+        <h1 className="mt-2 tv-title">Host stellt ein</h1>
         <p className="mt-4 max-w-lg text-lg text-muted">
           {hostName ? `${hostName} wählt Pack und Regeln am Handy.` : "Warten auf das Host-Handy."}{" "}
           Danach kommt der Gäste-QR auf diesen Bildschirm.
@@ -237,7 +220,7 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
   if (!isAdmin) {
     return (
       <div className="mt-10 max-w-lg">
-        <p className="text-xs tracking-[0.24em] text-muted uppercase">{TV_MODE_NAME}</p>
+        <p className="tv-kicker">{TV_MODE_NAME}</p>
         <h1 className="mt-2 font-display text-4xl text-fg">Gleich geht’s los</h1>
         <p className="mt-3 text-sm text-muted">Der Host stellt Pack und Regeln ein.</p>
       </div>
@@ -247,7 +230,7 @@ function SetupStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
   return (
     <div className="mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)] lg:gap-12">
       <div>
-        <p className="text-xs tracking-[0.24em] text-muted uppercase">{TV_MODE_NAME}</p>
+        <p className="tv-kicker">{TV_MODE_NAME}</p>
         <h1 className="mt-2 font-display text-4xl text-fg">Abend einstellen</h1>
         <p className="mt-3 max-w-xl text-sm text-muted">
           Pack, Stil, Karten. Danach der Gäste-QR auf diesem Bildschirm.
@@ -335,8 +318,8 @@ function InviteStep({ isAdmin, isTv }: { isAdmin: boolean; isTv: boolean }) {
         <CopyRow code={roomCode} link={link} />
       </div>
       <div>
-        <p className="text-xs tracking-[0.24em] text-muted uppercase">{TV_MODE_NAME}</p>
-        <h1 className="mt-2 font-display text-4xl text-fg">Mitspielen</h1>
+        <p className="tv-kicker">{TV_MODE_NAME}</p>
+        <h1 className="mt-2 tv-title">Mitspielen</h1>
         <p className="mt-3 max-w-xl text-base text-muted">
           Handy auf den QR. Im Discord-Stream den Code abtippen oder den Link aus dem Chat öffnen.
           Der Ton kommt von diesem Bildschirm.

@@ -74,13 +74,13 @@ export function TvPlayScreen() {
   if (!player || !current) return null;
 
   return (
-    <main className="screen-in mx-auto flex h-dvh w-full max-w-[90rem] flex-col overflow-hidden px-8 py-6">
-      <header className="flex items-center justify-between gap-4">
+    <main className="screen-in mx-auto flex h-dvh w-full max-w-[90rem] flex-col overflow-hidden px-8 py-6 lg:px-12">
+      <header className="theme-clear flex items-center justify-between gap-4">
         <div>
-          <p className="text-xs tracking-[0.24em] text-muted uppercase">{VARIANT_LABELS[variant]}</p>
-          <h1 className="font-display text-3xl text-fg">Jahrgang</h1>
+          <p className="tv-kicker">{VARIANT_LABELS[variant]}</p>
+          <h1 className="font-display text-3xl text-fg lg:text-4xl">Jahrgang</h1>
         </div>
-        <p className="font-mono text-3xl tracking-[0.2em] text-fg">{roomCode}</p>
+        <p className="font-mono text-3xl tracking-[0.2em] text-fg lg:text-5xl">{roomCode}</p>
         <div className="flex items-center gap-2">
           <MuteToggle />
           {canEndGame() ? (
@@ -95,31 +95,31 @@ export function TvPlayScreen() {
         </div>
       </header>
 
-      <div className="mt-6 flex min-h-0 flex-1 items-center gap-12">
+      <div className="mt-6 flex min-h-0 flex-1 items-center gap-10 lg:gap-16">
         <div className="flex flex-1 flex-col items-center text-center">
-          <p className="text-sm tracking-[0.2em] text-muted uppercase">Am Zug</p>
-          <h2 className="mt-2 font-display text-6xl font-medium text-fg">{player.name}</h2>
-          <p className="mt-3 text-lg text-muted">Eingabe auf den anderen Geräten. Ton von diesem Bildschirm.</p>
-          <div className="mt-8">
+          <p className="tv-kicker">Am Zug</p>
+          <h2 className="mt-2 tv-name">{player.name}</h2>
+          <p className="mt-3 text-lg text-muted lg:text-xl">Eingabe auf den anderen Geräten. Ton von diesem Bildschirm.</p>
+          <div className="mt-6">
             <Vinyl
               spinning={playing}
               reverse={rules.reverse}
               artworkUrl={rules.hideCover ? undefined : current.artworkUrl}
-              size="lg"
+              size="xl"
             />
           </div>
         </div>
-        <ol className="grid min-w-[22rem] max-w-md flex-1 gap-3">
+        <ol className="grid min-w-[22rem] max-w-lg flex-1 gap-3">
           {players.map((row, i) => (
             <li
               key={row.id}
               className={cn(
-                "rounded-xl px-4 py-3",
+                "rounded-xl px-5 py-4",
                 i === currentPlayerIndex ? "bg-primary text-primary-fg" : "bg-raised text-fg shadow-border",
               )}
             >
-              <p className="truncate text-lg font-medium">{row.name}</p>
-              <p className="text-sm tabular-nums opacity-80">
+              <p className="truncate text-xl font-medium lg:text-2xl">{row.name}</p>
+              <p className="mt-1 text-base tabular-nums opacity-80 lg:text-lg">
                 {rules.open ? row.timeline.length : `${row.timeline.length}/${target}`}
               </p>
             </li>
@@ -128,7 +128,7 @@ export function TvPlayScreen() {
       </div>
 
       <section className="mt-6 min-h-0 shrink-0">
-        <p className="mb-2 text-xs font-medium tracking-[0.18em] text-muted uppercase">
+        <p className="mb-2 tv-kicker">
           Linie von {player.name}
         </p>
         <Timeline
@@ -137,6 +137,7 @@ export function TvPlayScreen() {
           interactive={false}
           showSlots
           hideYear={rules.hideYear}
+          tv
         />
       </section>
     </main>
@@ -158,18 +159,18 @@ export function TvRevealScreen() {
     <main className="screen-in mx-auto flex min-h-dvh w-full max-w-[70rem] flex-col items-center justify-center px-8 py-10 text-center">
       <p
         className={cn(
-          "text-sm tracking-[0.24em] uppercase",
+          "tv-kicker",
           lastResult.correct ? "text-success" : "text-danger",
         )}
       >
         {lastResult.correct ? "Sitzt" : "Daneben"}
       </p>
-      <h1 className="mt-3 font-display text-6xl font-medium text-fg">
+      <h1 className="mt-3 tv-title">
         {lastResult.song.title}
       </h1>
-      <p className="mt-3 text-2xl text-muted">{lastResult.song.artist}</p>
+      <p className="mt-3 text-2xl text-muted lg:text-3xl">{lastResult.song.artist}</p>
       <div className="mt-10">
-        <SongCard song={lastResult.song} />
+        <SongCard song={lastResult.song} tv />
       </div>
       {kind !== "none" ? (
         <p className="mt-6 text-lg text-muted">
@@ -179,7 +180,7 @@ export function TvRevealScreen() {
           {lastResult.jokerEarned ? " · Joker" : ""}
         </p>
       ) : null}
-      <Button size="lg" className="mt-10 min-w-64" disabled={pending} onClick={requestNext}>
+      <Button size="xl" className="mt-10 min-w-64" disabled={pending} onClick={requestNext}>
         {next ? `Weiter · ${next.name}` : "Weiter"}
       </Button>
     </main>
@@ -194,8 +195,8 @@ export function TvWinnerScreen() {
 
   return (
     <main className="screen-in mx-auto flex min-h-dvh w-full max-w-[70rem] flex-col items-center justify-center px-8 py-10 text-center">
-      <p className="text-sm tracking-[0.24em] text-muted uppercase">Abend vorbei</p>
-      <h1 className="mt-3 font-display text-6xl font-medium text-fg">Podest</h1>
+      <p className="tv-kicker">Abend vorbei</p>
+      <h1 className="mt-3 tv-title">Podest</h1>
       <ol className="mt-12 flex items-end justify-center gap-6">
         {top.map((row, i) => (
           <li
@@ -208,20 +209,20 @@ export function TvWinnerScreen() {
             )}
           >
             <p className="text-sm text-muted">{i + 1}.</p>
-            <p className="mt-1 font-display text-3xl text-fg">{row.name}</p>
+            <p className="mt-1 font-display text-3xl text-fg lg:text-4xl">{row.name}</p>
             <p className="mt-2 tabular-nums text-muted">{row.timeline.length} Karten</p>
           </li>
         ))}
       </ol>
       {admin ? (
         <div className="mt-12 flex gap-3">
-          <Button size="lg" onClick={() => void requestAgain()}>
+          <Button size="xl" onClick={() => void requestAgain()}>
             Nochmal
           </Button>
-          <Button size="lg" variant="secondary" onClick={requestBackToLobby}>
+          <Button size="xl" variant="secondary" onClick={requestBackToLobby}>
             Lobby
           </Button>
-          <Button size="lg" variant="ghost" onClick={requestEndEvening}>
+          <Button size="xl" variant="ghost" onClick={requestEndEvening}>
             Abend
           </Button>
         </div>

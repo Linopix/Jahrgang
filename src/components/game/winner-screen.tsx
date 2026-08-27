@@ -45,7 +45,7 @@ function pct(part: number, whole: number) {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md bg-raised px-3 py-3 shadow-border">
-      <p className="text-[0.65rem] tracking-[0.16em] text-muted uppercase">{label}</p>
+      <p className="text-2xs tracking-[0.16em] text-muted uppercase">{label}</p>
       <p className="mt-1 font-display text-2xl font-medium tabular-nums text-fg">{value}</p>
     </div>
   );
@@ -137,7 +137,7 @@ export function WinnerScreen() {
         onClick={() => setView("board")}
       >
         <ConfettiBurst />
-        <p className="text-xs font-medium tracking-[0.24em] text-muted uppercase">
+        <p className="kicker">
           {soloFailed ? "Drei Fehler" : "Die Bestplatzierten"}
         </p>
         <h1 className="mt-2 text-center font-display text-4xl font-medium text-fg sm:text-5xl">{title}</h1>
@@ -156,10 +156,10 @@ export function WinnerScreen() {
   }
 
   return (
-    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-4xl flex-col px-5 py-10 lg:max-w-6xl lg:px-8">
+    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-4xl flex-col px-5 py-8 lg:max-w-6xl lg:px-8">
       <div className="flex flex-col items-center text-center">
         <Vinyl size="sm" spinning slow />
-        <p className="mt-6 text-xs font-medium tracking-[0.24em] text-muted uppercase">
+        <p className="mt-5 kicker">
           {soloFailed ? "Drei Fehler" : VARIANT_LABELS[variant]}
         </p>
         <h1 className="mt-2 font-display text-4xl font-medium text-fg sm:text-5xl">{title}</h1>
@@ -171,11 +171,6 @@ export function WinnerScreen() {
               : `${champ?.timeline.length ?? 0} Titel in der richtigen Reihenfolge.`}
           {original && champ ? ` ${champ.quiz} Treffer beim Raten.` : ""}
         </p>
-      </div>
-
-      <div className="mt-8 space-y-8">
-        <StatsGrid stats={roundStats} title="Diese Runde" />
-        {stats.heard > roundStats.heard ? <StatsGrid stats={stats} title="Abend" /> : null}
       </div>
 
       {mode === "party" && ranked.length > 1 ? (
@@ -198,36 +193,7 @@ export function WinnerScreen() {
         </ol>
       ) : null}
 
-      {series.some((row) => row.wins > 0 || row.points > 0) ? (
-        <section className="mt-8">
-          <h2 className="text-sm font-medium text-fg">Abend-Stand</h2>
-          <p className="mt-1 text-sm text-muted">Gleicher Raum, gleicher Code. Siege bleiben.</p>
-          <ol className="mt-3 space-y-2">
-            {series.map((row) => (
-              <li
-                key={row.id}
-                className="flex items-center justify-between rounded-md bg-raised px-4 py-3 text-sm text-fg shadow-border"
-              >
-                <span className="font-medium">{row.name}</span>
-                <span className="tabular-nums text-muted">
-                  {row.wins} {row.wins === 1 ? "Sieg" : "Siege"} · {row.points} Pkt
-                </span>
-              </li>
-            ))}
-          </ol>
-        </section>
-      ) : null}
-
-      {champ ? (
-        <section className="mt-8 rounded-xl bg-surface p-4 shadow-border">
-          <p className="mb-2 px-1 text-xs font-medium tracking-[0.18em] text-muted uppercase">
-            Zeitlinie
-          </p>
-          <Timeline songs={champ.timeline} selectedSlot={null} interactive={false} />
-        </section>
-      ) : null}
-
-      <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         {online ? (
           <>
             {mayStart ? (
@@ -277,6 +243,40 @@ export function WinnerScreen() {
           </>
         )}
       </div>
+
+      <div className="mt-8 space-y-8">
+        <StatsGrid stats={roundStats} title="Diese Runde" />
+        {stats.heard > roundStats.heard ? <StatsGrid stats={stats} title="Abend" /> : null}
+      </div>
+
+      {series.some((row) => row.wins > 0 || row.points > 0) ? (
+        <section className="mt-8">
+          <h2 className="text-sm font-medium text-fg">Abend-Stand</h2>
+          <p className="mt-1 text-sm text-muted">Gleicher Raum, gleicher Code. Siege bleiben.</p>
+          <ol className="mt-3 space-y-2">
+            {series.map((row) => (
+              <li
+                key={row.id}
+                className="flex items-center justify-between rounded-md bg-raised px-4 py-3 text-sm text-fg shadow-border"
+              >
+                <span className="font-medium">{row.name}</span>
+                <span className="tabular-nums text-muted">
+                  {row.wins} {row.wins === 1 ? "Sieg" : "Siege"} · {row.points} Pkt
+                </span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
+
+      {champ ? (
+        <section className="mt-8 rounded-xl bg-surface p-4 shadow-border">
+          <p className="mb-2 px-1 kicker">
+            Zeitlinie
+          </p>
+          <Timeline songs={champ.timeline} selectedSlot={null} interactive={false} />
+        </section>
+      ) : null}
     </main>
   );
 }

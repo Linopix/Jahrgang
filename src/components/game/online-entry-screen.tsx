@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { ChevronLeft, Monitor, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SwitchRow, SWITCH_PANEL } from "@/components/ui/switch-row";
 import { Vinyl } from "./vinyl";
-import { sfxTick, unlockAudio } from "@/lib/game/audio";
+import { unlockAudio } from "@/lib/game/audio";
 import { useOnline } from "@/lib/game/online-store";
 import { notePlayerName, noteRoomCode } from "@/lib/gags";
 import { TV_LIVE } from "@/lib/tv/flags";
@@ -39,7 +40,7 @@ export function OnlineEntryScreen() {
   }
 
   return (
-    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 py-8 lg:max-w-5xl lg:justify-center lg:px-8">
+    <main className="screen-in mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 py-6 lg:max-w-5xl lg:justify-center lg:px-8">
       <button
         type="button"
         onClick={() => leaveRoom()}
@@ -52,7 +53,7 @@ export function OnlineEntryScreen() {
       <div className="lg:mt-8 lg:grid lg:grid-cols-[minmax(0,28rem)_auto] lg:items-start lg:gap-16">
       <div>
       <header className="mt-6 lg:mt-0">
-        <p className="text-xs font-medium tracking-[0.24em] text-muted uppercase">Mehrspieler</p>
+        <p className="kicker">Mehrspieler</p>
         <h1 className="mt-2 font-display text-4xl font-medium text-fg">
           {claimIntent ? "Host-Handy" : "Online-Abend"}
         </h1>
@@ -62,10 +63,6 @@ export function OnlineEntryScreen() {
             : "Ein Host öffnet den Raum. Mitspieler treten mit Code oder Einladungslink bei, jedes Gerät für sich."}
         </p>
       </header>
-
-      <div className="flex justify-center py-8 lg:hidden">
-        <Vinyl size="sm" spinning />
-      </div>
 
       {tv && inviteCode.length < 4 ? null : (
       <label className="mt-6 block">
@@ -79,7 +76,7 @@ export function OnlineEntryScreen() {
           placeholder="Name"
           maxLength={18}
           autoComplete="nickname"
-          className="mt-2 h-12 w-full rounded-md bg-raised px-4 text-sm text-fg shadow-border outline-none transition-[box-shadow] focus:ring-2 focus:ring-primary/70"
+          className="field mt-2"
           onKeyDown={(event) => {
             if (event.key !== "Enter") return;
             event.preventDefault();
@@ -94,41 +91,14 @@ export function OnlineEntryScreen() {
       )}
 
       {TV_LIVE && !claimIntent ? (
-        <button
-          type="button"
-          role="switch"
-          aria-checked={tv}
-          onClick={() => {
-            setTv((value) => !value);
-            sfxTick();
-          }}
-          className="mt-5 flex min-h-12 w-full items-center justify-between gap-4 py-2 text-left"
-        >
-          <span className="min-w-0">
-            <span className="flex items-center gap-2 text-sm text-fg">
-              <Monitor className="size-4" />
-              {TV_MODE_NAME}
-            </span>
-            <span className="mt-0.5 block text-xs text-muted">
-              Dieser Bildschirm zeigt die Runde im Vollbild. Legen und Raten passieren auf den anderen
-              Geräten. Die Bühne braucht keinen Spielernamen. Geeignet für Fernseher und Discord-Übertragung.
-            </span>
-          </span>
-          <span
-            aria-hidden
-            className={cn(
-              "relative h-7 w-11 shrink-0 overflow-hidden rounded-full transition-colors duration-200 ease-soft motion-reduce:transition-none",
-              tv ? "bg-primary" : "bg-surface shadow-border",
-            )}
-          >
-            <span
-              className={cn(
-                "absolute top-0.5 left-0.5 size-6 rounded-full transition-transform duration-200 ease-soft motion-reduce:transition-none",
-                tv ? "translate-x-4 bg-primary-fg" : "bg-fg",
-              )}
-            />
-          </span>
-        </button>
+        <div className={cn("mt-4", SWITCH_PANEL)}>
+          <SwitchRow
+            label={TV_MODE_NAME}
+            hint="Dieser Bildschirm zeigt die Runde im Vollbild. Legen und Raten passieren auf den anderen Geräten. Die Bühne braucht keinen Spielernamen. Geeignet für Fernseher und Discord-Übertragung."
+            on={tv}
+            onChange={setTv}
+          />
+        </div>
       ) : null}
 
       {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
@@ -165,7 +135,7 @@ export function OnlineEntryScreen() {
           autoCapitalize="characters"
           autoCorrect="off"
           spellCheck={false}
-          className="mt-2 h-12 w-full rounded-md bg-raised px-4 font-mono text-lg tracking-[0.28em] text-fg uppercase shadow-border outline-none focus:ring-2 focus:ring-primary/70"
+          className="field mt-2 font-mono text-lg tracking-[0.28em] uppercase"
           onKeyDown={(event) => {
             if (event.key !== "Enter" || !named || inviteCode.length < 4) return;
             event.preventDefault();

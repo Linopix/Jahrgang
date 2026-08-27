@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Plus, X } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
+import { Segment } from "@/components/ui/segment";
+import { SwitchRow, SWITCH_PANEL } from "@/components/ui/switch-row";
 import { peekPlaylist } from "@/lib/game/playlist";
 import { markPreviewHintSeen, previewHintSeen } from "@/lib/game/preview-hint";
 import { packSize, songsForEras } from "@/lib/game/packs";
 import { countFittingFor } from "@/lib/game/extras";
 import { getFreshSongs, subscribeFresh } from "@/lib/game/fresh";
 import { dealCount, pileStatus, type PileStatus } from "@/lib/game/engine";
-import { sfxHover, sfxSlide, sfxTick } from "@/lib/game/audio";
+import { sfxSlide, sfxTick } from "@/lib/game/audio";
 import { GenreArt, PackArt } from "@/components/game/pack-art";
 import { MenuSelect } from "@/components/game/menu-select";
 import { noteMixYears, notePack, noteVariant } from "@/lib/gags";
@@ -67,99 +69,6 @@ type GameOptionsProps = {
   players?: number;
   solo?: boolean;
 };
-
-function Segment<T extends string | number>({
-  items,
-  value,
-  onChange,
-  label,
-}: {
-  items: readonly T[];
-  value: T;
-  onChange: (next: T) => void;
-  label: (item: T) => string;
-}) {
-  const index = Math.max(0, items.indexOf(value));
-  const count = items.length;
-  return (
-    <div className="relative flex rounded-md bg-raised p-0.5 shadow-border" role="group">
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-y-0.5 left-0.5 rounded-sm bg-primary transition-transform duration-200 ease-soft motion-reduce:transition-none"
-        style={{
-          width: `calc((100% - 0.25rem) / ${count})`,
-          transform: `translateX(${index * 100}%)`,
-        }}
-      />
-      {items.map((item) => {
-        const on = item === value;
-        return (
-          <button
-            key={String(item)}
-            type="button"
-            onMouseEnter={() => {
-              if (!on) sfxHover();
-            }}
-            onClick={() => {
-              if (!on) sfxTick();
-              onChange(item);
-            }}
-            className={cn(
-              "relative z-10 h-8 min-w-0 flex-1 truncate rounded-sm px-2 text-xs font-medium transition-colors duration-200 ease-soft motion-reduce:transition-none",
-              on ? "text-primary-fg" : "text-muted hover:text-fg",
-            )}
-          >
-            {label(item)}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function SwitchRow({
-  label,
-  hint,
-  on,
-  onChange,
-}: {
-  label: string;
-  hint: string;
-  on: boolean;
-  onChange: (next: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      onClick={() => {
-        onChange(!on);
-        sfxTick();
-      }}
-      className="flex min-h-12 w-full items-center justify-between gap-4 py-2 text-left"
-    >
-      <span className="min-w-0">
-        <span className="block text-sm text-fg">{label}</span>
-        <span className="block text-xs text-muted">{hint}</span>
-      </span>
-      <span
-        aria-hidden
-        className={cn(
-          "relative h-7 w-11 shrink-0 overflow-hidden rounded-full transition-colors duration-200 ease-soft motion-reduce:transition-none",
-          on ? "bg-primary" : "bg-surface shadow-border",
-        )}
-      >
-        <span
-          className={cn(
-            "absolute top-0.5 left-0.5 size-6 rounded-full transition-transform duration-200 ease-soft motion-reduce:transition-none",
-            on ? "translate-x-4 bg-primary-fg" : "bg-fg",
-          )}
-        />
-      </span>
-    </button>
-  );
-}
 
 function playlistPlayable(label: string) {
   const current = label.match(/(\d+)\s+von\s+(\d+)\s+mit Hörprobe/);
@@ -257,7 +166,7 @@ function PlaylistField({
   const missing = playable !== null && value.playlistLabel.includes("von") && playable === 0;
 
   return (
-    <div className="mt-3 rounded-xl bg-raised p-4 shadow-border" data-playlist-field>
+    <div className="mt-3 rounded-xl bg-raised p-3 shadow-border" data-playlist-field>
       <p className="text-sm text-muted">
         Öffentlichen Spotify- oder Deezer-Link einfügen oder Zeilen im Format Interpret – Titel.
       </p>
@@ -459,14 +368,14 @@ function MixField({
   onChange: (patch: Partial<RoomConfig>) => void;
 }) {
   return (
-    <div className="mt-3 space-y-4 rounded-xl bg-raised p-4 shadow-border" data-mix-field>
+    <div className="mt-3 space-y-4 rounded-xl bg-raised p-3 shadow-border" data-mix-field>
       <DualYearSlider
         from={value.mixFrom}
         to={value.mixTo}
         onChange={(mixFrom, mixTo) => onChange({ mixFrom, mixTo })}
       />
       <div>
-        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Genre</p>
+        <p className="mb-2 kicker">Genre</p>
         <MenuSelect
           ariaLabel="Genre"
           name="genre"
@@ -502,7 +411,7 @@ function SuggestTune({
   const mode = parseSuggest(value);
   return (
     <div className="py-3">
-      <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Autocomplete</p>
+      <p className="mb-2 kicker">Autocomplete</p>
       <Segment
         items={SUGGEST_IDS}
         value={mode}
@@ -532,9 +441,9 @@ function CustomTune({
   onSuggest: (next: SuggestMode) => void;
 }) {
   return (
-    <div className="mt-4 divide-y divide-border rounded-xl bg-raised px-4 py-1 shadow-border" data-custom-tune>
+    <div className={cn("mt-4", SWITCH_PANEL)} data-custom-tune>
       <div className="py-3">
-        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Raten</p>
+        <p className="mb-2 kicker">Raten</p>
         <Segment
           items={["none", "artist", "title", "both"] as const}
           value={value.guess}
@@ -548,7 +457,7 @@ function CustomTune({
         <SuggestTune value={suggest} onChange={onSuggest} />
       ) : null}
       <div className="py-3">
-        <p className="mb-2 text-xs font-medium tracking-[0.16em] text-muted uppercase">Linie</p>
+        <p className="mb-2 kicker">Linie</p>
         <Segment
           items={["chrono", "reverse", "free"] as const}
           value={value.line}
@@ -667,26 +576,24 @@ function OwnSources({
   }
 
   return (
-    <div className="mt-4 rounded-xl bg-raised p-4 shadow-border">
-      <p className="text-sm font-medium text-fg">Mix und Playlist</p>
-      <p className="mt-1 text-sm text-muted">
+    <div className={cn("mt-4", SWITCH_PANEL)}>
+      <p className="pt-3 text-sm font-medium text-fg">Mix und Playlist</p>
+      <p className="mt-1 hidden pb-2 text-sm text-muted sm:block">
         Liegen außerhalb der Katalog-Liste. Mix setzt Zeitraum und Genre. Playlist lädt eine
         öffentliche Liste und prüft, wie viele Titel eine Hörprobe haben.
       </p>
-      <div className="mt-1 divide-y divide-border">
-        <SwitchRow
-          label="Mix"
-          hint={mixOn ? "Zeitraum und Genre sind aktiv." : "Aus."}
-          on={mixOn}
-          onChange={(on) => setOwn("mix", on)}
-        />
-        <SwitchRow
-          label="Playlist"
-          hint={playlistOn ? "Link oder Titelliste ist aktiv." : "Aus."}
-          on={playlistOn}
-          onChange={(on) => setOwn("playlist", on)}
-        />
-      </div>
+      <SwitchRow
+        label="Mix"
+        hint={mixOn ? "Zeitraum und Genre sind aktiv." : "Aus."}
+        on={mixOn}
+        onChange={(on) => setOwn("mix", on)}
+      />
+      <SwitchRow
+        label="Playlist"
+        hint={playlistOn ? "Link oder Titelliste ist aktiv." : "Aus."}
+        on={playlistOn}
+        onChange={(on) => setOwn("playlist", on)}
+      />
     </div>
   );
 }
@@ -916,7 +823,7 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
   );
   return (
     <div>
-      <div className="mt-8 grid gap-8 lg:mt-0 lg:grid-cols-2">
+      <div className="mt-6 grid gap-6 lg:mt-0 lg:grid-cols-2 xl:grid-cols-3 xl:gap-8">
         <section>
           <h2 className="text-sm font-medium text-fg">Spiel</h2>
           <div className="mt-3">
@@ -943,7 +850,7 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
               }))}
             />
           </div>
-          <p className="mt-2 text-sm text-muted">{VARIANT_BLURBS[value.variant]}</p>
+          <p className="mt-2 line-clamp-2 text-sm text-muted">{VARIANT_BLURBS[value.variant]}</p>
           {value.variant === "custom" ? (
             <CustomTune
               value={custom}
@@ -953,7 +860,7 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
             />
           ) : null}
           {guessKind(value.variant, custom) === "both" && value.variant !== "custom" ? (
-            <div className="mt-4 divide-y divide-border rounded-xl bg-raised px-4 py-1 shadow-border">
+            <div className={cn("mt-4", SWITCH_PANEL)}>
               <SuggestTune
                 value={parseSuggest(value.suggest)}
                 onChange={(suggest) => onChange({ suggest })}
@@ -964,7 +871,7 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
 
         <section>
           <h2 className="text-sm font-medium text-fg">{showTarget ? "Ziel und Joker" : "Stapel und Joker"}</h2>
-          <div className="mt-3 grid gap-5">
+          <div className="mt-3 grid gap-4">
             {showTarget ? (
               <SnapSlider
                 label="Karten"
@@ -1006,87 +913,81 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
                 ? "Kenner startet ohne Joker. Beides richtig gibt einen dazu."
                 : "Karten bis zum Sieg · Joker pro Person."}
           </p>
+          {online ? (
+            <div className="mt-5">
+              <h2 className="text-sm font-medium text-fg">Nächste Runde</h2>
+              <div className="mt-3">
+                <Segment
+                  items={NEXT_ROUND_OPTIONS}
+                  value={value.nextRound}
+                  onChange={(nextRound) => onChange({ nextRound: nextRound as NextRoundPolicy })}
+                  label={(item) => NEXT_ROUND_LABELS[item]}
+                />
+              </div>
+              <p className="mt-2 text-sm text-muted">{NEXT_ROUND_BLURB[value.nextRound]}</p>
+            </div>
+          ) : null}
+          {online ? (
+            <div className={cn("mt-5", SWITCH_PANEL)}>
+              <SwitchRow
+                label="Emoji"
+                hint={value.emoji ? "Reaktionen sind an." : "Keine Reaktionen."}
+                on={value.emoji}
+                onChange={(emoji) => onChange({ emoji })}
+              />
+              <SwitchRow
+                label="Chat"
+                hint={value.chat ? "Nachrichten sind an." : "Kein Chat."}
+                on={value.chat}
+                onChange={(chat) => onChange({ chat })}
+              />
+            </div>
+          ) : null}
+        </section>
+
+        <section className="lg:col-span-2 xl:col-span-1">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-sm font-medium text-fg">Repertoire</h2>
+            <p className="text-xs tabular-nums text-subtle" data-pile-size>
+              {pile === null
+                ? "Stapel offen"
+                : pile === 0
+                  ? "Kein Titel"
+                  : `${pile} Titel im Stapel`}
+            </p>
+          </div>
+          <p className="mt-1 line-clamp-2 text-sm text-muted">
+            {packs.length > 1
+              ? packs.map((id) => ERA_LABELS[id]).join(" + ") + ". Doppelte Titel einmal."
+              : ERA_BLURBS[packs[0] ?? value.era]}
+          </p>
+          <PackList
+            value={value}
+            onChange={onChange}
+            extras={extras}
+            spotifyUser={Boolean(spotifyUser)}
+            libraryCount={libraryCount}
+            login={login}
+          />
+          <OwnSources value={value} onChange={onChange} />
+          {packs.includes("playlist") ? <PlaylistField value={value} onChange={onChange} /> : null}
+          {packs.includes("mix") ? <MixField value={value} onChange={onChange} /> : null}
+          {SPOTIFY_LIVE ? (
+            <div className="mt-4">
+              <SpotifyConnect compact />
+            </div>
+          ) : null}
+          {extraFit > 0 ? (
+            <p className="mt-2 text-xs text-subtle">
+              {extraFit} extra Titel
+              {spotifyUser ? " aus deinem Spotify" : ""}
+              {fresh.length ? (spotifyUser ? " und frischen Charts" : " aus frischen Charts") : ""}
+              , die zum Pack passen.
+            </p>
+          ) : null}
+          <PileNote value={value} players={players} solo={solo} />
         </section>
       </div>
-
-      {online ? (
-        <section className="mt-8">
-          <h2 className="text-sm font-medium text-fg">Nächste Runde</h2>
-          <div className="mt-3 max-w-md">
-            <Segment
-              items={NEXT_ROUND_OPTIONS}
-              value={value.nextRound}
-              onChange={(nextRound) => onChange({ nextRound: nextRound as NextRoundPolicy })}
-              label={(item) => NEXT_ROUND_LABELS[item]}
-            />
-          </div>
-          <p className="mt-2 text-sm text-muted">{NEXT_ROUND_BLURB[value.nextRound]}</p>
-        </section>
-      ) : null}
-
-      {online ? (
-        <section className="mt-8">
-          <h2 className="text-sm font-medium text-fg">Emoji und Chat</h2>
-          <div className="mt-1 max-w-md divide-y divide-border">
-            <SwitchRow
-              label="Emoji"
-              hint={value.emoji ? "Reaktionen sind an." : "Keine Reaktionen."}
-              on={value.emoji}
-              onChange={(emoji) => onChange({ emoji })}
-            />
-            <SwitchRow
-              label="Chat"
-              hint={value.chat ? "Nachrichten sind an." : "Kein Chat."}
-              on={value.chat}
-              onChange={(chat) => onChange({ chat })}
-            />
-          </div>
-          <p className="mt-2 text-sm text-muted">Nur der Host stellt das ein.</p>
-        </section>
-      ) : null}
-
-      <section className="mt-8">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-sm font-medium text-fg">Repertoire</h2>
-          <p className="text-xs tabular-nums text-subtle" data-pile-size>
-            {pile === null
-              ? "Stapel offen"
-              : pile === 0
-                ? "Kein Titel"
-                : `${pile} Titel im Stapel`}
-          </p>
-        </div>
-        <p className="mt-1 text-sm text-muted">
-          {packs.length > 1
-            ? packs.map((id) => ERA_LABELS[id]).join(" + ") + ". Doppelte Titel einmal."
-            : ERA_BLURBS[packs[0] ?? value.era]}
-        </p>
-        <PackList
-          value={value}
-          onChange={onChange}
-          extras={extras}
-          spotifyUser={Boolean(spotifyUser)}
-          libraryCount={libraryCount}
-          login={login}
-        />
-        <OwnSources value={value} onChange={onChange} />
-        {packs.includes("playlist") ? <PlaylistField value={value} onChange={onChange} /> : null}
-        {packs.includes("mix") ? <MixField value={value} onChange={onChange} /> : null}
-        {SPOTIFY_LIVE ? (
-          <div className="mt-4">
-            <SpotifyConnect compact />
-          </div>
-        ) : null}
-        {extraFit > 0 ? (
-          <p className="mt-2 text-xs text-subtle">
-            {extraFit} extra Titel
-            {spotifyUser ? " aus deinem Spotify" : ""}
-            {fresh.length ? (spotifyUser ? " und frischen Charts" : " aus frischen Charts") : ""}
-            , die zum Pack passen.
-          </p>
-        ) : null}
-        <PileNote value={value} players={players} solo={solo} />
-      </section>
     </div>
   );
 }

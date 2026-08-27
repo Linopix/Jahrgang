@@ -23,6 +23,19 @@
   --font-display: "Fraunces Variable", "Fraunces", "Times New Roman", serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
+  --text-7xl: 4.5rem;
+
   --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -33,6 +46,10 @@
   --shadow-border: 0 0 0 1px rgb(242 238 230 / 0.08);
   --shadow-lift: 0 0 0 1px rgb(242 238 230 / 0.1), 0 18px 40px -24px rgb(0 0 0 / 0.7);
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --motion-quick: 150ms;
+  --motion-fast: 250ms;
+  --motion-medium: 350ms;
 }
 
 :root,
@@ -313,6 +330,83 @@
 
 .font-display {
   font-family: var(--font-display);
+}
+
+@layer components {
+.kicker {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.field {
+  height: 3rem;
+  width: 100%;
+  border-radius: var(--radius-md);
+  background: var(--color-raised);
+  padding-inline: 1rem;
+  font-size: 0.875rem;
+  color: var(--color-fg);
+  box-shadow: var(--shadow-border);
+  outline: none;
+  transition: box-shadow 150ms var(--ease-soft);
+}
+.field::placeholder {
+  color: var(--color-subtle);
+}
+.field:focus {
+  box-shadow: var(--shadow-border), 0 0 0 2px color-mix(in oklab, var(--color-primary) 70%, transparent);
+}
+
+.panel {
+  border-radius: var(--radius-xl);
+  background: var(--color-raised);
+  box-shadow: var(--shadow-border);
+}
+
+.screen-pad {
+  padding-inline: 1.25rem;
+  padding-top: max(1.5rem, env(safe-area-inset-top));
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+}
+
+@media (min-width: 1024px) {
+  .screen-pad {
+    padding-inline: 2rem;
+  }
+}
+
+.theme-clear {
+  padding-right: 3.5rem;
+}
+
+.tv-kicker {
+  font-size: clamp(0.8rem, 1.1vw, 1rem);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.tv-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 5vw, 4.5rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--color-fg);
+}
+
+.tv-name {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--color-fg);
+}
 }
 
 .groove-bg {
