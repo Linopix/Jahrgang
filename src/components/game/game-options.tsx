@@ -811,7 +811,7 @@ export function GameOptions({ value, onChange, online, players = 2, solo = false
   const library = useSpotify((s) => s.library);
   const [fresh, setFresh] = useState(getFreshSongs);
   useEffect(() => subscribeFresh(() => setFresh(getFreshSongs())), []);
-  const extras = [...library, ...fresh];
+  const extras = [...(library ?? []), ...(fresh ?? [])];
   const pile = pileCount(value, extras);
   const packs = parseEras(value.era, value.extraEra, value.eras);
   const spotifyUser = useSpotifyConnected();

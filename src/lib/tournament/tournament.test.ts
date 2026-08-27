@@ -10,6 +10,7 @@ import {
   liveMatches,
   nextPending,
   openKnockout,
+  playerOf,
   startBatch,
   startMatch,
   type MatchScore,
@@ -24,6 +25,12 @@ function people(n: number) {
 
 test("feature flag alias matches TOURNAMENT_LIVE", () => {
   assert.equal(TOURNAMENT_MODE_ENABLED, TOURNAMENT_LIVE);
+});
+
+test("playerOf and liveMatches tolerate missing tournament", () => {
+  assert.equal(playerOf(null, "p0"), undefined);
+  assert.deepEqual(liveMatches(null), []);
+  assert.deepEqual(liveMatches({} as never), []);
 });
 
 function scores(ids: string[]): MatchScore[] {

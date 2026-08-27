@@ -143,8 +143,10 @@ export function GameApp() {
   const players = useGame((s) => s.players);
   const tvMyTurn = Boolean(tvScreen && stagePlays && selfId && players[currentPlayerIndex]?.id === selfId);
   const localPhase = onlineStatus === "off" || onlineStatus === "playing";
-  const cupOn = TOURNAMENT_LIVE && useOnline((s) => s.cup);
-  const cupPar = cupOn && useOnline((s) => s.cupFlow) === "par";
+  const cup = useOnline((s) => s.cup);
+  const cupFlow = useOnline((s) => s.cupFlow);
+  const cupOn = TOURNAMENT_LIVE && cup;
+  const cupPar = cupOn && cupFlow === "par";
   const watching =
     Boolean(cupOn && onlineStatus === "playing" && selfId && !tvScreen && !players.some((row) => row.id === selfId));
 

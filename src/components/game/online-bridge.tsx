@@ -412,7 +412,7 @@ function handleMessage(
         ctx.send({ t: "state", snapshot: table }, from);
         ctx.send({ t: "cup-table", matchId: match.id, snapshot: table }, from);
       }
-      if (TOURNAMENT_LIVE && online.cupBoards.length) {
+      if (TOURNAMENT_LIVE && online.cupBoards?.length) {
         ctx.send({ t: "cup-board", boards: online.cupBoards }, from);
       }
     }

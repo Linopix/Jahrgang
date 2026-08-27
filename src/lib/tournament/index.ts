@@ -1,4 +1,4 @@
-export { TOURNAMENT_LIVE, TOURNAMENT_MODE_ENABLED, CUP_MIN, CUP_MAX, TABLE_CAP } from "./flags";
+export { TOURNAMENT_LIVE, TOURNAMENT_MODE_ENABLED, CUP_MIN, CUP_MAX, TABLE_CAP } from "./flags.ts";
 export {
   DEFAULT_CUP_AUDIO,
   DEFAULT_CUP_FLOW,
@@ -28,9 +28,9 @@ export {
   type CupStanding,
   type CupStatus,
   type Tournament,
-} from "./types";
-export { planGroupSizes, groupLabel, splitBySizes } from "./groups";
-export { buildKnockout, nextPowerOfTwo, knockoutRound, placeWinner } from "./bracket";
+} from "./types.ts";
+export { planGroupSizes, groupLabel, splitBySizes } from "./groups.ts";
+export { buildKnockout, nextPowerOfTwo, knockoutRound, placeWinner } from "./bracket.ts";
 export {
   applyBye,
   collectQualifiers,
@@ -52,6 +52,6 @@ export {
   startBatch,
   startMatch,
   type MatchScore,
-} from "./engine";
-export { parseTournament } from "./wire";
-export { boardFromSnapshot, openTable, type CupBoardCard } from "./tables";
+} from "./engine.ts";
+export { parseTournament } from "./wire.ts";
+export { boardFromSnapshot, openTable, type CupBoardCard } from "./tables.ts";

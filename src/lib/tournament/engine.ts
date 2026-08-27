@@ -352,13 +352,13 @@ function nextPow(n: number): number {
   return Math.max(2, p);
 }
 
-export function playerOf(t: Tournament, id: string): CupPlayer | undefined {
-  return t.players.find((row) => row.id === id);
+export function playerOf(t: Tournament | null | undefined, id: string): CupPlayer | undefined {
+  return t?.players?.find((row) => row.id === id);
 }
 
 export function matchTitle(match: CupMatch, t: Tournament): string {
   if (match.kind === "group") {
-    const group = t.groups.find((row) => row.id === match.groupId);
+    const group = t.groups?.find((row) => row.id === match.groupId);
     return group ? `Gruppe ${group.label}` : "Gruppe";
   }
   if (match.round === "r16") return "Achtelfinale";

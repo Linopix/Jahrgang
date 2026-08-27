@@ -269,15 +269,17 @@ export class P2PRoom {
     const res = await fetch(`/api/rtc?${params}`);
     if (this.closed) return;
     if (!res.ok) throw new Error(`signaling poll failed: ${res.status}`);
-    const body = (await res.json()) as RtcPollResponse;
+    const body = (await res.json()) as Partial<RtcPollResponse> | null;
     if (this.closed) return;
     if (!this.everPolled) {
       this.everPolled = true;
       this.opts.onConnected?.();
     }
-    this.reconcileRoster(body.peers);
-    const roster = new Set(body.peers.map((p) => p.id));
-    for (const sig of body.signals) {
+    const peers = Array.isArray(body?.peers) ? body.peers : [];
+    const signals = Array.isArray(body?.signals) ? body.signals : [];
+    this.reconcileRoster(peers);
+    const roster = new Set(peers.map((p) => p.id));
+    for (const sig of signals) {
       this.cursor = Math.max(this.cursor, sig.id);
       await this.onSignal(sig.from, sig.kind, sig.payload, roster);
       if (this.closed) return;
@@ -294,10 +296,11 @@ export class P2PRoom {
     this.schedulePoll(this.anyPairConnecting() ? FAST_POLL_MS : IDLE_POLL_MS);
   }
 
-  private reconcileRoster(peers: { id: string; name: string }[]): void {
-    this.roster = peers.slice();
-    const alive = new Set(peers.map((p) => p.id));
-    for (const p of peers) {
+  private reconcileRoster(peers: { id: string; name: string }[] | undefined): void {
+    const list = Array.isArray(peers) ? peers : [];
+    this.roster = list.slice();
+    const alive = new Set(list.map((p) => p.id));
+    for (const p of list) {
       if (p.id === this.opts.selfId) continue;
       if (this.ignored.has(p.id)) continue;
       if (!this.shouldPair(p.id)) continue;

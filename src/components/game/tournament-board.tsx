@@ -39,10 +39,10 @@ function MatchCard({
   live?: boolean;
   tv?: boolean;
 }) {
-  const a = match.playerIds[0];
-  const b = match.playerIds[1];
-  const extra = match.playerIds.slice(2);
-  const winner = match.winnerIds[0];
+  const a = match.playerIds?.[0];
+  const b = match.playerIds?.[1];
+  const extra = match.playerIds?.slice(2) ?? [];
+  const winner = match.winnerIds?.[0];
   return (
     <article
       className={cn(
@@ -78,11 +78,11 @@ function GroupCard({
   live?: boolean;
   tv?: boolean;
 }) {
-  const group = t.groups.find((row) => row.id === groupId);
+  const group = t.groups?.find((row) => row.id === groupId);
   if (!group) return null;
-  const rows = group.table.length
+  const rows = group.table?.length
     ? group.table
-    : group.playerIds.map((id, i) => ({
+    : (group.playerIds ?? []).map((id, i) => ({
         id,
         name: nameOf(t, id),
         rank: i + 1,
@@ -124,9 +124,10 @@ export function TournamentBoard({
   tv?: boolean;
 }) {
   if (!TOURNAMENT_LIVE) return null;
+  if (!t) return null;
   const live = currentMatch(t);
-  const groups = t.groups;
-  const knockout = t.matches.filter((row) => row.kind === "knockout");
+  const groups = t.groups ?? [];
+  const knockout = (t.matches ?? []).filter((row) => row.kind === "knockout");
   const champ = t.championId ? nameOf(t, t.championId) : null;
   const liveGroupId = live?.kind === "group" ? live.groupId : undefined;
 
@@ -136,7 +137,7 @@ export function TournamentBoard({
         <p className="cup-live">
           {matchTitle(live, t)}
           {live.stechen ? " · Stechen" : ""}
-          {live.playerIds.length ? ` · ${live.playerIds.map((id) => nameOf(t, id)).join(" · ")}` : ""}
+          {live.playerIds?.length ? ` · ${live.playerIds.map((id) => nameOf(t, id)).join(" · ")}` : ""}
         </p>
       ) : champ ? (
         <p className="cup-live is-done">Sieger: {champ}</p>
