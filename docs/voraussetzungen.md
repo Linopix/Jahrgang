@@ -49,7 +49,7 @@ React kann parallel gelernt werden. Online-Protokoll nicht als erste Aufgabe.
 ## Nicht nötig
 
 - SQL für den Spielablauf (die Datenbank dient der WebRTC-Vermittlung)
-- Docker
+- Docker (nur zum Starten ohne Node, siehe README. Zum Beitragen nicht nötig)
 - Native Apps oder Game-Engines
 - GraphQL
 - ICE-Details (STUN ist gesetzt)

@@ -166,7 +166,8 @@ export default defineConfig(({ command, isPreview }) => ({
     ...(command === "build" || isPreview
       ? [
           nitro({
-            preset: "vercel",
+            // Vercel bleibt der Default. Docker setzt NITRO_PRESET=node-server.
+            preset: process.env.NITRO_PRESET || "vercel",
           }),
         ]
       : []),

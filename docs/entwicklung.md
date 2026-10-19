@@ -21,6 +21,8 @@ npm run dev
 
 Node 22. Dann [http://127.0.0.1:8080](http://127.0.0.1:8080) — nicht `localhost`, Spotify und manches Mobilgerät mögen das nicht.
 
+Ohne Node auf dem Rechner: `docker compose up --build -d` (Spiel) oder `docker compose -f compose.dev.yml up` (mit Neuladen). Einrichtung steht in der [README](../README.md#docker-compose).
+
 | Befehl | Wofür |
 | --- | --- |
 | `npm run dev` | Spiel lokal, lädt bei Dateiänderung neu |

@@ -1,0 +1,27 @@
+# Entwicklung: Quellcode gemountet, Vite lädt neu.
+#   docker compose -f compose.dev.yml up
+name: jahrgang
+
+services:
+  jahrgang:
+    image: node:22-bookworm
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev"
+    ports:
+      - "${JAHRGANG_PORT:-8080}:8080"
+    volumes:
+      - .:/app
+      - jahrgang_dev_modules:/app/node_modules
+    environment:
+      HOST: 0.0.0.0
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+      CHOKIDAR_USEPOLLING: "1"
+      DATABASE_URL: ${DATABASE_URL:-}
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:-}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET:-}
+      SPOTIFY_REDIRECT_URI: ${SPOTIFY_REDIRECT_URI:-}
+      SPOTIFY_MARKET: ${SPOTIFY_MARKET:-}
+    init: true
+
+volumes:
+  jahrgang_dev_modules:

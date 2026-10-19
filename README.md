@@ -73,7 +73,11 @@ Der Host stellt ein, wer die nächste Runde startet, und ob Chat und Emoji an si
 
 **Alleine:** eine Linie, drei Fehler.
 
-## Lokal
+## Installation
+
+Zwei Wege. Beide enden auf [127.0.0.1:8080](http://127.0.0.1:8080). Nicht `localhost`: Spotify und manches Handy mögen das nicht. Ohne Netz keine Vorschau und keine Online-Runde.
+
+### Node
 
 ```bash
 git clone https://github.com/Linopix/Jahrgang.git
@@ -82,9 +86,38 @@ npm install
 npm run dev
 ```
 
-Node 22, dann [localhost:8080](http://localhost:8080). Ohne Netz keine Vorschau und keine Online-Runde.
+Node 22 (`.nvmrc`). Am Code arbeiten: **[docs/entwicklung.md](docs/entwicklung.md)** (Landkarte) und **[docs/voraussetzungen.md](docs/voraussetzungen.md)** (was du können solltest).
 
-Am Code arbeiten: **[docs/entwicklung.md](docs/entwicklung.md)** (Landkarte) und **[docs/voraussetzungen.md](docs/voraussetzungen.md)** (was du können solltest).
+### Docker Compose
+
+Docker Engine mit Compose-Plugin. Node muss dann nicht installiert sein.
+
+```bash
+git clone https://github.com/Linopix/Jahrgang.git
+cd Jahrgang
+docker compose up --build -d
+```
+
+Der erste Bau dauert ein paar Minuten. Danach läuft der Produktionsbuild im Container, Port 8080. Im Browser: [127.0.0.1:8080](http://127.0.0.1:8080).
+
+| Befehl | Wofür |
+| --- | --- |
+| `docker compose logs -f` | Ausgabe |
+| `docker compose ps` | Läuft der Container |
+| `docker compose down` | Stoppen |
+| `docker compose up --build -d` | Nach `git pull` neu bauen |
+
+Am Code arbeiten, mit Neuladen, Quellcode gemountet:
+
+```bash
+docker compose -f compose.dev.yml up
+```
+
+Strg+C stoppt. Aufräumen: `docker compose -f compose.dev.yml down`.
+
+Ohne weitere Variablen speichert der Container die Raumvermittlung nur im Prozess. Ein Neustart leert laufende Räume. Für einen Abend reicht das. Eigene Postgres und optionales Spotify: `.env.example` nach `.env` kopieren, die Zeilen setzen, dann `docker compose --profile db up --build -d`. Compose liest `.env` von selbst. Spotify bleibt im Spiel aus, bis `SPOTIFY_LIVE` im Code an ist. Details: **[docs/musikdienste.md](docs/musikdienste.md)**.
+
+Das Passwort in der Beispieldatei gilt nur für den lokalen Postgres-Container. Nicht ins Internet stellen.
 
 Kleine Tippfehler beim Raten sind in Ordnung. „Beatles“ zählt für The Beatles.
 
